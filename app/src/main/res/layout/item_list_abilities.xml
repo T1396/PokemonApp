@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cvAbility"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/rounded_button_shape"
+    android:backgroundTint="?attr/colorSurfaceContainerHighest"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/ripple">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tvGen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/tvNr"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvNr" />
+
+        <TextView
+            android:id="@+id/tvAbilityName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/tvNr"
+            app:layout_constraintEnd_toStartOf="@+id/tvGen"
+            app:layout_constraintStart_toEndOf="@+id/tvNr"
+            app:layout_constraintTop_toTopOf="@+id/tvNr" />
+
+        <TextView
+            android:id="@+id/tvNr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

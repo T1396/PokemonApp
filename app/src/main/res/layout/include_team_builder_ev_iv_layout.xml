@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_button_shape"
+    android:backgroundTint="?attr/colorSecondaryContainer"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/topLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvEvIvLeft"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="12dp"
+            android:layout_weight="1"
+            android:drawableEnd="@drawable/baseline_arrow_drop_down_24"
+            android:drawableTint="?attr/colorOnTertiaryContainer"
+            android:gravity="center_horizontal|center_vertical"
+            android:paddingEnd="8dp"
+            android:text="@string/evs_and_ivs_initial"
+            android:textColor="?attr/colorOnSecondaryContainer"
+            android:textSize="16sp"
+            tools:layout_editor_absoluteX="314dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/expandLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        android:paddingBottom="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/topLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvHpShort"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_hp_short"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvHpBaseVal"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvHpBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tvHpShort"
+                app:layout_constraintRight_toLeftOf="@id/progressBar"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvHpBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvHpBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilHpEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvHpBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilHpEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:tag="0"
+                app:boxBackgroundMode="outline"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBar"
+                app:layout_constraintLeft_toRightOf="@id/progressBar"
+                app:layout_constraintRight_toLeftOf="@id/slider"
+                app:layout_constraintTop_toTopOf="@+id/progressBar">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:breakStrategy="simple"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="0"
+                    android:text="0"
+                    android:textAllCaps="false"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilHpEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilHpIvs"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilHpIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:tag="0"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilHpEvs"
+                app:layout_constraintLeft_toRightOf="@id/slider"
+                app:layout_constraintRight_toLeftOf="@id/tvHpVal"
+                app:layout_constraintTop_toTopOf="@+id/tilHpEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxEms="2"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="0"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvHpVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilHpIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvAttack"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_atk_short"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvAtkBaseVal"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvAtkBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tvAttack"
+                app:layout_constraintRight_toLeftOf="@id/progressBarAtk"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:id="@+id/progressBarAtk"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvAtkBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvAtkBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilAtkEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvAtkBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilAtkEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:tag="1"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarAtk"
+                app:layout_constraintLeft_toRightOf="@id/progressBarAtk"
+                app:layout_constraintRight_toLeftOf="@id/sliderAtk"
+                app:layout_constraintTop_toTopOf="@+id/progressBarAtk">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="1"
+                    android:text="0"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderAtk"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilAtkEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilAtkIvs"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilAtkIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:tag="1"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilAtkEvs"
+                app:layout_constraintLeft_toRightOf="@id/sliderAtk"
+                app:layout_constraintRight_toLeftOf="@id/tvAtkVal"
+                app:layout_constraintTop_toTopOf="@+id/tilAtkEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="1"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvAtkVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilAtkIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvDefense"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_def_short"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvDefBaseVal"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvDefBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tvDefense"
+                app:layout_constraintRight_toLeftOf="@id/progressBarDef"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:id="@+id/progressBarDef"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvDefBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvDefBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilDefEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvDefBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDefEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:tag="2"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarDef"
+                app:layout_constraintLeft_toRightOf="@id/progressBarDef"
+                app:layout_constraintRight_toLeftOf="@id/sliderDef"
+                app:layout_constraintTop_toTopOf="@+id/progressBarDef">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="2"
+                    android:text="0"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderDef"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilDefEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilDefIvs"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDefIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:tag="2"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilDefEvs"
+                app:layout_constraintLeft_toRightOf="@id/sliderDef"
+                app:layout_constraintRight_toLeftOf="@id/tvDefVal"
+                app:layout_constraintTop_toTopOf="@+id/tilDefEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="2"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvDefVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilDefIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvSpAttack"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_spAtk_short"
+                app:layout_constraintBottom_toBottomOf="@+id/tvSpAtkBaseVal"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvSpAtkBaseVal"
+                app:layout_constraintTop_toTopOf="@+id/tvSpAtkBaseVal" />
+
+            <TextView
+                android:id="@+id/tvSpAtkBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tvSpAttack"
+                app:layout_constraintRight_toLeftOf="@id/progressBarSpAtk"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:id="@+id/progressBarSpAtk"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvSpAtkBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvSpAtkBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilSpAtkEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvSpAtkBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSpAtkEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:tag="3"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarSpAtk"
+                app:layout_constraintLeft_toRightOf="@id/progressBarSpAtk"
+                app:layout_constraintRight_toLeftOf="@id/sliderSpAtk"
+                app:layout_constraintTop_toTopOf="@+id/progressBarSpAtk">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="3"
+                    android:text="0"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSpAtk"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilSpAtkEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilSpAtkIvs"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSpAtkIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:tag="3"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilSpAtkEvs"
+                app:layout_constraintLeft_toRightOf="@id/sliderSpAtk"
+                app:layout_constraintRight_toLeftOf="@id/tvSpAtkVal"
+                app:layout_constraintTop_toTopOf="@+id/tilSpAtkEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="3"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvSpAtkVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilSpAtkIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvSpDefense"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_spDef_short"
+                app:layout_constraintBottom_toBottomOf="@+id/tvSpDefBaseVal"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvSpDefBaseVal"
+                app:layout_constraintTop_toTopOf="@+id/tvSpDefBaseVal" />
+
+            <TextView
+                android:id="@+id/tvSpDefBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="@+id/sliderSpDef"
+                app:layout_constraintLeft_toRightOf="@id/tvSpDefense"
+                app:layout_constraintRight_toLeftOf="@id/progressBarSpDef"
+                app:layout_constraintTop_toTopOf="@+id/sliderSpDef" />
+
+            <ProgressBar
+                android:id="@+id/progressBarSpDef"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvSpDefBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvSpDefBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilSpDefEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvSpDefBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSpDefEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:padding="0dp"
+                android:tag="4"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarSpDef"
+                app:layout_constraintLeft_toRightOf="@id/progressBarSpDef"
+                app:layout_constraintRight_toLeftOf="@id/sliderSpDef"
+                app:layout_constraintTop_toTopOf="@+id/progressBarSpDef">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="4"
+                    android:text="0"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSpDef"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilSpDefEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilSpDefIvs"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_percent="0.2" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSpDefIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:tag="4"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilSpDefEvs"
+                app:layout_constraintLeft_toRightOf="@id/sliderSpDef"
+                app:layout_constraintRight_toLeftOf="@id/tvSpDefVal"
+                app:layout_constraintTop_toTopOf="@+id/tilSpDefEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="4"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvSpDefVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="@+id/tilSpDefIvs"
+                app:layout_constraintLeft_toRightOf="@id/tilSpDefIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/tilSpDefIvs" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvInit"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/base_value_name_init_short"
+                app:layout_constraintBottom_toBottomOf="@+id/tvInitBaseVal"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/tvInitBaseVal"
+                app:layout_constraintTop_toTopOf="@+id/tvInitBaseVal" />
+
+            <TextView
+                android:id="@+id/tvInitBaseVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:gravity="center_horizontal|center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="@+id/sliderInit"
+                app:layout_constraintLeft_toRightOf="@id/tvInit"
+                app:layout_constraintRight_toLeftOf="@id/progressBarInit"
+                app:layout_constraintTop_toTopOf="@+id/sliderInit" />
+
+            <ProgressBar
+                android:id="@+id/progressBarInit"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="255"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progress="100"
+                android:progressTint="?android:attr/colorActivatedHighlight"
+                android:scaleY="2.5"
+                app:layout_constraintBottom_toBottomOf="@+id/tvInitBaseVal"
+                app:layout_constraintLeft_toRightOf="@id/tvInitBaseVal"
+                app:layout_constraintRight_toLeftOf="@id/tilInitEvs"
+                app:layout_constraintTop_toTopOf="@+id/tvInitBaseVal" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilInitEvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clipToPadding="true"
+                android:gravity="center_horizontal|center_vertical"
+                android:padding="0dp"
+                android:tag="5"
+                app:boxBackgroundMode="outline"
+                app:boxCollapsedPaddingTop="0dp"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarInit"
+                app:layout_constraintLeft_toRightOf="@id/progressBarInit"
+                app:layout_constraintRight_toLeftOf="@id/sliderInit"
+                app:layout_constraintTop_toTopOf="@+id/progressBarInit"
+                app:suffixTextAppearance="@style/TextAppearance.AppCompat.Display3">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="0dp"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="5"
+                    android:text="0"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderInit"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/tilInitEvs"
+                app:layout_constraintRight_toLeftOf="@id/tilInitIvs"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilInitIvs"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal|center_vertical"
+                android:tag="5"
+                android:textAlignment="gravity"
+                android:textSize="12sp"
+                app:boxCollapsedPaddingTop="0dp"
+                app:hintEnabled="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tilInitEvs"
+                app:layout_constraintLeft_toRightOf="@id/sliderInit"
+                app:layout_constraintRight_toLeftOf="@id/tvInitVal"
+                app:layout_constraintTop_toTopOf="@+id/tilInitEvs">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|center_vertical"
+                    android:includeFontPadding="false"
+                    android:inputType="number|numberDecimal|numberSigned"
+                    android:maxLength="3"
+                    android:padding="0dp"
+                    android:tag="5"
+                    android:text="31"
+                    android:textAlignment="gravity"
+                    android:textSize="12sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvInitVal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight=".8"
+                android:gravity="center_vertical|end"
+                app:layout_constraintBottom_toBottomOf="@+id/progressBarInit"
+                app:layout_constraintLeft_toRightOf="@id/tilInitIvs"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/progressBarInit" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

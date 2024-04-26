@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_login">
+
+    <fragment
+        android:id="@+id/nav_login"
+        android:name="com.example.pokinfo.ui.loginRegister.LoginFragment"
+        android:label="@string/menu_login"
+        tools:layout="@layout/fragment_login" />
+
+    <fragment
+        android:id="@+id/nav_teams_and_builder"
+        android:name="com.example.pokinfo.ui.teambuilder.TeamsFragment"
+        android:label="@string/menu_teambuilder"
+        tools:layout="@layout/fragment_teams" >
+        <action
+            android:id="@+id/action_nav_teambuilder_to_teamBuild"
+            app:destination="@id/nav_teambuilder" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.pokinfo.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_home_to_nav_home_detail"
+            app:destination="@id/nav_home_detail" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_register"
+        android:name="com.example.pokinfo.ui.loginRegister.RegisterFragment"
+        android:label="@string/menu_register"
+        tools:layout="@layout/fragment_register" />
+    <fragment
+        android:id="@+id/nav_home_detail"
+        android:name="com.example.pokinfo.ui.home.HomeDetailFragment"
+        android:label="@string/menu_home_detail"
+        tools:layout="@layout/fragment_home_detail" >
+        <argument
+            android:name="pokemonId"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_nav_home_detail_to_fullScreenDialogFragment"
+            app:destination="@id/fullScreenDialogFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_attacks"
+        android:name="com.example.pokinfo.ui.attacks.AttacksListFragment"
+        android:label="@string/menu_attacks"
+        tools:layout="@layout/fragment_attacks_list" >
+        <action
+            android:id="@+id/action_nav_attacks_to_attacksDetailFragment"
+                app:destination="@id/nav_attacks_detail" />
+        </fragment>
+        <fragment
+            android:id="@+id/nav_abilities"
+            android:name="com.example.pokinfo.ui.abilities.AbilitiesListFragment"
+            android:label="@string/menu_abilities"
+            tools:layout="@layout/fragment_abilities_list" >
+            <action
+                android:id="@+id/action_nav_abilities_to_abilitiesDetailFragment"
+                app:destination="@id/abilitiesDetailFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@android:anim/slide_out_right"
+                app:popEnterAnim="@anim/slide_in_right"
+                app:popExitAnim="@android:anim/slide_out_right" />
+        </fragment>
+        <fragment
+        android:id="@+id/nav_attacks_detail"
+        android:name="com.example.pokinfo.ui.attacks.AttacksDetailFragment"
+        android:label="Attack details"
+        tools:layout="@layout/fragment_attacks_detail" >
+        <argument
+            android:name="moveId"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_nav_attacks_detail_to_nav_home_detail"
+            app:destination="@id/nav_home_detail" />
+    </fragment>
+    <fragment
+        android:id="@+id/abilitiesDetailFragment"
+        android:name="com.example.pokinfo.ui.abilities.AbilitiesDetailFragment"
+        android:label="Ability Details"
+        tools:layout="@layout/fragment_abilities_detail" >
+        <argument
+            android:name="abilityId"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_abilitiesDetailFragment_to_nav_home_detail"
+            app:destination="@id/nav_home_detail" />
+    </fragment>
+    <fragment
+        android:id="@+id/fullScreenDialogFragment"
+        android:name="com.example.pokinfo.ui.FullScreenAttacksFragment"
+        android:label="@string/show_attacks_placeholder" >
+        <argument
+            android:name="isSelectionMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_teambuilder"
+        android:name="com.example.pokinfo.ui.teambuilder.TeamBuilderFragment"
+        android:label="TeamBuild" >
+        <action
+            android:id="@+id/action_teamBuild_to_fullScreenDialogFragment"
+            app:destination="@id/fullScreenDialogFragment" />
+        <argument
+            android:name="pokemonTeam"
+            app:argType="com.example.pokinfo.data.models.firebase.PokemonTeam"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+</navigation>

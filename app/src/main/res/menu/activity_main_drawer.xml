@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="@string/menu_home" />
+
+        <item
+            android:id="@+id/nav_attacks"
+            android:icon="@drawable/baseline_electric_bolt_24"
+            android:title="@string/attacks" />
+
+        <item
+            android:id="@+id/nav_abilities"
+            android:icon="@drawable/baseline_storm_24"
+            android:title="@string/abilities"
+            />
+        <item
+            android:id="@+id/nav_teams_and_builder"
+            android:icon="@drawable/baseline_catching_pokemon_24"
+            android:title="@string/menu_teambuilder" />
+    </group>
+
+</menu>

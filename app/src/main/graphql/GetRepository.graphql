@@ -1,0 +1,503 @@
+query SpritesNamesOrderedQuery($languageId: Int!) {
+    sprites: pokemon_v2_pokemonsprites(order_by: {id: asc}, limit: 10) {
+        sprites(path: "other.home")
+        pokemon_id
+        id
+        pokemon_v2_pokemon {
+            height
+            id
+            order
+            pokemon_species_id
+            name
+            weight
+        }
+    }
+    speciesName: pokemon_v2_pokemonspeciesname(order_by: {pokemon_species_id: asc}, where: {language_id: {_eq: $languageId}}, limit: 10) {
+        id
+        pokemon_species_id
+        name
+    }
+}
+
+query LanguageAndVersionNames($languageId: Int!) {
+    languageNames: pokemon_v2_languagename(where: {local_language_id: {_eq: $languageId}}) {
+        pokemonV2LanguageByLocalLanguageId {
+            name
+            id
+        }
+        name
+        local_language_id
+        language_id
+        id
+    }
+    pokemon_v2_versionname(where: {language_id: {_eq: $languageId}}) {
+        id
+        version_id
+        name
+        language_id
+    }
+}
+
+query TeambuilderPokeDetails($pokemonId: Int!, $languageId: Int!) {
+    pokemon: pokemon_v2_pokemon(where: {id: {_eq: $pokemonId}}) {
+        pokemon_species_id
+        id
+        abilities: pokemon_v2_pokemonabilities {
+            slot
+            ability_id
+            ability: pokemon_v2_ability {
+                effectText: pokemon_v2_abilityeffecttexts(where: {language_id: {_eq: $languageId}}) {
+                    effect
+                    short_effect
+                }
+                nameTranslated: pokemon_v2_abilitynames(where: {language_id: {_eq: $languageId}}) {
+                    name
+                }
+            }
+        }
+        specyData: pokemon_v2_pokemonspecy {
+            gender_rate
+        }
+        moves: pokemon_v2_pokemonmoves(where: {version_group_id: {_eq: 25}}){
+            move: pokemon_v2_move {
+                accuracy
+                power
+                pp
+                type_id
+                move_damage_class_id
+                nameTranslated: pokemon_v2_movenames(where: {language_id: {_eq: $languageId}}) {
+                    name
+                    language_id
+                }
+                effect: pokemon_v2_moveeffect {
+                    text: pokemon_v2_moveeffecteffecttexts(where: {language_id: {_eq: $languageId}}) {
+                        effect
+                        short_effect
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+query PokeList($languageId:Int!) {
+    response: pokemon_v2_pokemonsprites_aggregate {
+        data: nodes {
+            sprites: sprites
+            pokemon_id
+            pokemon: pokemon_v2_pokemon {
+                height
+                pokemon_species_id
+                id
+                name
+                weight
+                stats: pokemon_v2_pokemonstats_aggregate {
+                    list: nodes {
+                        base_stat
+                        stat_id
+                        pokemon_id
+                    }
+                }
+                types: pokemon_v2_pokemontypes{
+                    type_id
+                    pokemon_v2_type {
+                        name
+                    }
+                }
+                specy: pokemon_v2_pokemonspecy {
+                    is_mythical
+                    is_legendary
+                    is_baby
+                    id
+                    generation_id
+                    names: pokemon_v2_pokemonspeciesnames_aggregate(where: {language_id: {_eq:$languageId}}) {
+                        data: nodes {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+query FormQuery($speciesId: Int!, $languageId: Int!) {
+    pokemon_v2_pokemonform_aggregate(where: {pokemon_v2_pokemon: {pokemon_species_id: {_eq: $speciesId}}}) {
+        nodes {
+            form_name
+            name
+            pokemon_id
+            form_order
+            order
+            id
+            is_battle_only
+            is_default
+            is_mega
+            version_group_id
+            pokemon_v2_pokemonformsprites_aggregate {
+                nodes {
+                    pokemon_form_id
+                    sprites
+                    id
+                }
+            }
+            pokemon_v2_pokemonformnames(where: {language_id: {_eq: $languageId}}) {
+                name
+                pokemon_name
+                pokemon_form_id
+                language_id
+            }
+        }
+    }
+}
+
+
+query PokemonDetail3($nr: Int!, $languageId: Int!) {
+    pokemon: pokemon_v2_pokemon(where: {id: {_eq: $nr}}) {
+        id
+        name
+        encounters: pokemon_v2_encounters(where: {pokemon_v2_encounterslot: {encounter_method_id: {_nin: [18, 19]}}}, order_by: {version_id: asc}) {
+            id
+            location_area_id
+            encounter_slot_id
+            version: pokemon_v2_version {
+                name
+                version_group_id
+            }
+            max_level
+            min_level
+            encounterslot: pokemon_v2_encounterslot {
+                id
+                method: pokemon_v2_encountermethod {
+                    id
+                    name
+                    nameTranslated: pokemon_v2_encountermethodnames(where: {language_id: {_eq: $languageId}}) {
+                        id
+                        name
+                    }
+                }
+            }
+            conditionValues: pokemon_v2_encounterconditionvaluemaps {
+                id
+                encounter_condition_value_id
+                value: pokemon_v2_encounterconditionvalue {
+                    id
+                    name
+                    nameTranslated: pokemon_v2_encounterconditionvaluenames(where: {language_id: {_eq: $languageId}}) {
+                        id
+                        name
+                        pokemon_v2_encounterconditionvalue {
+                            id
+                            is_default
+                            name
+                        }
+                    }
+                }
+            }
+            locationArea: pokemon_v2_locationarea {
+                id
+                name
+                pokemon_v2_locationareanames {
+                    id
+                    name
+                }
+            }
+        }
+    }
+}
+
+
+
+
+query PokemonDetail2($nr: Int!, $languageId: Int!) {
+    genNames: pokemon_v2_generationname(where: {language_id: {_eq: 6}}) {
+        name
+        gen: pokemon_v2_generation {
+            genNamesCount: pokemon_v2_generationnames_aggregate {
+                agg: aggregate {
+                    count
+                }
+            }
+        }
+    }
+    versionNames: pokemon_v2_versionname(where: {language_id: {_eq: $languageId}}){
+        id
+        version_id
+        name
+    }
+    pokemon: pokemon_v2_pokemon(where: {id: {_eq: $nr}}) {
+        id
+        specy: pokemon_v2_pokemonspecy {
+            id
+            generation_id
+            pokedexTexts: pokemon_v2_pokemonspeciesflavortexts(order_by: {language_id: asc, version_id: asc}, where: {pokemon_species_id: {_eq: $nr}}) {
+                id
+                text: flavor_text
+                language_id
+                version_id
+                version: pokemon_v2_version {
+                    id
+                }
+            }
+        }
+        abilities: pokemon_v2_pokemonabilities(order_by: {slot: asc}) {
+            id
+            ability_id
+            slot
+            ability: pokemon_v2_ability {
+                id
+                name
+                longText: pokemon_v2_abilityeffecttexts(where: {language_id: {_eq: $languageId}}) {
+                    id
+                    effect
+                    ability_id
+                    language_id
+                    short_effect
+                }
+                shortText: pokemon_v2_abilityflavortexts(where: {language_id: {_eq: $languageId}}) {
+                    id
+                    flavor_text
+                    version_group_id
+                    language_id
+                    ability_id
+                }
+                nameTranslated: pokemon_v2_abilitynames(where: {language_id: {_eq: $languageId}}) {
+                    id
+                    name
+                    language_id
+                }
+            }
+            is_hidden
+        }
+        moves: pokemon_v2_pokemonmoves(where: {pokemon_v2_pokemon: {id: {_eq: $nr}}}, order_by: {version_group_id: asc, move_learn_method_id: asc}) {
+            id
+            move_id
+            level
+            move_learn_method_id
+            order
+            version_group_id
+            pokemon_id
+            moveLearnMethodName: pokemon_v2_movelearnmethod {
+                id
+                name
+            }
+            move: pokemon_v2_move {
+                accuracy
+                move_damage_class_id
+                move_effect_chance
+                move_effect_id
+                name
+                move_target_id
+                power
+                effect: pokemon_v2_moveeffect {
+                    texts: pokemon_v2_moveeffecteffecttexts{
+                        short_effect
+                    }
+                }
+                machines: pokemon_v2_machines{
+                    move_id
+                    version_group_id
+                    machine_number
+                }
+                pp
+                priority
+                id
+                type_id
+                generation_id
+                nameTranslated: pokemon_v2_movenames {
+                    name
+                    id
+                    language_id
+                }
+            }
+        }
+    }
+    languageNames: pokemon_v2_languagename(where: {local_language_id: {_eq: $languageId}}) {
+        pokemonV2LanguageByLocalLanguageId {
+            name
+            id
+        }
+        name
+        local_language_id
+        language_id
+        id
+    }
+    typeNames: pokemon_v2_typename(where: {language_id: {_eq: $languageId}}){
+        name
+        type_id
+    }
+}
+
+query PokemonDetail1($nr: Int!, $languageId: Int!) {
+    pokemon: pokemon_v2_pokemon(where: {id: {_eq: $nr}}) {
+        id
+        height
+        weight
+        order
+        defaultName: name
+        sprites: pokemon_v2_pokemonsprites{
+            id
+            sprites
+        }
+        specy: pokemon_v2_pokemonspecy {
+            id
+            is_legendary
+            is_mythical
+            name
+            order
+            is_baby
+            evolves_from_species_id
+            evolutions: pokemon_v2_evolutionchain {
+                species: pokemon_v2_pokemonspecies_aggregate {
+                    nodes {
+                        id
+                        name
+                        evolves_from_species_id
+                    }
+                }
+            }
+            gender_rate
+            evolution_chain_id
+            capture_rate
+            base_happiness
+            allNames: pokemon_v2_pokemonspeciesnames {
+                id
+                name
+                language_id
+                genus
+            }
+        }
+        stats: pokemon_v2_pokemonstats {
+            id
+            base_stat
+            stat_id
+            pokemon_v2_stat {
+                name
+                pokemon_v2_statnames(where: {language_id: {_eq: $languageId}}) {
+                    id
+                    name
+                }
+            }
+        }
+        typeInfos: pokemon_v2_pokemontypes {
+            id
+            slot
+            type_id
+        }
+    }
+
+}
+
+query AttacksQuery($languageId: Int!) {
+    moves: pokemon_v2_move {
+        names: pokemon_v2_movenames(where: {language_id: {_in: [$languageId, 9]}}) {
+            language_id
+            name
+        }
+        name
+        move_damage_class_id
+        accuracy
+        type_id
+        id
+        generation_id
+        move_target_id
+        power
+        move_effect_id
+        move_effect_chance
+        priority
+        pp
+        machines: pokemon_v2_machines {
+            machine_number
+            version_group_id
+            versionGroup: pokemon_v2_versiongroup {
+                generation_id
+            }
+        }
+    }
+
+}
+
+
+
+query AttackDetails($moveId: Int!, $languageId: Int!) {
+    move: pokemon_v2_move(where: {id: {_eq: $moveId}}) {
+        type_id
+        power
+        pp
+        accuracy
+        generation_id
+        priority
+        move_target_id
+        move_damage_class_id
+        name
+        names: pokemon_v2_movenames(where: {language_id: {_in: [$languageId, 9]}}) {
+            language_id
+            name
+        }
+        texts: pokemon_v2_moveflavortexts {
+            flavor_text
+            language_id
+            version_group_id
+            move_id
+            id
+        }
+    }
+    pokemonList: pokemon_v2_pokemon(where: {pokemon_v2_pokemonmoves: {move_id: {_eq: $moveId}}}) {
+        pokemon_species_id
+        order
+        name
+        id
+    }
+}
+
+query AllAbilities($languageId: Int!) {
+    response: pokemon_v2_ability_aggregate(where: {is_main_series: {_eq: true}}) {
+        data: nodes {
+            names: pokemon_v2_abilitynames(where: {language_id: {_eq: $languageId}}) {
+                name
+            }
+            generation_id
+            id
+            is_main_series
+            name
+        }
+    }
+}
+
+
+query AbilityDetail($abilityId: Int!) {
+    data: pokemon_v2_ability(where: {id: {_eq: $abilityId}}) {
+        name
+        flavorTexts: pokemon_v2_abilityflavortexts {
+            version_group_id
+            flavor_text
+            language_id
+            ability_id
+        }
+        effectTexts: pokemon_v2_abilityeffecttexts {
+            effect
+            short_effect
+            language_id
+            ability_id
+        }
+        names: pokemon_v2_abilitynames_aggregate {
+            nodes {
+                name
+                language_id
+            }
+        }
+        pokemonList: pokemon_v2_pokemonabilities {
+            pokemon_id
+            pokemon_v2_pokemon {
+                name
+            }
+        }
+    }
+}
+
+
+
+

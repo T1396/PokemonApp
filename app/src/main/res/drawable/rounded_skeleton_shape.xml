@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/colorSurfaceContainerHighest" /> <!-- Setzen Sie hier Ihre bevorzugte Farbe für das Skeleton -->
+    <corners android:radius="20dp" /> <!-- Passen Sie den Radius an, um die gewünschte Abrundung zu erhalten -->
+</shape>
