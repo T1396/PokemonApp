@@ -316,6 +316,11 @@ class HomeDetailFragment : Fragment() {
         val keys = sortedMap.keys.toList()
         val chipGroup = sheetBinding.chipGroupImage
         chipGroup.removeAllViews() // remove old chips that may were created with a pokemon before
+
+        if (keys.isEmpty()) {
+            return
+        }
+
         keys.forEachIndexed { index, text ->
             val chip = Chip(requireContext())
             chip.text = text
