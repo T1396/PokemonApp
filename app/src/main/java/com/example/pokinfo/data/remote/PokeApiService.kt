@@ -1,6 +1,7 @@
 package com.example.pokinfo.data.remote
 
 import com.apollographql.apollo3.ApolloClient
+import com.apollographql.apollo3.network.okHttpClient
 import com.example.pokeinfo.data.graphModel.AbilityDetailQuery
 import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
 import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
@@ -10,8 +11,7 @@ import com.example.pokeinfo.data.graphModel.LanguageAndVersionNamesQuery
 import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail2Query
-import com.example.pokeinfo.data.graphModel.SpritesNamesOrderedQuery
-import com.example.pokeinfo.data.graphModel.TeambuilderPokeDetailsQuery
+import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.data.models.typeInfo.Type
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -24,7 +24,7 @@ import retrofit2.http.Path
 
 
 private const val BASE_URL = "https://pokeapi.co/api/v2/"
-private const val GRAPH_URL = "https://beta.pokeapi.co/graphql/v1beta"
+private const val LOCAL_GRAPH_URL = BuildConfig.localGraphqlUrl
 
 interface PokeApiService {
 
@@ -108,8 +108,18 @@ private val retrofit = Retrofit.Builder()
     .baseUrl(BASE_URL)
     .build()
 
+private val loggingInterceptor = HttpLoggingInterceptor().apply {
+    level = HttpLoggingInterceptor.Level.BODY // Zeigt die vollständigen Anfragedetails
+}
+
+private val httpClient = OkHttpClient.Builder()
+    .addInterceptor(loggingInterceptor)
+    .build()
+
 private val apolloClient = ApolloClient.Builder()
-    .serverUrl(GRAPH_URL)
+    .serverUrl(LOCAL_GRAPH_URL)
+    .okHttpClient(httpClient)
+    .addHttpHeader("x-hasura-admin-secret", "pokemon")
     .build()
 
 

@@ -14,8 +14,6 @@
     <string name="menu_abilities">Abilities</string>
 
 
-    <string name="your_web_client_id" translatable="false">569710510391-2ququo8hffcf89f4m6t6u3ekc5mvd1rg.apps.googleusercontent.com</string>
-
     <!-- Preference Titles -->
     <string name="settings_header_language">Language Settings</string>
     <string name="settings_header_account_setting">Account Settings</string>

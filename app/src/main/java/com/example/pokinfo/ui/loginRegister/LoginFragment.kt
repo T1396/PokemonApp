@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentLoginBinding
@@ -19,6 +20,7 @@ class LoginFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
     private val viewModel: FirebaseViewModel by activityViewModels()
+    private val webClientId = BuildConfig.webClientId
 
 
     override fun onCreateView(
@@ -41,7 +43,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            viewModel.startGoogleSignIn(getString(R.string.your_web_client_id))
+            viewModel.startGoogleSignIn(webClientId)
         }
 
         binding.tvRegister.setOnClickListener {
