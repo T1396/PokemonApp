@@ -62,6 +62,7 @@ class HomeFragment : Fragment() {
             binding.rvPokeList.adapter = adapter
             createFilterChips(binding.chipGroupFilter) // create sort filter chips
             adapter.submitList(it)
+            binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
             binding.tilPokemonName.editText?.addTextChangedListener { text ->
                 pokeViewModel.setSearchInputPokemonList(text.toString())
             }
@@ -72,7 +73,6 @@ class HomeFragment : Fragment() {
         pokeViewModel.sortedFilteredPokemonList.observe(viewLifecycleOwner) {
             adapter.submitList(it)
         }
-
     }
 
     // creates a chip for each PokemonSortFilter
@@ -103,6 +103,16 @@ class HomeFragment : Fragment() {
                 }
                 chipGroup.addView(chip)
             }
+
+            // sets the active filter again if fragment is created again
+            pokeViewModel.filterStateLiveData.value?.let { selectedFilter ->
+                chipGroup.children.forEach { chip ->
+                    if ((chip as ThreeStateChip).tag == selectedFilter.first) {
+                        chip.state = selectedFilter.second
+                    }
+                }
+            }
+
             chipGroup.isSingleSelection = true
         }
     }
