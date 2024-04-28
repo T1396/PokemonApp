@@ -81,7 +81,7 @@ query TeambuilderPokeDetails($pokemonId: Int!, $languageId: Int!) {
 }
 
 
-query PokeList($languageId:Int!) {
+query PokeList($languageId: Int!) {
     response: pokemon_v2_pokemonsprites_aggregate {
         data: nodes {
             sprites: sprites
@@ -92,6 +92,29 @@ query PokeList($languageId:Int!) {
                 id
                 name
                 weight
+                is_default
+                pokemon_v2_pokemonforms_aggregate {
+                    nodes {
+                        pokemon_v2_pokemonformnames_aggregate {
+                            nodes {
+                                pokemon_name
+                                pokemon_form_id
+                                name
+                                language_id
+                                id
+                            }
+                        }
+                        form_name
+                        form_order
+                        id
+                        is_battle_only
+                        is_default
+                        is_mega
+                        name
+                        order
+                        pokemon_id
+                    }
+                }
                 stats: pokemon_v2_pokemonstats_aggregate {
                     list: nodes {
                         base_stat
@@ -99,7 +122,7 @@ query PokeList($languageId:Int!) {
                         pokemon_id
                     }
                 }
-                types: pokemon_v2_pokemontypes{
+                types: pokemon_v2_pokemontypes {
                     type_id
                     pokemon_v2_type {
                         name
@@ -111,7 +134,7 @@ query PokeList($languageId:Int!) {
                     is_baby
                     id
                     generation_id
-                    names: pokemon_v2_pokemonspeciesnames_aggregate(where: {language_id: {_eq:$languageId}}) {
+                    names: pokemon_v2_pokemonspeciesnames_aggregate(where: {language_id: {_eq: $languageId}}) {
                         data: nodes {
                             name
                         }
@@ -121,6 +144,7 @@ query PokeList($languageId:Int!) {
         }
     }
 }
+
 
 
 
