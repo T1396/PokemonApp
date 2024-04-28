@@ -79,7 +79,7 @@ class PokeViewModel(
     }
 
     private fun initializeGenericData() {
-        if (isAppInitialized()) {
+        if (isInitialized) {
             viewModelScope.launch(Dispatchers.IO) {
                 getPokemonTypeNames()
                 getLanguageNames()
@@ -88,10 +88,6 @@ class PokeViewModel(
         }
     }
 
-    private fun isAppInitialized(): Boolean {
-        val sharedPrefs = application.getSharedPreferences("MyAppPreferences", Context.MODE_PRIVATE)
-        return sharedPrefs.getBoolean("isInitialized", false)
-    }
 
 
     /** Gets some important Data, List of all Pokemon, Language Names and Type Details
@@ -104,7 +100,7 @@ class PokeViewModel(
 
             val mappingJob = async{
                 val dataMapper = PokemonListMapper()
-                dataMapper.mapData(data)
+                dataMapper.mapData(data, languageId)
             }
             val typeDetails = async { loadTypeDetails() }
             val languageNames = async { loadLanguageAndVersionNames() }
@@ -252,6 +248,10 @@ class PokeViewModel(
         sortAndFilterPokemon()
     }
 
+    fun getSearchInputPokemonList(): String{
+        return _searchInputPokemonList.value.orEmpty()
+    }
+
     private val _filterStateLiveData =
         MutableLiveData<Pair<PokemonSortFilter, PokemonSortFilterState>>()
     val filterStateLiveData: LiveData<Pair<PokemonSortFilter, PokemonSortFilterState>>
@@ -326,6 +326,7 @@ class PokeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
 
             val needsToBeLoaded = repository.checkIfPokemonNeedsToBeLoaded(pokemonId)
+            Log.d("PokemonFetch", needsToBeLoaded.toString())
             if (needsToBeLoaded) { // load data and map it + save to database
 
                 loadPokemonDataFromApiAndSave(pokemonId, errorMessageRes) {
@@ -349,7 +350,8 @@ class PokeViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.loadSinglePokemonData(pokemonId, languageId)
-            if (data != null) {
+            Log.d("PokemonFetch", data.toString())
+            if (data?.data1 != null && data.data2 != null && data.data3 != null) {
                 val mapper = PokemonDatabaseMapper(repository)
                 mapper.savePokemonDetailsIntoDatabase(data) { isSuccess ->
                     if (isSuccess) {
