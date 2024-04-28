@@ -13,47 +13,56 @@ import kotlinx.coroutines.withContext
 class PokemonListMapper {
 
 
-    suspend fun mapData(data: PokeListQuery.Data): List<PokemonForList> = coroutineScope {
-        val listPokemon = data.response.data
-        val batchSize = 100 // size of the batches to run parallel
-        val batches =
-            listPokemon.chunked(batchSize) // cut the list into smaller lists with batchsize
+    suspend fun mapData(data: PokeListQuery.Data, languageId: Int): List<PokemonForList> =
+        coroutineScope {
+            val listPokemon = data.response.data
+            val batchSize = 100 // size of the batches to run parallel
+            val batches =
+                listPokemon.chunked(batchSize) // cut the list into smaller lists with batchsize
 
-        // flatmap takes all the batches to map them to a list than
-        val mappedPokemonList = batches.flatMap { batch ->
+            // flatmap takes all the batches to map them to a list than
+            val mappedPokemonList = batches.flatMap { batch ->
 
 
-            batch.map { pokemonData ->
-                async { // run async
-                    // get the data
-                    val pokemon = pokemonData.pokemon
-                    val stat = pokemon?.stats
-                    if (pokemon == null) null
-                    else {
-                        // Map Infos to data object
-                        val id = pokemonData.pokemon_id ?: -1
-                        val typeId1 = pokemon.types.firstOrNull()?.type_id ?: 10001
-                        val typeId2 = pokemon.types.getOrNull(1)?.type_id
-                        PokemonForList(
-                            id = id,
-                            height = pokemon.height ?: -1,
-                            weight = pokemon.weight ?: -1,
-                            imageUrl = loadImageUrl("home", id),
-                            altImageUrl = loadImageUrl("default", id),
-                            officialImageUrl = loadImageUrl("official", id),
-                            name = pokemon.specy?.names?.data?.firstOrNull()?.name ?: "error",
-                            stats = createStatValueList(stat) ?: emptyList(),
-                            typeId1 = typeId1,
-                            typeId2 = typeId2
-                        )
+                batch.map { pokemonData ->
+                    async { // run async
+                        // get the data
+                        val pokemon = pokemonData.pokemon
+                        val stat = pokemon?.stats
+                        if (pokemon == null) null
+                        else {
+                            // Map Infos to data object
+                            val id = pokemonData.pokemon_id ?: -1
+                            val typeId1 = pokemon.types.firstOrNull()?.type_id ?: 10001
+                            val typeId2 = pokemon.types.getOrNull(1)?.type_id
+                            val name =
+                                if (pokemon.is_default) {
+                                    pokemon.specy?.names?.data?.firstOrNull()?.name
+                                } else {
+                                    pokemon.pokemon_v2_pokemonforms_aggregate.nodes.firstOrNull()?.pokemon_v2_pokemonformnames_aggregate?.nodes?.find { it.language_id == languageId }?.pokemon_name
+                                }
+                            PokemonForList(
+                                id = id,
+                                height = pokemon.height ?: -1,
+                                weight = pokemon.weight ?: -1,
+                                speciesId = pokemon.pokemon_species_id ?: -1,
+                                imageUrl = loadImageUrl("home", id),
+                                altImageUrl = loadImageUrl("default", id),
+                                isDefault = pokemon.is_default,
+                                officialImageUrl = loadImageUrl("official", id),
+                                name = name ?: "No name found",
+                                stats = createStatValueList(stat) ?: emptyList(),
+                                typeId1 = typeId1,
+                                typeId2 = typeId2
+                            )
+                        }
                     }
-                }
-            }.awaitAll()
-                .filterNotNull() // wait for each batch to finish and filter all null pokemon out
+                }.awaitAll()
+                    .filterNotNull() // wait for each batch to finish and filter all null pokemon out
 
+            }
+            mappedPokemonList // return the list
         }
-        mappedPokemonList // return the list
-    }
 
     private fun loadImageUrl(type: String, pokemonId: Int): String {
         val homeUrl =
