@@ -50,3 +50,6 @@ Pok-Info integrates with Firebase to offer a seamless and scalable backend solut
 
 As an educational project, Poke-Info welcomes contributions and feedback from the community. Whether it's suggesting new features, reporting bugs, or improving the codebase, your input is invaluable in making Pok-Info a better tool for everyone.
 
+## How to use the App yourself
+
+To make this app work, you need to create your own Firebase Project (you need a google account for that)
