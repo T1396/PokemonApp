@@ -11,6 +11,8 @@ data class PokemonForList(
     @PrimaryKey
     val id: Int = -1,
     val name: String = "",
+    val speciesId: Int = -1,
+    val isDefault: Boolean = false,
     val weight: Int = 0,
     val height: Int = 0,
     val imageUrl: String = "",

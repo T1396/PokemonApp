@@ -67,7 +67,7 @@ import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionN
         PkMoveMachines::class,
         PkForms::class
     ],
-    version = 27
+    version = 29
 )
 @TypeConverters(
     StringListConverter::class,

@@ -182,7 +182,7 @@ interface PokeDatabaseDao {
     @Query("SELECT * FROM pokemon_language_names")
     suspend fun getLanguageNames(): List<LanguageNames>
 
-    @Query("SELECT * FROM table_list_pokemon")
+    @Query("SELECT * FROM table_list_pokemon ORDER BY speciesId, isDefault DESC")
     fun getPokemonList(): LiveData<List<PokemonForList>>
 
     @Query("SELECT * FROM table_list_pokemon WHERE id IN (:list)")
