@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.misc.dialogs
 
+import android.annotation.SuppressLint
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +28,7 @@ fun Fragment.showConfirmationDialog(
 }
 
 
+@SuppressLint("InflateParams")
 fun Fragment.openPokemonListDialog(
     listOfPokemon: List<PokemonForList>,
     title: String,

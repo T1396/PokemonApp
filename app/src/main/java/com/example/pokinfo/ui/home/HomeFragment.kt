@@ -11,7 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
-import com.example.pokinfo.data.util.PokemonSortFilter
+import com.example.pokinfo.data.enums.PokemonSortFilter
 import com.example.pokinfo.databinding.FragmentHomeBinding
 import com.example.pokinfo.viewModels.PokeViewModel
 import com.google.android.material.chip.ChipGroup
@@ -44,28 +44,28 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // show all pokemons and navigate if one is clicked
-        pokeViewModel.pokemonList.observe(viewLifecycleOwner) {
-            // create adapter and set callback function
-            adapter = PokeListAdapter { pokemonId ->
-                // when callback invoked
-                pokeViewModel.getSinglePokemonData(
-                    pokemonId,
-                    R.string.failed_load_single_pokemon_data
-                ) {
-                    // when data is loaded navigate
+            // show all pokemons and navigate if one is clicked
+            pokeViewModel.pokemonList.observe(viewLifecycleOwner) {
+                val typeNames = pokeViewModel.pokemonTypeNames
+                // create adapter and set callback function
+                adapter = PokeListAdapter(typeNames) { pokemonId ->
+                    // when callback invoked
+                    pokeViewModel.getSinglePokemonData(
+                        pokemonId,
+                        R.string.failed_load_single_pokemon_data
+                    )
                     findNavController().navigate(
                         HomeFragmentDirections.actionNavHomeToNavHomeDetail(pokemonId)
                     )
                 }
-            }
-            binding.rvPokeList.adapter = adapter
-            createFilterChips(binding.chipGroupFilter) // create sort filter chips
-            adapter.submitList(it)
-            binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
-            binding.tilPokemonName.editText?.addTextChangedListener { text ->
-                pokeViewModel.setSearchInputPokemonList(text.toString())
-            }
+                binding.rvPokeList.adapter = adapter
+                createFilterChips(binding.chipGroupFilter) // create sort filter chips
+                adapter.submitList(it)
+                binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
+                binding.tilPokemonName.editText?.addTextChangedListener { text ->
+                    pokeViewModel.setSearchInputPokemonList(text.toString())
+                }
+
 
         }
 

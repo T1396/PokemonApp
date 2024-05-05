@@ -16,8 +16,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.attacks.AttacksListAdapter
-import com.example.pokinfo.data.util.AttackFilter
-import com.example.pokinfo.data.util.AttackFilter2
+import com.example.pokinfo.data.enums.AttackFilter
+import com.example.pokinfo.data.enums.AttackFilter2
 import com.example.pokinfo.databinding.FragmentAttacksListBinding
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AttacksViewModel
@@ -68,9 +68,8 @@ class AttacksListFragment : Fragment() {
         binding.rvAttackList.adapter = adapter
         showSkeleton()
 
-        pokeViewModel.pokemonTypeNames.observe(viewLifecycleOwner) {
-            adapter.setTypeNames(pokemonTypeNames = it)
-        }
+        adapter.setTypeNames(pokeViewModel.pokemonTypeNames)
+
 
         createFilterChips(binding.chipGroupFilter)
         createSecondFilterGroup(binding.chipGroupTypeFilter)
@@ -263,7 +262,6 @@ class AttacksListFragment : Fragment() {
             animatorSet.start() // Start the Animation
         }
     }
-
 
 
     private fun showSkeleton() {
