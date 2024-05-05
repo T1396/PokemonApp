@@ -1,6 +1,8 @@
 package com.example.pokinfo.ui
 
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,13 +13,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.detail.AttacksAdapter
-import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.firebase.AttacksData
+import com.example.pokinfo.data.util.UIState
 import com.example.pokinfo.databinding.FragmentAttacksFullscreenBinding
 import com.example.pokinfo.viewModels.PokeViewModel
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.MaterialColors
 
 class FullScreenAttacksFragment : Fragment() {
 
@@ -28,11 +31,14 @@ class FullScreenAttacksFragment : Fragment() {
     private lateinit var allAttackDetails: List<PkMoveVersionGroupDetail>
 
     private var isSelectionMode = false
-    private lateinit var selectedAttackList: MutableList<AttacksData?>
+    private var selectedAttackList: List<AttacksData> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        allAttackDetails = pokeViewModel.clickedPokemon.value?.versionGroupDetails ?: emptyList()
+        allAttackDetails = when (val pkData = pokeViewModel.clickedPokemon.value) {
+            is UIState.Success -> pkData.data.versionGroupDetails
+            else -> emptyList()
+        }
         isSelectionMode = args.isSelectionMode
     }
 
@@ -60,60 +66,52 @@ class FullScreenAttacksFragment : Fragment() {
 
             // in selection mode there are no chips to filter
             binding.scrollView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
-            binding.tvPlace.visibility = if (isSelectionMode) View.VISIBLE else View.GONE // adjust end space if selection mode
-            binding.tvLevel.visibility = if (isSelectionMode) View.GONE else View.VISIBLE // hide level for team builder
+            binding.tvLevel.visibility =
+                if (isSelectionMode) View.GONE else View.VISIBLE // hide level for team builder
             binding.tvChooseAtkHeader.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
 
-            pokeViewModel.pokemonTypeNames.observe(viewLifecycleOwner) { typeNames ->
+            val typeNames = pokeViewModel.pokemonTypeNames
 
-                if (!isSelectionMode) {
-                    attacksAdapter = AttacksAdapter(typeColorMap, typeNames, false)
-                    // not needed in selection mode
-                    setChipsForEachGenAndListener(
-                        chipGroup,
-                        allAttackDetails
-                    ) // this submits the attacks also
+            if (!isSelectionMode) {
+                attacksAdapter = AttacksAdapter(typeNames, false)
+                // not needed in selection mode
+                setChipsForEachGenAndListener(
+                    chipGroup,
+                    allAttackDetails
+                ) // this submits the attacks also
 
-                } else {
-                    selectedAttackList = pokeViewModel.teamBuilderSelectedAttacks.value?.toMutableList() ?: MutableList(4) { null }
-                    attacksAdapter =
-                        AttacksAdapter(typeColorMap, typeNames, true) { selectedAttacks ->
-                            manageSelectedAttacks(selectedAttacks)
-                        }
-                    val attacksList = pokeViewModel.getAttacksFromNewestVersion()
-                    attacksAdapter.submitList(attacksList)
-                    attacksAdapter.selectAttacks(selectedAttackList)
-                }
-                rvList.adapter = attacksAdapter
+            } else {
+                selectedAttackList = pokeViewModel.teamBuilderSelectedAttacks.value ?: emptyList()
+                attacksAdapter =
+                    AttacksAdapter(typeNames, true) { selectedAttacks ->
+                        updateAttacksSelectedCount(selectedAttacks)
+                    }
+                val attacksList = pokeViewModel.getAttacksFromNewestVersion()
+                attacksAdapter.submitList(attacksList)
+                attacksAdapter.selectAttacks(selectedAttackList)
             }
-
-            binding.floatingActionButton.setOnClickListener {
-                if (::selectedAttackList.isInitialized) pokeViewModel.setSelectedAttacks(selectedAttackList)
-                findNavController().navigateUp()
-            }
+            rvList.adapter = attacksAdapter
         }
 
+        binding.floatingActionButton.setOnClickListener {
+            val attacks = attacksAdapter.getSelectedAttacks()
+            Log.d("selectedAttacksFragment", attacks.toString())
+            pokeViewModel.setSelectedAttacks(attacks)
+            findNavController().navigateUp()
+        }
     }
 
-    private fun manageSelectedAttacks(selectedAttacks: List<AttacksData>) {
-        val nrAttacksSelected = selectedAttacks.size
-        val text = if (nrAttacksSelected > 0) getString(R.string.choose_your_attacks_selected, nrAttacksSelected) else getString(R.string.choose_your_attacks)
+    private fun updateAttacksSelectedCount(attacksSelectedCount: Int) {
+        val text = if (attacksSelectedCount > 0) getString(
+            R.string.choose_your_attacks_selected,
+            attacksSelectedCount
+        ) else ""
 
-        binding.tvChooseAtkHeader.text = text
-        // if no attacks selected anymore, replace attackList with null
-        if (selectedAttacks.isEmpty()) {
-            binding.floatingActionButton.visibility = View.GONE
-            selectedAttackList.replaceAll { null }
-        } else {
+        binding.tvNrAttacksSelected.text = text
+        if (attacksSelectedCount > 0) {
             binding.floatingActionButton.visibility = View.VISIBLE
-            selectedAttackList.forEachIndexed { index, _ ->
-                val selectedAttack = selectedAttacks.getOrNull(index)
-                if (selectedAttack != null) {
-                    selectedAttackList[index] = selectedAttack
-                } else {
-                    selectedAttackList[index] = null
-                }
-            }
+        } else {
+            binding.floatingActionButton.visibility = View.GONE
         }
     }
 
@@ -133,24 +131,56 @@ class FullScreenAttacksFragment : Fragment() {
         val generationNrs = versionGroupSet.map {
             pokeViewModel.getGenerationOfVersion(it ?: 0)
         }.filterNot { it == 0 }.toSet().toList()
+        val unselectedColor = MaterialColors.getColor(
+            requireView(),
+            com.google.android.material.R.attr.colorOnSurface
+        )
+        val selectedColor =
+            MaterialColors.getColor(requireView(), com.google.android.material.R.attr.colorTertiary)
+        val textColorSelected = MaterialColors.getColor(
+            requireView(),
+            com.google.android.material.R.attr.colorOnTertiary
+        )
+        val textColorUnselected =
+            MaterialColors.getColor(requireView(), com.google.android.material.R.attr.colorSurface)
+
+        val states = arrayOf(
+            intArrayOf(android.R.attr.state_selected), // Zustand: ausgewählt
+            intArrayOf(-android.R.attr.state_selected) // Zustand: nicht ausgewählt
+        )
+
+        val colors = intArrayOf(
+            selectedColor,
+            unselectedColor
+        )
+        val textColors = intArrayOf(
+            textColorSelected, // Farbe für den ausgewählten Zustand
+            textColorUnselected // Farbe für den nicht ausgewählten Zustand
+        )
 
         generationNrs.forEachIndexed { index, _ ->
-            val chip = Chip(requireContext())
-            chip.text = getString(R.string.generation_nr_placeholder, generationNrs[index])
-            chip.isClickable = true
-            chip.isFocusable = false
-            chip.isCheckable = true
-            chip.tag = generationNrs[index] // use the number of the gen as tag to call viewmodel gen filter function on click
-            chipGroup.addView(chip)
+            Chip(requireContext()).apply {
+                text = getString(R.string.generation_nr_placeholder, generationNrs[index])
+                isClickable = true
+                isFocusable = false
+                isCheckable = true
+                chipBackgroundColor = ColorStateList(states, colors)
+                setTextColor(ColorStateList(states, textColors))
+                tag =
+                    generationNrs[index] // use the number of the gen as tag to call viewmodel gen filter function on click
+                chipGroup.addView(this)
 
-            chip.setOnCheckedChangeListener { _, _ ->
-                val list = pokeViewModel.getFilteredAttacks(chip.tag as Int)
-                attacksAdapter.submitList(list)
+                setOnCheckedChangeListener { _, _ ->
+                    val list = pokeViewModel.getFilteredAttacks(this.tag as Int)
+                    attacksAdapter.submitList(list)
+                }
+                // checks first chip so list will be submitted due to onCheckedChangeListener
+                if (index == 0) chipGroup.check(this.id)
             }
-            if (index == 0) chipGroup.check(chip.id) // checks first chip so list will be submitted due to onCheckedChangeListener
+
         }
         // makes sure 1 chip is at least checked all the time
-        var lastCheckedId = -1
+        var lastCheckedId = chipGroup.checkedChipId
         chipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
             if (checkedIds.isEmpty()) {
                 group.check(lastCheckedId)
