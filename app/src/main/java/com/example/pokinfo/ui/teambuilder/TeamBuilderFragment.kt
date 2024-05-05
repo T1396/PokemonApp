@@ -15,8 +15,6 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -27,6 +25,7 @@ import com.example.pokinfo.R
 import com.example.pokinfo.adapter.teamAndTeambuilder.AllPokemonAdapter
 import com.example.pokinfo.adapter.teamAndTeambuilder.SpinnerAdapter
 import com.example.pokinfo.data.maps.typeColorMap
+import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.data.models.firebase.TeamPokemon
@@ -35,7 +34,6 @@ import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
 import com.example.pokinfo.databinding.FragmentTeamBuilderBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.PokeViewModel
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -53,22 +51,21 @@ class TeamBuilderFragment : Fragment() {
 
     private lateinit var pokeListAdapter: AllPokemonAdapter
     private lateinit var selectedAbility: Pair<String, String> // pair of name and effect text to display in spinner
-    private var selectedAttacks: List<AttacksData?>? = null
     private var abilityList: List<Pair<String, String>>? =
         null // list of all abilities a pokemon can have
 
 
     // maps to easier run things in loops
-    private lateinit var sliderEditTextMap: LinkedHashMap<EditText?, Slider>
-    private lateinit var tvEditTextMapEV: LinkedHashMap<TextView, EditText?>
-    private lateinit var tvEditTextMapIV: LinkedHashMap<TextView, EditText?>
-    private lateinit var cvIvPair: List<Pair<MaterialCardView, ImageView>>
+    lateinit var sliderEditTextMap: LinkedHashMap<EditText?, Slider>
+    lateinit var tvEditTextMapEV: LinkedHashMap<TextView, EditText?>
+    lateinit var tvEditTextMapIV: LinkedHashMap<TextView, EditText?>
+    lateinit var cvIvPair: List<Pair<MaterialCardView, ImageView>>
 
     /** Holds triples of IV/EV EditText and Progress Bar of a stat (hp, atk, etc.) to calc the resulting values*/
-    private lateinit var calculationMap: List<Triple<EditText?, EditText?, ProgressBar>>
-    private lateinit var resultValuesList: List<TextView>
-    private lateinit var progressBarTVList: List<Pair<ProgressBar, TextView>>
-    private lateinit var attacksCardList: List<Pair<MaterialCardView, TextView>>
+    lateinit var calculationMap: List<Triple<EditText?, EditText?, ProgressBar>>
+    lateinit var resultValuesList: List<TextView>
+    lateinit var progressBarTVList: List<Pair<ProgressBar, TextView>>
+    lateinit var attacksCardList: List<Pair<MaterialCardView, TextView>>
 
     private val maleIconRes = R.drawable.baseline_male_24
     private val maleTextRes = R.string.male
@@ -88,7 +85,7 @@ class TeamBuilderFragment : Fragment() {
 
 
     private var assignedEvs = 0
-    private val maxEvs =
+    val maxEvs =
         508 // each pokemon can have up to 508 ev's assigned to all stats like atk, hp, def etc
 
     // one stat can have 252 max.
@@ -103,7 +100,7 @@ class TeamBuilderFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentTeamBuilderBinding.inflate(inflater, container, false)
-        createMaps() // create the maps mentioned above directly
+        createMaps(binding) // create the maps mentioned above directly
         return binding.root
     }
 
@@ -117,7 +114,7 @@ class TeamBuilderFragment : Fragment() {
         fabSavePokemon = activity?.findViewById(R.id.fabMain)
         overrideNavigationLogic()
 
-        val typeNames = pokeViewModel.pokemonTypeNames.value.orEmpty()
+        val typeNames = pokeViewModel.pokemonTypeNames
 
         if (args.pokemonTeam != null) {
             // inserts if editing a team the values into live-data to display it with a observer
@@ -140,24 +137,27 @@ class TeamBuilderFragment : Fragment() {
             }
         }
 
-        // create an adapter to let the user choose from all pokemons
+        // create an adapter to let the user choose from all pokemon
         pokeViewModel.everyPokemon.observe(viewLifecycleOwner) {
-            pokeListAdapter = AllPokemonAdapter(typeNames) { pokemon ->
-                // if a pokemon is clicked (selected)
-                isPokemonSelected = true
-                binding.rvPokeList.visibility = View.GONE
-                pokeViewModel.getSinglePokemonData(
-                    pokemon.id,
-                    R.string.failed_load_single_pokemon_data
-                ) {
-                    // insert to team when clicked
-                    pokeViewModel.insertPokemonToTeam(teamIndex, postVal = true)
-                    fabSavePokemon?.isEnabled = true
+
+            pokeListAdapter = AllPokemonAdapter(
+                pokemonTypeNames = typeNames,
+                onItemClicked = { pokemon: PokemonForList ->
+                    // if a pokemon is clicked (selected)
+                    isPokemonSelected = true
+                    binding.tilPokemonName.editText?.setText("")
+                    binding.rvPokeList.visibility = View.GONE
+                    pokeViewModel.getSinglePokemonData(
+                        pokemon.id,
+                        R.string.failed_load_single_pokemon_data
+                    ) {
+                        // insert to team when loaded
+                        pokeViewModel.insertPokemonToTeam(teamIndex, postVal = true)
+                        fabSavePokemon?.isEnabled = true
+                    }
                 }
-
-            }
+            )
             binding.rvPokeList.adapter = pokeListAdapter
-
         }
 
         binding.abilitySpinner.onItemSelectedListener =
@@ -192,13 +192,21 @@ class TeamBuilderFragment : Fragment() {
         }
 
         pokeViewModel.teamBuilderSelectedAttacks.observe(viewLifecycleOwner) {
-            selectedAttacks = it
-            showSelectedAttacks()
+            showSelectedAttacks(it)
         }
 
         setUpGenderSwitch()
 
-        setTextWatchers()
+        //setTextWatchers(binding)
+
+        val statManager = StatManager(updateEvLeftTextView = ::updateEvLeftTextView)
+        sliderEditTextMap.forEach { ( editText, slider) ->
+            if (editText != null) {
+                statManager.registerEditTextAndSlider(editText, slider)
+            }
+        }
+        // Level-EditText behavior, can be between 1 and 100
+        //addLevelTextWatcher(binding.tilPokemonLevel.editText)
 
         // expands the ev/iv layout
         binding.includeEvIvWindow.topLayout.setOnClickListener {
@@ -264,7 +272,7 @@ class TeamBuilderFragment : Fragment() {
             binding.tilPokemonName.editText?.setText("")
         }
         isPokemonSelected = false
-        pokeViewModel.setSelectedAttacks(null)
+        pokeViewModel.setSelectedAttacks(emptyList())
         isAtLeast1PokemonInTeam = true
     }
 
@@ -304,7 +312,6 @@ class TeamBuilderFragment : Fragment() {
         binding.rvPokeList.visibility = View.GONE // gets visible somehow if reentered the fragment
         ignoreTextChanges = false
         displaySlotOnIndex(teamIndex, pkData) // displays the card with image (slot 1-6)
-
         // abilitySpinner
         if (pkData?.pokemonId == 0) {
             binding.abilitySpinner.adapter = null
@@ -325,7 +332,9 @@ class TeamBuilderFragment : Fragment() {
         // displays chosen attacks if there is any attack
         val attacks =
             listOf(pkData?.attackOne, pkData?.attackTwo, pkData?.attackThree, pkData?.attackFour)
-        pokeViewModel.setSelectedAttacks(attacks) // observer will display attacks
+        if (attacks.filterNotNull().isNotEmpty()) {
+            pokeViewModel.setSelectedAttacks(attacks.filterNotNull()) // observer will display attacks
+        }
 
         setUpGenderSwitch(pkData?.gender ?: 1)
 
@@ -435,8 +444,8 @@ class TeamBuilderFragment : Fragment() {
     }
 
     private fun hidePokemonSlot(index: Int) {
-        val (cardView, imageView) = cvIvPair[index] // get cardview imageview from list with index
-        cardView.setOnLongClickListener(null) // prevents bugs e.g. clicked on a slot with index 5 while team has only 4 pokemon
+        val (cardView, _) = cvIvPair[index] // get cardview imageview from list with index
+        cardView.setOnLongClickListener(null)
         cardView.setOnClickListener(null)
         cardView.visibility = View.INVISIBLE
     }
@@ -483,8 +492,7 @@ class TeamBuilderFragment : Fragment() {
             if (teamPokemon != null) {
                 displaySlotOnIndex(index, teamPokemon) // shows image of every teampokemon
                 if (index == teamIndex) {
-                    // pokemon id = 0 means it is an empty slot so we dont need to get data
-                    // load data for the chosen pokemon (teamIndex)
+
                     loadDataOfSelectedSlot()
                     // to display selected attacks
                     val attackList = listOf(
@@ -493,7 +501,7 @@ class TeamBuilderFragment : Fragment() {
                         teamPokemon.attackThree,
                         teamPokemon.attackFour
                     )
-                    if (attackList.any { it != null }) pokeViewModel.setSelectedAttacks(attackList)
+                    if (attackList.any { it != null }) pokeViewModel.setSelectedAttacks(attackList.filterNotNull())
                 }
             } else {
                 // hide slot when null
@@ -503,15 +511,21 @@ class TeamBuilderFragment : Fragment() {
     }
 
     /** Displays every chosen Attack, function will be invoked from observer */
-    private fun showSelectedAttacks() {
-        selectedAttacks?.forEachIndexed { index, attacksData ->
-            // get card and textview from the list with the index
-            val (cardView, textView) = attacksCardList[index]
-            if (attacksData != null) {
+    private fun showSelectedAttacks(selectedAttacks: List<AttacksData>) {
+        Log.d("selectedAttacks", selectedAttacks.toString())
+        if (selectedAttacks.isEmpty()) {
+            binding.incChosenAttacks.root.visibility = View.GONE
+            return
+        }
+        // a pokemon can have up to 4 attacks
+        for (i in 0..3) {
+            val (cardView, textView) = attacksCardList[i]
+            val attack = selectedAttacks.getOrNull(i)
+            if (attack != null) {
                 binding.incChosenAttacks.root.visibility = View.VISIBLE
                 cardView.visibility = View.VISIBLE
-                textView.text = attacksData.name
-                val colorRes = typeColorMap[attacksData.typeId]?.first
+                textView.text = attack.name
+                val colorRes = typeColorMap[attack.typeId]?.first
                     ?: -1 // map holds type colors for each pokemon type
                 if (colorRes != -1) {
                     val color = ContextCompat.getColor(requireContext(), colorRes)
@@ -521,8 +535,7 @@ class TeamBuilderFragment : Fragment() {
                 cardView.visibility = View.GONE
             }
         }
-        // hide the layout if there is no attack selected
-        if (selectedAttacks == null) binding.incChosenAttacks.root.visibility = View.GONE
+
     }
 
     //endregion
@@ -545,7 +558,7 @@ class TeamBuilderFragment : Fragment() {
         }
     }
 
-    private fun showUnsavedChangesDialog() {
+    fun showUnsavedChangesDialog() {
         // just show reminder dialogs if there are any data
         if (pokeViewModel.pokemonTeam.value?.pokemons?.any { it != null } == true) {
             if (!isEditTeamMode) {
@@ -660,61 +673,9 @@ class TeamBuilderFragment : Fragment() {
     //endregion
 
     //region text watcher behaviour
-    /** Function sets slider ranges and edit text behaviour for ev/iv and level edit texts */
-    private fun setTextWatchers() {
 
-        sliderEditTextMap.values.forEach { slider -> // set ranges
-            slider.valueFrom = 0f
-            slider.valueTo = 252f
-            slider.stepSize = 1f
-        }
 
-        sliderEditTextMap.keys.forEach { editText ->
-            editText?.let {
-                addTextWatcher( // sets the maximum values the user can enter
-                    editText = it,
-                    maxValue = 252,
-                    sliderEditTextMap = sliderEditTextMap, // sliders are connected to ev edit texts so we need to pass them too
-                    isEvWatcher = true // addTextWatcher will perform differently for ev edit texts
-                )
-            }
-        }
-        // Iv's maximum value is 31 for each base stat
-        tvEditTextMapIV.values.forEach { editText ->
-            editText?.let {
-                addTextWatcher(
-                    editText = it,
-                    maxValue = 31,
-                    isEvWatcher = false
-                )
-            }
-        }
-        // Level-EditText behavior, can be between 1 and 100
-        addLevelTextWatcher(binding.tilPokemonLevel.editText)
-
-        // adjust slider behavior and connect their value changes to editTexts
-        sliderEditTextMap.forEach { (editText, slider) ->
-            slider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-                override fun onStartTrackingTouch(slider: Slider) {}
-                override fun onStopTrackingTouch(slider: Slider) {
-                    // when slider is stopped from user get sum of all ev's and update the value
-                    //  of the slider if e.g. only 4 evs are left and the slider is on a higher value
-                    val editTexts = sliderEditTextMap.keys
-                    val totalEvsExcludingCurrent = editTexts.sumOf {
-                        it?.text.toString().toIntOrNull() ?: 0
-                    } - (editText?.text.toString().toIntOrNull() ?: 0)
-                    // maximum value that can be assigned to the actual slider
-                    val remainingEvs = maxEvs - totalEvsExcludingCurrent
-                    val correctValue =
-                        slider.value.toInt().coerceAtMost(remainingEvs.coerceAtMost(252))
-                    slider.value = correctValue.toFloat()
-                    editText?.setText(correctValue.toString())
-                }
-            })
-        }
-    }
-
-    /**
+ /*   *//**
      * Adds a textWatcher to the editText that is given in as parameter that corrects numbers
      * higher than the maxValue Parameter to give them a maximal number to use, if 'isEvWatcher'
      * is true and sliderEditTextMap not null helper function is called to update the ev texts correctly
@@ -723,8 +684,8 @@ class TeamBuilderFragment : Fragment() {
      * @param maxValue the highest number the editText can display
      * @param sliderEditTextMap map of EditTexts to their relating slider, optional (only given in for ev edit texts)
      * @param isEvWatcher if true helper function 'updateEvs' is called and the slider is corrected if the value is too high
-     */
-    private fun addTextWatcher(
+     *//*
+    fun addTextWatcher(
         editText: EditText,
         maxValue: Int,
         sliderEditTextMap: Map<EditText?, Slider>? = null,
@@ -755,9 +716,9 @@ class TeamBuilderFragment : Fragment() {
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
             }
         })
-    }
+    }*/
 
-    private fun addLevelTextWatcher(
+    /*private fun addLevelTextWatcher(
         levelEditText: EditText?
     ) {
         val maxLevel = 100
@@ -785,16 +746,16 @@ class TeamBuilderFragment : Fragment() {
                 }
             }
         }
-    }
+    }*/
 
-    /**
+/*    *//**
      * Handles the correct usage of EV's (explanation: Every Pokemon can have up to 508 Ev's
      * distributed over all values, e.g. 252 in attack, 252 in hp and 4 in defense)
      * if the totalEVs Value is higher than 508 it will be corrected (e.g. if you enter 80 while you have just 50 points
      * left, it will be corrected to 50), also updates the slider to that value
      *
      * @param currentEditText the editText that was changed before
-     * @param sliderEditTextMap map of all edit texts and their relating slider*/
+     * @param sliderEditTextMap map of all edit texts and their relating slider*//*
 
     fun handleEvInputs(currentEditText: EditText, sliderEditTextMap: Map<EditText?, Slider>) {
         val editTexts = sliderEditTextMap.keys.toList()
@@ -815,14 +776,18 @@ class TeamBuilderFragment : Fragment() {
         }
         // update the text
         assignedEvs = editTexts.sumOf { it?.text.toString().toIntOrNull() ?: 0 }
-        val text = getString(R.string.remaining_ev_s_508, (maxEvs - assignedEvs))
-        binding.includeEvIvWindow.tvEvIvLeft.text = text
+        updateEvLeftTextView()
         // handles the condition of every slider (activated or not if e.g. 508 points are already assigned)
         sliderEditTextMap.forEach { (editText, slider) ->
             val isSliderValueZero = (editText?.text.toString().toIntOrNull() ?: 0) == 0
             // disables all sliders with value '0' (or empty) , if 508 points are assigned
             slider.isEnabled = !(assignedEvs >= maxEvs && isSliderValueZero)
         }
+    }*/
+
+    private fun updateEvLeftTextView(maxEvs: Int, assignedEvs: Int) {
+        val text = getString(R.string.remaining_ev_s_508, (maxEvs - assignedEvs))
+        binding.includeEvIvWindow.tvEvIvLeft.text = text
     }
 
     private fun getCalculatedValueAndSetToTV(index: Int) {
@@ -842,120 +807,4 @@ class TeamBuilderFragment : Fragment() {
         textView.text = if (calcedVal == 0) "" else calcedVal.toString()
     }
     //endregion
-
-    // region maps
-    private fun createMaps() {
-        // map of editTexts to their relating slider, each one has a range of 0-252
-        val evIvBinding = binding.includeEvIvWindow
-        sliderEditTextMap = linkedMapOf(
-            evIvBinding.tilHpEvs.editText to evIvBinding.slider,
-            evIvBinding.tilAtkEvs.editText to evIvBinding.sliderAtk,
-            evIvBinding.tilDefEvs.editText to evIvBinding.sliderDef,
-            evIvBinding.tilSpAtkEvs.editText to evIvBinding.sliderSpAtk,
-            evIvBinding.tilSpDefEvs.editText to evIvBinding.sliderSpDef,
-            evIvBinding.tilInitEvs.editText to evIvBinding.sliderInit,
-        )
-        // ex texts
-        tvEditTextMapEV = linkedMapOf(
-            evIvBinding.tvHpShort to evIvBinding.tilHpEvs.editText,
-            evIvBinding.tvAttack to evIvBinding.tilAtkEvs.editText,
-            evIvBinding.tvDefense to evIvBinding.tilDefEvs.editText,
-            evIvBinding.tvSpAttack to evIvBinding.tilSpAtkEvs.editText,
-            evIvBinding.tvSpDefense to evIvBinding.tilSpDefEvs.editText,
-            evIvBinding.tvInit to evIvBinding.tilInitEvs.editText,
-        )
-        // iv texts
-        tvEditTextMapIV = linkedMapOf(
-            evIvBinding.tvHpShort to evIvBinding.tilHpIvs.editText,
-            evIvBinding.tvAttack to evIvBinding.tilAtkIvs.editText,
-            evIvBinding.tvDefense to evIvBinding.tilDefIvs.editText,
-            evIvBinding.tvSpAttack to evIvBinding.tilSpAtkIvs.editText,
-            evIvBinding.tvSpDefense to evIvBinding.tilSpDefIvs.editText,
-            evIvBinding.tvInit to evIvBinding.tilInitIvs.editText
-        )
-        // slot pokemon below searchbar
-        cvIvPair = listOf(
-            binding.teamSlots.cvPokemon1 to binding.teamSlots.ivChosenPokemon1,
-            binding.teamSlots.cvPokemon2 to binding.teamSlots.ivChosenPokemon2,
-            binding.teamSlots.cvPokemon3 to binding.teamSlots.ivChosenPokemon3,
-            binding.teamSlots.cvPokemon4 to binding.teamSlots.ivChosenPokemon4,
-            binding.teamSlots.cvPokemon5 to binding.teamSlots.ivChosenPokemon5,
-            binding.teamSlots.cvPokemon6 to binding.teamSlots.ivChosenPokemon6
-        )
-        calculationMap = listOf(
-            Triple(
-                evIvBinding.tilHpIvs.editText,
-                evIvBinding.tilHpEvs.editText,
-                evIvBinding.progressBar
-            ),
-            Triple(
-                evIvBinding.tilAtkIvs.editText,
-                evIvBinding.tilAtkEvs.editText,
-                evIvBinding.progressBarAtk
-            ),
-            Triple(
-                evIvBinding.tilDefIvs.editText,
-                evIvBinding.tilDefEvs.editText,
-                evIvBinding.progressBarDef
-            ),
-            Triple(
-                evIvBinding.tilSpAtkIvs.editText,
-                evIvBinding.tilSpAtkEvs.editText,
-                evIvBinding.progressBarSpAtk
-            ),
-            Triple(
-                evIvBinding.tilSpDefIvs.editText,
-                evIvBinding.tilSpDefEvs.editText,
-                evIvBinding.progressBarSpDef
-            ),
-            Triple(
-                evIvBinding.tilInitIvs.editText,
-                evIvBinding.tilInitEvs.editText,
-                evIvBinding.progressBarInit
-            ),
-        )
-        resultValuesList = listOf(
-            evIvBinding.tvHpVal,
-            evIvBinding.tvAtkVal,
-            evIvBinding.tvDefVal,
-            evIvBinding.tvSpAtkVal,
-            evIvBinding.tvSpDefVal,
-            evIvBinding.tvInitVal
-        )
-        progressBarTVList = listOf(
-            evIvBinding.progressBar to evIvBinding.tvHpBaseVal,
-            evIvBinding.progressBarAtk to evIvBinding.tvAtkBaseVal,
-            evIvBinding.progressBarDef to evIvBinding.tvDefBaseVal,
-            evIvBinding.progressBarSpAtk to evIvBinding.tvSpAtkBaseVal,
-            evIvBinding.progressBarSpDef to evIvBinding.tvSpDefBaseVal,
-            evIvBinding.progressBarInit to evIvBinding.tvInitBaseVal
-        )
-        val attackBarBinding = binding.incChosenAttacks
-        attacksCardList = listOf(
-            attackBarBinding.cvAttackOne to attackBarBinding.tvAttackOne,
-            attackBarBinding.cvAttackTwo to attackBarBinding.tvAttackTwo,
-            attackBarBinding.cvAttackThree to attackBarBinding.tvAttackThree,
-            attackBarBinding.cvAttackFour to attackBarBinding.tvAttackFour,
-        )
-
-
-    }//endregion
-
-    private fun overrideNavigationLogic() {
-
-        // override back-navigation (physical)
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Hier Ihre Logik, was passieren soll, wenn der Zurück-Button gedrückt wird
-                showUnsavedChangesDialog()
-            }
-        }
-        // override backpressed dispatcher and toolbar navigation to warn the user about losing data
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
-        (activity as? AppCompatActivity)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        (activity as? AppCompatActivity)?.findViewById<MaterialToolbar>(R.id.mainToolbar)
-            ?.setNavigationOnClickListener {
-                showUnsavedChangesDialog()
-            }
-    }
 }
