@@ -63,13 +63,13 @@ interface PokeDatabaseDao {
         val abilityInfo = abilitiesToJoins.map {
             getAbility(it.abilityId)
         }
-        val abilityNames = abilitiesToJoins.mapNotNull {
+        val abilityNames = abilitiesToJoins.map {
             getAbilityName(it.abilityId, languageId)
         }
         val flavorTexts = abilitiesToJoins.flatMap {
             getAbilityFlavorTexts(it.abilityId)
         }
-        val effectTexts = abilitiesToJoins.mapNotNull {
+        val effectTexts = abilitiesToJoins.map {
             getAbilityEffectText(it.abilityId)
         }
         val pokedexEntries = getPokedexEntries(specyInfo.id)
