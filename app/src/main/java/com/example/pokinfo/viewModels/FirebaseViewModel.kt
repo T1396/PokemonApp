@@ -1,18 +1,25 @@
 package com.example.pokinfo.viewModels
 
 import android.app.Application
-import android.content.Intent
+import android.credentials.GetCredentialException
 import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.R
 import com.example.pokinfo.data.models.Profile
 import com.example.pokinfo.data.models.firebase.PokemonTeam
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -22,6 +29,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.launch
 
 
 class FirebaseViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -41,9 +49,6 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
 
     private lateinit var profileRef: DocumentReference
 
-    private val _signInResult: MutableLiveData<Intent?> = MutableLiveData()
-    val signInResult: LiveData<Intent?>
-        get() = _signInResult
 
     fun isUserLoggedIn(): Boolean {
         val user = auth.currentUser
@@ -54,57 +59,80 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
     val messageSender: LiveData<Int>
         get() = _messageSender
 
+    private var responseJson: String = ""
+    private val webClientId = BuildConfig.webClientId
+
 
     init {
         setupUserEnv()
     }
 
     private fun setupUserEnv() {
-
         _user.value = auth.currentUser
         auth.currentUser?.let { firebaseUser ->
             profileRef = firestore.collection("userData").document(firebaseUser.uid)
         }
     }
 
-    fun startGoogleSignIn(string: String) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(string)
-            .requestEmail()
-            .build()
-        val googleSignInClient = GoogleSignIn.getClient(application, gso)
-        googleSignInClient.signOut()
-        val signInIntent = googleSignInClient.signInIntent
-        _signInResult.value = signInIntent
-    }
-
-    fun handleGoogleSignInResult(data: Intent?) {
-        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            firebaseAuthWithGoogle(account.idToken)
-        } catch (e: ApiException) {
-            _errorMessage.value = "Google sign in failed: ${e.statusCode}"
-        }
-    }
-
-    private fun firebaseAuthWithGoogle(idToken: String?) {
-        if (idToken == null) {
-            _errorMessage.value = "Google ID Token is missing"
-            return
-        }
+    private fun signInGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
                     setupUserEnv()
-                    updateProfile()
+                    if (isNewUser) updateProfile()
                 } else {
-                    _errorMessage.value = "Authentication Failed."
+                    _errorMessage.postValue(task.exception?.message)
+                    Log.d("FirebaseAuthGoogle", task.exception?.message.toString())
                 }
             }
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    fun setUpGoogleSignIn(filter: Boolean) {
+        val credentialManager = CredentialManager.create(application)
+        val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(filter)
+            .setServerClientId(webClientId)
+            .build()
+
+        val request: GetCredentialRequest = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        viewModelScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = application
+                )
+                handleSignIn(result)
+            } catch (e: GetCredentialException) {
+                // error
+                Log.e("FirebaseViewModel", "Get Credential Error", e)
+                _messageSender.postValue(R.string.credential_error)
+            } catch (e: Exception) {
+                Log.d("FirebaseViewModel", "Cancelled credential", e)
+            }
+
+        }
+    }
+
+    private fun handleSignIn(result: GetCredentialResponse) {
+        val credential = result.credential
+        try {
+            // Use googleIdTokenCredential and extract id to validate and
+            // authenticate on your server
+            val googleIdTokenCredential = GoogleIdTokenCredential
+                .createFrom(credential.data)
+            val googleIdToken = googleIdTokenCredential.idToken
+            signInGoogle(googleIdToken)
+        } catch (e: GoogleIdTokenParsingException) {
+            Log.e("FirebaseViewModel", "Received an invalid google id token response", e)
+        }
+    }
 
     //region firebase authentication and image update
 
@@ -122,21 +150,14 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
     fun logout() {
         auth.signOut()
         setupUserEnv()
-        val googleSignInClient = GoogleSignIn.getClient(
-            application,
-            GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-        googleSignInClient.signOut()
-        _signInResult.value = null
     }
 
-    fun register(userName: String, email: String, password: String) {
+    fun register(email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
             if (it.isSuccessful) {
                 //User wurde erstellt
                 setupUserEnv()
-                val newProfile = Profile(userName, email, Timestamp.now())
-                profileRef.set(newProfile)
+                updateProfile()
             } else {
                 _errorMessage.value = it.exception?.message
             }
@@ -165,7 +186,11 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
                     onComplete(finalImageUrl.result)
                 }
             } else {
-                Log.d("FirebaseViewModel", "Error while upload new profile picture into storage", it.exception)
+                Log.d(
+                    "FirebaseViewModel",
+                    "Error while upload new profile picture into storage",
+                    it.exception
+                )
             }
         }
     }
@@ -246,7 +271,8 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
 
     fun updateTeam(pokemonTeam: PokemonTeam) {
         try {
-            val teamDocumentReference = profileRef.collection("createdTeams").document(pokemonTeam.id)
+            val teamDocumentReference =
+                profileRef.collection("createdTeams").document(pokemonTeam.id)
             teamDocumentReference.update(pokemonTeam.toHashMap())
             _messageSender.value = R.string.success_update
         } catch (e: Exception) {

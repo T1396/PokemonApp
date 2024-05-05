@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.loginRegister
 
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.BuildConfig
@@ -33,6 +35,7 @@ class RegisterFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -58,7 +61,6 @@ class RegisterFragment : Fragment() {
 
         binding.btnRegister.setOnClickListener {
             viewModel.register(
-                binding.tilUserName.editText?.text.toString(),
                 binding.tilEmail.editText?.text.toString(),
                 binding.tilPassword.editText?.text.toString(),
             )
@@ -69,7 +71,7 @@ class RegisterFragment : Fragment() {
         }
 
         binding.btnRegisterGoogle.setOnClickListener {
-            viewModel.startGoogleSignIn(webClientId)
+            viewModel.setUpGoogleSignIn(false)
         }
 
     }

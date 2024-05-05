@@ -1,6 +1,5 @@
 package com.example.pokinfo
 
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
@@ -36,7 +35,6 @@ import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: FirebaseViewModel
@@ -44,9 +42,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var attacksViewModel: AttacksViewModel
     private lateinit var abilitiesViewModel: AbilityViewModel
 
-    private var isInitialized by sharedPreferences("isInitialized", false)
-    private var languageId by sharedPreferences("languageId", 9)
 
+    private var isInitialized by sharedPreferences("isInitialized", false)
     private val fabSaveIconRes = R.drawable.baseline_save_as_24
     private val fabAddIconRes = R.drawable.baseline_add_24
 
@@ -61,14 +58,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    private val googleSignInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.handleGoogleSignInResult(result.data)
-        }
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,11 +68,11 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[FirebaseViewModel::class.java]
         pokeViewModel =
-            ViewModelProvider(this)[PokeViewModel::class.java].apply { setLangId(languageId) }
+            ViewModelProvider(this)[PokeViewModel::class.java]
         attacksViewModel =
-            ViewModelProvider(this)[AttacksViewModel::class.java].apply { setLangId(languageId) }
+            ViewModelProvider(this)[AttacksViewModel::class.java]
         abilitiesViewModel =
-            ViewModelProvider(this)[AbilityViewModel::class.java].apply { setLangId(languageId) }
+            ViewModelProvider(this)[AbilityViewModel::class.java]
 
         setSupportActionBar(binding.appBarMain.mainToolbar)
 
@@ -139,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
             }
+
             override fun onDrawerOpened(drawerView: View) {
                 if (!viewModel.isUserLoggedIn()) {
                     Snackbar.make(
@@ -150,8 +140,10 @@ class MainActivity : AppCompatActivity() {
                     drawerLayout.closeDrawer(drawerView)
                 }
             }
+
             override fun onDrawerClosed(drawerView: View) {
             }
+
             override fun onDrawerStateChanged(newState: Int) {
             }
         })
@@ -199,25 +191,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.signInResult.observe(this) { signInIntent ->
-            if (signInIntent != null) googleSignInLauncher.launch(signInIntent) // google login/sign in
-        }
 
-        onBackPressedDispatcher.addCallback(this, object :
-            OnBackPressedCallback(true) {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (viewModel.user.value != null) {
                     when (navController.currentDestination?.id) {
-                        R.id.nav_home -> finish()
-                        R.id.nav_attacks -> finish()
-                        R.id.nav_abilities -> finish()
-                        R.id.nav_teams_and_builder -> finish()
+                        R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities, R.id.nav_teams_and_builder -> finish()
                         else -> navController.navigateUp()
                     }
                 }
             }
         })
-
     }
 
     /** dialog to update profile pic */
@@ -266,7 +250,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun restoreDrawerNavigation(navView: NavigationView) {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        findViewById<MaterialToolbar>(R.id.mainToolbar).setupWithNavController(navController, appBarConfiguration)
+        findViewById<MaterialToolbar>(R.id.mainToolbar).setupWithNavController(
+            navController,
+            appBarConfiguration
+        )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }

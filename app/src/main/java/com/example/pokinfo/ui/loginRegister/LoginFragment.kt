@@ -1,16 +1,17 @@
 package com.example.pokinfo.ui.loginRegister
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.example.pokinfo.BuildConfig
-import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentLoginBinding
+import com.example.pokinfo.viewModels.FirebaseViewModel
 
 class LoginFragment : Fragment() {
 
@@ -20,8 +21,6 @@ class LoginFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
     private val viewModel: FirebaseViewModel by activityViewModels()
-    private val webClientId = BuildConfig.webClientId
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +31,7 @@ class LoginFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -43,7 +43,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            viewModel.startGoogleSignIn(webClientId)
+            viewModel.setUpGoogleSignIn(true)
         }
 
         binding.tvRegister.setOnClickListener {
