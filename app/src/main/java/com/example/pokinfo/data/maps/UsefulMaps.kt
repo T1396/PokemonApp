@@ -43,37 +43,6 @@ val imageTypeName = mapOf(
     "front_transparent" to "Front transparent",
     "front_shiny_transparent" to "Front shiny transparent"
 )
-
-val versionGroupNames = mapOf(
-    1 to "Red / Blue",
-    2 to "Yellow",
-    3 to "Gold / Silver",
-    4 to "Crystal",
-    5 to "Ruby / Sapphire",
-    6 to "Emerald",
-    7 to "Firered / Leafgreen",
-    8 to "Diamond / Pearl",
-    9 to "Platinum",
-    10 to "Heartgold / Soulsilver",
-    11 to "Black / White",
-    12 to "Collosseum",
-    13 to "XD (Gale of Darkness)",
-    14 to "Black / White 2",
-    15 to "X / Y",
-    16 to "Omega Ruby / Alpha Sapphire",
-    17 to "Sun / Moon",
-    18 to "Ultra Sun / Moon",
-    19 to "Lets go Pikachu/Eevee",
-    20 to "Sword/Shield",
-    21 to "The Isle of Armor",
-    22 to "The Crown Tundra",
-    23 to "Brilliant Diamond / Shining Pearl",
-    24 to "Legends-Arceus",
-    25 to "Scarlet / Violet",
-    26 to "The Teal Mask",
-    27 to "The Indigo Disk",
-)
-
 //endregion
 
 val languageMap = mapOf(

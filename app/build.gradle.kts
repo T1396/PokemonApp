@@ -25,9 +25,11 @@ android {
         val keystoreFile = project.rootProject.file("apikeys.properties")
         val properties = Properties()
         properties.load(keystoreFile.inputStream())
+        val localApiUrl = properties.getProperty("API_URL_LOCAL")
         val localGraphQLUrl = properties.getProperty("GRAPH_URL_LOCAL")
         val webClientId = properties.getProperty("WEB_CLIENT_ID")
 
+        buildConfigField("String", "localApiUrl", localApiUrl)
         buildConfigField("String", "localGraphqlUrl", localGraphQLUrl)
         buildConfigField("String", "webClientId", webClientId)
     }
@@ -86,8 +88,15 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation(("androidx.legacy:legacy-support-v4:1.0.0"))
 
+    // Google Auth Id ...
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    // Biometric
+    implementation("androidx.biometric:biometric:1.1.0")
+
+
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation ("com.google.android.gms:play-services-auth-api-phone:18.0.2") // Überprüfen Sie die genaue Version
     implementation("com.google.firebase:firebase-firestore:24.11.1")
     implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
