@@ -10,7 +10,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
-import com.example.pokinfo.data.util.AbilityFilter
+import com.example.pokinfo.data.enums.AbilityFilter
 import com.example.pokinfo.databinding.FragmentAbilitiesListBinding
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AbilityViewModel
@@ -77,7 +77,6 @@ class AbilitiesListFragment : Fragment() {
     }
 
 
-
     private fun createFilterChips(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) { // only create filter chips if no chips are there (if navigated back for example)
             val list = AbilityFilter.entries
@@ -110,7 +109,6 @@ class AbilitiesListFragment : Fragment() {
         )
         skeleton.showSkeleton()
     }
-
 
 
 }

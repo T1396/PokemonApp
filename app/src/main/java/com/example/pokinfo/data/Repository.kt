@@ -1,5 +1,6 @@
 package com.example.pokinfo.data
 
+import android.support.annotation.StringRes
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,7 @@ import com.example.pokinfo.data.models.database.type.PokemonTypeName
 import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
 import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
 import com.example.pokinfo.data.remote.PokeApi
+import com.example.pokinfo.data.util.UIState
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -47,9 +49,21 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
     val pokemonList: LiveData<List<PokemonForList>>
         get() = _pokemonList
 
+    suspend fun getVersionNames (languageId: Int): List<VersionNames> {
+        return database.pokeDao.getVersionNames(languageId)
+    }
+
+    suspend fun getLanguageNames(): List<LanguageNames> {
+        return database.pokeDao.getLanguageNames()
+    }
+
+    suspend fun getPokemonTypeNames(languageId: Int): List<PokemonTypeName> {
+        return database.pokeTypeDao.getTypeNames(languageId)
+    }
+
     // home-detail
-    private var _clickedPokemon = MutableLiveData<PokemonData>()
-    val clickedPokemon: LiveData<PokemonData>
+    private var _clickedPokemon = MutableLiveData<UIState<PokemonData>>()
+    val clickedPokemon: LiveData<UIState<PokemonData>>
         get() = _clickedPokemon
 
     // all pokemon for teambuilder + forms of pokemon
@@ -131,35 +145,6 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-
-    suspend fun getLanguageNames(): List<LanguageNames> {
-        return try {
-            val returnData = database.pokeDao.getLanguageNames()
-            returnData
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to load LanguageNames from Database")
-            emptyList()
-        }
-    }
-
-    suspend fun getVersionNames(languageId: Int): List<VersionNames> {
-        return try {
-            database.pokeDao.getVersionNames(languageId)
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to load VersionNames from Database", e)
-            emptyList()
-        }
-    }
-
-    suspend fun getPokemonTypeNames(languageId: Int): List<PokemonTypeName> {
-        return try {
-            database.pokeTypeDao.getTypeName(languageId)
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to load type names from Database", e)
-            emptyList()
-        }
-    }
-
     //endregion
 
 
@@ -181,19 +166,18 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    suspend fun postSinglePokemonDataFromDb(
+    suspend fun getPokemonDataFromDatabase(
         pokemonId: Int,
         languageId: Int,
-        onLoadFinished: (Boolean) -> Unit
-    ) {
-        try {
+        @StringRes errorMessageRes: Int,
+    ): UIState<PokemonData>{
+        return try {
             val pokemonData = database.pokeDao.getInfosForOnePokemon(pokemonId, languageId)
-            _clickedPokemon.postValue(pokemonData)
-            onLoadFinished(true)
+            UIState.Success(pokemonData)
 
         } catch (e: Exception) {
             Log.d(TAG, "Failed to fetch pokemon data from Database", e)
-            onLoadFinished(false)
+            UIState.Error(e, errorMessageRes)
         }
 
     }
@@ -269,7 +253,7 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
 
     suspend fun loadLanguageAndVersionNames(languageId: Int) {
         try {
-            val response = api.retrofitGraphService.sendLanguageNamesQuery(languageId)
+            val response = api.retrofitGraphService.sendLanguageVersionNameQuery(languageId)
             val data = response?.languageNames?.map {
                 LanguageNames(
                     id = it.id,

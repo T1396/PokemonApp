@@ -10,19 +10,49 @@ import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
 import com.example.pokinfo.adapter.abilities.AbilityInfo
 import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.util.AbilityFilter
+import com.example.pokinfo.data.enums.AbilityFilter
+import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
+import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
 class AbilityViewModel(application: Application) : AndroidViewModel(application) {
-    private var languageId by Delegates.notNull<Int>()
+    private val repository = RepositoryProvider.provideRepository(application)
+
+    private var languageId by application.sharedPreferences("languageId", 9)
+
+    var versionNames: List<VersionNames> = emptyList()
+        private set
+    var languageNames: List<LanguageNames> = emptyList()
+        private set
+
+    var pokemonTypeNames: List<PokemonTypeName> = emptyList()
+        private set
+
+
+    init {
+        loadGenericData()
+    }
+
+    private fun loadGenericData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            versionNames = repository.getVersionNames(languageId)
+            languageNames = repository.getLanguageNames()
+            pokemonTypeNames = repository.getPokemonTypeNames(languageId)
+        }
+    }
+
     fun setLangId(languageId: Int) {
         this.languageId = languageId
     }
 
-    private val repository = RepositoryProvider.provideRepository(application)
+    fun getLangId(): Int {
+        return languageId
+    }
 
     private val _allAbilities = MutableLiveData<List<AbilityInfo>>()
     private val abilityMapper: (AllAbilitiesQuery.Data?) -> List<AbilityInfo> = { response ->
@@ -59,9 +89,9 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) {
             val abilitiesList = repository.loadAllAbilities(languageId)
 
-            withContext(Dispatchers.Main) {
-                _allAbilities.value = (abilityMapper.invoke(abilitiesList))
-                _filteredAbilityList.value = (_allAbilities.value)
+            viewModelScope.launch(Dispatchers.Main) {
+                _allAbilities.value = abilityMapper.invoke(abilitiesList)
+                _filteredAbilityList.value = _allAbilities.value
             }
         }
     }

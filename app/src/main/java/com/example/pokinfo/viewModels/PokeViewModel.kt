@@ -1,7 +1,6 @@
 package com.example.pokinfo.viewModels
 
 import android.app.Application
-import android.content.Context
 import android.support.annotation.StringRes
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -22,7 +21,6 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.StatValues
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
 import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
 import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
 import com.example.pokinfo.data.models.firebase.AttacksData
@@ -30,30 +28,50 @@ import com.example.pokinfo.data.models.firebase.EvIvData
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.data.models.firebase.TeamPokemon
 import com.example.pokinfo.data.models.fragmentDataclasses.TeamBuilderData
-import com.example.pokinfo.data.util.PokemonSortFilter
-import com.example.pokinfo.data.util.PokemonSortFilterState
+import com.example.pokinfo.data.enums.PokemonSortFilter
+import com.example.pokinfo.data.enums.PokemonSortFilterState
+import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.util.UIState
 import com.example.pokinfo.data.util.sharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
-class PokeViewModel(
-    private val application: Application
-) : AndroidViewModel(application) {
+class PokeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RepositoryProvider.provideRepository(application)
 
     private var isInitialized by application.sharedPreferences("isInitialized", false)
 
+    private var languageId by application.sharedPreferences("languageId", 9)
 
-    private var languageId by Delegates.notNull<Int>()
-    fun setLangId(languageId: Int) {
-        this.languageId = languageId
+    var versionNames: List<VersionNames> = emptyList()
+        private set
+    var languageNames: List<LanguageNames> = emptyList()
+        private set
+
+    var pokemonTypeNames: List<PokemonTypeName> = emptyList()
+        private set
+
+    init {
+        loadGenericData()
     }
 
+    private fun loadGenericData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            versionNames = repository.getVersionNames(languageId)
+            languageNames = repository.getLanguageNames()
+            pokemonTypeNames = repository.getPokemonTypeNames(languageId)
+        }
+    }
+
+
+    fun setLangId(languageId: Int) {
+        this.languageId = languageId
+        loadGenericData()
+    }
     fun getLangId(): Int {
         return languageId
     }
@@ -61,33 +79,6 @@ class PokeViewModel(
     private val _snackBarMessageSender = MutableLiveData<Int>()
     val snackBarMessageSender: LiveData<Int>
         get() = _snackBarMessageSender
-
-    private val _pokemonTypeNames = MutableLiveData<List<PokemonTypeName>>()
-    val pokemonTypeNames: LiveData<List<PokemonTypeName>>
-        get() = _pokemonTypeNames
-
-    private val _languageNames = MutableLiveData<List<LanguageNames>>()
-    val languageNames: LiveData<List<LanguageNames>>
-        get() = _languageNames
-
-    private val _versionNames = MutableLiveData<List<VersionNames>>()
-    val versionNames: LiveData<List<VersionNames>>
-        get() = _versionNames
-
-    init {
-        initializeGenericData()
-    }
-
-    private fun initializeGenericData() {
-        if (isInitialized) {
-            viewModelScope.launch(Dispatchers.IO) {
-                getPokemonTypeNames()
-                getLanguageNames()
-                getVersionNames()
-            }
-        }
-    }
-
 
 
     /** Gets some important Data, List of all Pokemon, Language Names and Type Details
@@ -111,7 +102,6 @@ class PokeViewModel(
             val isDone = repository.insertAllPokemon(pokemonList)
             if (isDone) {
                 isInitialized = true // will be saved into shared Prefs through property delegation
-                initializeGenericData() // loads type names language names etc once data is initialized
             } else {
                 // when something failed while inserting pokemon to database
                 _snackBarMessageSender.postValue(R.string.error_fetching_data)
@@ -122,8 +112,11 @@ class PokeViewModel(
     /** loads for a specific pokemon species all details of his variations (forms) */
     fun loadFormDetails(callback: (List<PokemonForList>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val forms = _clickedPokemon.value?.formData
-            val formPokemonIds = forms?.map { it.pokemonId } ?: emptyList()
+            val forms = when (val pkData = _clickedPokemon.value) {
+                is UIState.Success -> pkData.data.formData
+                else -> return@launch
+            }
+            val formPokemonIds = forms.map { it.pokemonId }
             val formList = repository.getPokemonTableEntries(formPokemonIds)
             callback(formList)
         }
@@ -138,22 +131,6 @@ class PokeViewModel(
         }
     }
 
-    /** Gets the languageNames of all Pokemon Languages, e.g. in English -> English, German, Czech ...*/
-    private fun getLanguageNames() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val languageNames = repository.getLanguageNames()
-            _languageNames.postValue(languageNames)
-        }
-    }
-
-    /** Gets all Version Names of the Pokemon Games */
-    private fun getVersionNames() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val versionNames = repository.getVersionNames(languageId)
-            _versionNames.postValue(versionNames)
-        }
-    }
-
     fun getPokemonImagesWithNames(pokemonId: Int, callback: (List<Pair<Int, String>>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val list = repository.getPokemonImagesWithNameRes(pokemonId)
@@ -161,15 +138,6 @@ class PokeViewModel(
         }
     }
 
-    /** Gets the Names of all Pokemon Types of the Database */
-    private fun getPokemonTypeNames() {
-        if (!_pokemonTypeNames.isInitialized) {
-            viewModelScope.launch(Dispatchers.IO) {
-                val typeName = repository.getPokemonTypeNames(languageId)
-                _pokemonTypeNames.postValue(typeName)
-            }
-        }
-    }
 
 
     /** Gets Language and Version names together */
@@ -224,8 +192,11 @@ class PokeViewModel(
 
     /** Returns translated name of a pokemon */
     fun getTranslatedName(): String {
-        val name =
-            _clickedPokemon.value?.specyNames?.find { it.languageId == this.languageId }?.name
+        val specyNames = when (val pkData = _clickedPokemon.value) {
+            is UIState.Success -> pkData.data.specyNames
+            else -> return "Error"
+        }
+        val name = specyNames.find { it.languageId == this.languageId }?.name
         return name ?: ""
     }
 
@@ -301,44 +272,50 @@ class PokeViewModel(
 
     //region home detail
 
-    private val _clickedPokemon = repository.clickedPokemon
-    val clickedPokemon: LiveData<PokemonData>
+    private val _clickedPokemon = MutableLiveData<UIState<PokemonData>>()
+    val clickedPokemon: LiveData<UIState<PokemonData>>
         get() = _clickedPokemon
+
+    private fun pokemonAlreadyLoaded(pokemonId: Int) : Boolean {
+        return when (val currentState = _clickedPokemon.value) {
+            is UIState.Success -> currentState.data.pokemon.id == pokemonId
+            else -> false
+        }
+    }
 
     /**
      * Gets Data of a single Pokemon ( probably when clicked ) from the database or per apicall
      *
      * @param pokemonId id of the pokemon which was clicked
      * @param errorMessageRes String Ressource that holds the error message for failure
-     * @param onSuccessfullyLoaded callback function
      */
     fun getSinglePokemonData(
         pokemonId: Int,
         @StringRes errorMessageRes: Int,
-        onSuccessfullyLoaded: () -> Unit
+        optionalCallback: (() -> Unit)? = null,
     ) {
-        // already in live-data
-        if (_clickedPokemon.value?.pokemon?.id == pokemonId) {
-            viewModelScope.launch(Dispatchers.Main) { onSuccessfullyLoaded() }
-            return
+        if (pokemonAlreadyLoaded(pokemonId)) {
+            if (optionalCallback != null) optionalCallback()
+            else return
         }
+
 
         viewModelScope.launch(Dispatchers.IO) {
 
+            _clickedPokemon.postValue(UIState.Loading)
             val needsToBeLoaded = repository.checkIfPokemonNeedsToBeLoaded(pokemonId)
-            Log.d("PokemonFetch", needsToBeLoaded.toString())
             if (needsToBeLoaded) { // load data and map it + save to database
-
                 loadPokemonDataFromApiAndSave(pokemonId, errorMessageRes) {
-                    viewModelScope.launch(Dispatchers.Main) { onSuccessfullyLoaded() }
+                    optionalCallback?.invoke()
                 }
 
             } else { // already loaded from api, just post data from DB
-                repository.postSinglePokemonDataFromDb(pokemonId, languageId) { isSuccess ->
-                    if (isSuccess) {
-                        viewModelScope.launch(Dispatchers.Main) { onSuccessfullyLoaded() }
-                    } else _snackBarMessageSender.postValue(errorMessageRes)
+                val data = repository.getPokemonDataFromDatabase(pokemonId, languageId, errorMessageRes)
+                viewModelScope.launch(Dispatchers.Main) {
+                    _clickedPokemon.value = data
+                    optionalCallback?.invoke()
                 }
+
             }
         }
     }
@@ -346,21 +323,21 @@ class PokeViewModel(
     private fun loadPokemonDataFromApiAndSave(
         pokemonId: Int,
         errorMessageRes: Int,
-        callback: () -> Unit,
+        optionalCallback: (() -> Unit)? = null,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.loadSinglePokemonData(pokemonId, languageId)
-            Log.d("PokemonFetch", data.toString())
             if (data?.data1 != null && data.data2 != null && data.data3 != null) {
                 val mapper = PokemonDatabaseMapper(repository)
-                mapper.savePokemonDetailsIntoDatabase(data) { isSuccess ->
+                mapper.savePokemonDetailsIntoDatabase(data, languageId) { isSuccess ->
                     if (isSuccess) {
                         viewModelScope.launch(Dispatchers.IO) {
-                            repository.postSinglePokemonDataFromDb(pokemonId, languageId) {
-                                callback()
+                            val pokemonData = repository.getPokemonDataFromDatabase(pokemonId, languageId, errorMessageRes)
+                            viewModelScope.launch (Dispatchers.Main){
+                                _clickedPokemon.value = pokemonData
+                                optionalCallback?.invoke()
                             }
                         }
-
                     } else _snackBarMessageSender.postValue(errorMessageRes)
                 }
             } else _snackBarMessageSender.postValue(errorMessageRes)
@@ -375,19 +352,20 @@ class PokeViewModel(
      * @return the filtered list
      */
     fun getFilteredAttacks(generationId: Int): List<AttacksData> {
-        val moveData = clickedPokemon.value?.moves
-        val moveNames = clickedPokemon.value?.moveNames
+        val (moveData, moveNames, versionGroupDetails) = when (val pkData = _clickedPokemon.value) {
+            is UIState.Success -> Triple(pkData.data.moves, pkData.data.moveNames, pkData.data.versionGroupDetails)
+            else -> return emptyList()
+        }
         val versionId = getFirstVersionOfGeneration(generationId)
 
         // move Data in the specific gen
         val moveDetailsGenFiltered =
-            clickedPokemon.value?.versionGroupDetails?.filter { it.versionGroupId == versionId }
-                ?: emptyList()
+            versionGroupDetails.filter { it.versionGroupId == versionId }
 
         // map it to a compact dataclass to insert it into a recyclerview than (and sort it)
         val filteredAttacksList = moveDetailsGenFiltered.map { versionGroupDetail ->
-            val move = moveData?.find { it.id == versionGroupDetail.moveId }
-            val moveName = moveNames?.find { it.moveId.toLong() == versionGroupDetail.moveId }?.name
+            val move = moveData.find { it.id == versionGroupDetail.moveId }
+            val moveName = moveNames.find { it.moveId.toLong() == versionGroupDetail.moveId }?.name
             AttacksData(
                 name = moveName ?: "Error",
                 levelLearned = versionGroupDetail.levelLearnedAt ?: 0,
@@ -407,7 +385,10 @@ class PokeViewModel(
 
     /** Takes the spriteListJson and extracts sprites for each source  */
     fun extractSpritesWithCategories(onLoadFinished: ((Map<String, List<Pair<String, String>>>) -> Unit)) {
-        val sprites = clickedPokemon.value?.pokemon?.sprites
+        val sprites = when(val pkData = _clickedPokemon.value) {
+            is UIState.Success -> pkData.data.pokemon.sprites
+            else -> return
+        }
         val gson = Gson()
         val spriteListType = object : TypeToken<List<PokemonDetail1Query.Sprite>>() {}.type
         val spritesData: List<PokemonDetail1Query.Sprite> = gson.fromJson(sprites, spriteListType)
@@ -476,9 +457,12 @@ class PokeViewModel(
      * @return the filtered list
      */
     fun filterPokedexInfos(languageId: Int = this.languageId): List<PokemonDexEntries> {
-        val pokedexInfos = clickedPokemon.value?.pokedexEntries
-        val filteredList = pokedexInfos?.filter { it.languageId == languageId }
-        return if (filteredList.isNullOrEmpty()) {
+        val pokedexInfos = when(val pkData = _clickedPokemon.value) {
+            is UIState.Success -> pkData.data.pokedexEntries
+            else -> return emptyList()
+        }
+        val filteredList = pokedexInfos.filter { it.languageId == languageId }
+        return filteredList.ifEmpty {
             listOf(
                 PokemonDexEntries(
                     speciesId = -1,
@@ -487,7 +471,7 @@ class PokeViewModel(
                     versionGroupId = -1
                 )
             )
-        } else filteredList
+        }
     }
 
     /**
@@ -495,28 +479,31 @@ class PokeViewModel(
      * sorts them also in slot order
      */
     fun mapAbilitiesDetail(): List<AbilityEffectText> {
-        val pkData = _clickedPokemon.value
-        val abilityNames = pkData?.abilityNames
-        val abilityIds = pkData?.abilitiesToJoin?.sortedBy { it.slot }
-        val data = pkData?.abilityInfoList?.map { ability ->
-            val abilityEffectTexts = pkData.abilityEffectTexts
+        val data = when (val pkData = _clickedPokemon.value) {
+            is UIState.Success -> pkData.data
+            else -> return emptyList()
+        }
+        val abilityNames = data.abilityNames
+        val abilityIds = data.abilitiesToJoin.sortedBy { it.slot }
+        val abilityData = data.abilityInfoList.map { ability ->
+            val abilityEffectTexts = data.abilityEffectTexts
             val textLong = if (abilityEffectTexts.isEmpty()) "No Data found" else {
                 abilityEffectTexts.find { it?.abilityId == ability.id }?.effectTextLong // ?. is neccessary
             }
             val textShort =
-                pkData.abilityFlavorTexts.lastOrNull { it.abilityId == ability.id }?.effectTextShort
+                data.abilityFlavorTexts.lastOrNull { it.abilityId == ability.id }?.effectTextShort
             val name =
-                abilityNames?.find { it.abilityId == ability.id && it.languageId == languageId }?.name
+                abilityNames.find { it.abilityId == ability.id && it.languageId == languageId }?.name
             AbilityEffectText(
                 id = ability.id,
                 name = name ?: "Error",
                 textLong = textLong ?: "Error",
                 textShort = textShort ?: "Error",
-                slot = abilityIds?.find { it.abilityId == ability.id }?.slot ?: -1,
+                slot = abilityIds.find { it.abilityId == ability.id }?.slot ?: -1,
                 languageId = -1 // not needed
             )
-        } ?: emptyList()
-        return data.sortedBy { it.slot }
+        }
+        return abilityData.sortedBy { it.slot }
     }
     //endregion
 
@@ -538,8 +525,8 @@ class PokeViewModel(
         val team = _pokemonTeam.value
         val pokemonList = team?.pokemons?.toMutableList()
         pokemonList?.let { pokeList ->
-            if (_clickedPokemon.value != null) {
-                mapPokemonDataToTeamPokemon(_clickedPokemon.value) { mappedPokemon ->
+            if (_clickedPokemon.value is UIState.Success) {
+                mapPokemonDataToTeamPokemon((_clickedPokemon.value as UIState.Success<PokemonData>).data) { mappedPokemon ->
                     pokeList[teamIndex] = mappedPokemon
                     team.pokemons = pokeList
                     if (postVal) _pokemonTeam.postValue(team)
@@ -562,10 +549,6 @@ class PokeViewModel(
             }
             team.pokemons = pokeList
             _pokemonTeam.value = team
-            Log.d("dsad", _pokemonTeam.value!!.pokemons.size.toString())
-            pokeList.forEach {
-                Log.d("Test", it.toString())
-            }
         }
     }
 
@@ -622,30 +605,30 @@ class PokeViewModel(
     }
 
     /** stores the selected attacks */
-    private val _teamBuilderSelectedAttacks = MutableLiveData<List<AttacksData?>?>()
-    val teamBuilderSelectedAttacks: LiveData<List<AttacksData?>?>
+    private val _teamBuilderSelectedAttacks = MutableLiveData<List<AttacksData>>()
+    val teamBuilderSelectedAttacks: LiveData<List<AttacksData>>
         get() = _teamBuilderSelectedAttacks
 
-    fun setSelectedAttacks(attacks: List<AttacksData?>?) {
-        _teamBuilderSelectedAttacks.postValue(attacks)
+    fun setSelectedAttacks(attacks: List<AttacksData>) {
+        _teamBuilderSelectedAttacks.value = attacks
     }
 
     /** Updates the Attacks chosen in the Fragment */
     fun updatePokemonAttacks(teamIndex: Int) {
         if (teamIndex == -1) return
         val team = _pokemonTeam.value
-        val pokemonToUpdate = team?.pokemons?.get(teamIndex)
+        val pokemonToUpdate = team?.pokemons?.getOrNull(teamIndex)
         if (pokemonToUpdate != null) {
             val attacks = _teamBuilderSelectedAttacks.value
-            pokemonToUpdate.attackOne = attacks?.get(0)
-            pokemonToUpdate.attackTwo = attacks?.get(1)
-            pokemonToUpdate.attackThree = attacks?.get(2)
-            pokemonToUpdate.attackFour = attacks?.get(3)
+            pokemonToUpdate.attackOne = attacks?.getOrNull(0)
+            pokemonToUpdate.attackTwo = attacks?.getOrNull(1)
+            pokemonToUpdate.attackThree = attacks?.getOrNull(2)
+            pokemonToUpdate.attackFour = attacks?.getOrNull(3)
         }
     }
 
     fun resetChosenAttacks() {
-        _teamBuilderSelectedAttacks.postValue(null)
+        _teamBuilderSelectedAttacks.postValue(emptyList())
     }
 
     /** Mapping function to map the details from _clickedPokemon to a PokemonData object for teamBuilder Fragment */
@@ -698,9 +681,7 @@ class PokeViewModel(
 
         val team = pokemonTeam.value
         val pokemonList = team?.pokemons?.toMutableList() // get copy of team list
-        val chosenPokemon = pokemonList?.get(teamIndex)
-
-        val attackList = _teamBuilderSelectedAttacks.value // get selected attacks from live-data
+        val chosenPokemon = pokemonList?.getOrNull(teamIndex)
         if (chosenPokemon == null) {
             _snackBarMessageSender.value = R.string.you_need_to_select_1_pokemon
             return
@@ -719,10 +700,6 @@ class PokeViewModel(
                 )
             }
             // update the values on the instance of the pokemon
-            chosenPokemon.attackOne = attackList?.get(0)
-            chosenPokemon.attackTwo = attackList?.get(1)
-            chosenPokemon.attackThree = attackList?.get(2)
-            chosenPokemon.attackFour = attackList?.get(3)
             chosenPokemon.ivList = ivData
             chosenPokemon.evList = evData
             chosenPokemon.abilityEffect = pokemonDataFromUser.selectedAbility.second
@@ -768,21 +745,24 @@ class PokeViewModel(
      * @return the filtered list
      */
     fun getAttacksFromNewestVersion(): List<AttacksData> {
-        val pokemonDetails = _clickedPokemon.value
-        val moves = pokemonDetails?.moves
-        val moveNames = pokemonDetails?.moveNames
+        val pokemonDetails = when(val pkData = _clickedPokemon.value) {
+            is UIState.Success -> pkData.data
+            else -> return emptyList()
+        }
+        val moves = pokemonDetails.moves
+        val moveNames = pokemonDetails.moveNames
         val versionSet =
-            pokemonDetails?.versionGroupDetails?.map { it.versionGroupId }?.toSet() ?: emptySet()
+            pokemonDetails.versionGroupDetails.map { it.versionGroupId }.toSet()
         // gets the highest version in which the pokemon has attack data
         val highestVersion = versionSet.maxByOrNull { it ?: 1 } ?: 1
-        val attacksInVersion = pokemonDetails?.versionGroupDetails?.filter {
+        val attacksInVersion = pokemonDetails.versionGroupDetails.filter {
             it.versionGroupId == highestVersion
         } // filter attacks only from that version
 
         // create AttacksData objects
-        val attacksDataList = attacksInVersion?.map { moveDetail ->
-            val move = moves?.find { it.id == moveDetail.moveId }
-            val moveName = moveNames?.find { it.moveId.toLong() == moveDetail.moveId }?.name
+        val attacksDataList = attacksInVersion.map { moveDetail ->
+            val move = moves.find { it.id == moveDetail.moveId }
+            val moveName = moveNames.find { it.moveId.toLong() == moveDetail.moveId }?.name
             AttacksData(
                 name = moveName ?: "Error",
                 levelLearned = moveDetail.levelLearnedAt ?: 0,
@@ -792,7 +772,7 @@ class PokeViewModel(
                 power = move?.power ?: 0,
                 typeId = move?.typeId ?: 10001
             )
-        }?.distinctBy { it.name }?.sortedBy { it.name } ?: emptyList()
+        }.distinctBy { it.name }.sortedBy { it.name }
         return attacksDataList
     }
     //endregion

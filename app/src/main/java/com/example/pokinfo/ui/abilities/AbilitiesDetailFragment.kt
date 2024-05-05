@@ -45,10 +45,12 @@ class AbilitiesDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val languageId = pokeViewModel.getLangId()
-        abilityViewModel.abilityDetail.observe(viewLifecycleOwner) { reponse ->
-            val ability = reponse?.data?.firstOrNull()
+        abilityViewModel.abilityDetail.observe(viewLifecycleOwner) { response ->
+            val typeNames = pokeViewModel.pokemonTypeNames
+            val ability = response?.data?.firstOrNull()
             val abilityName =
-                ability?.names?.nodes?.find { it.language_id == languageId }?.name ?: ability?.name
+                ability?.names?.nodes?.find { it.language_id == languageId }?.name
+                    ?: ability?.name
             binding.tvAbilityName.text = abilityName
 
             val adapter = AbilityDetailAdapter()
@@ -79,31 +81,27 @@ class AbilitiesDetailFragment : Fragment() {
             val idList = ability?.pokemonList?.map { it.pokemon_id ?: -1 } ?: emptyList()
             abilityViewModel.getPokemonListWhoLearnMove(idList) { pokemonList ->
 
-                binding.button2.setOnClickListener {
+                binding.btnShowPokemonWithAbility.setOnClickListener {
                     // shows dialog with list of all pokemon who learns the ability
-                    openPokemonListDialog(pokemonList, R.string.every_pokemon_with_ability) { pokemonId ->
+                    openPokemonListDialog(
+                        listOfPokemon = pokemonList,
+                        title = getString(R.string.every_pokemon_with_ability, abilityName),
+                        typeNames = typeNames,
+                    ) { pokemonId ->
                         // another dialog to ask user if he surely wants to navigate
-                        showConfirmationDialog(
-                            onConfirm = {
-                                pokeViewModel.getSinglePokemonData(
-                                    pokemonId,
-                                    R.string.failed_load_single_pokemon_data
-                                ) {
-                                    findNavController().navigate(
-                                        AbilitiesDetailFragmentDirections.actionAbilitiesDetailFragmentToNavHomeDetail(
-                                            pokemonId
-                                        )
-                                    )
-                                } // no callback needed
-                            }
+                        pokeViewModel.getSinglePokemonData(
+                            pokemonId,
+                            R.string.failed_load_single_pokemon_data
+                        )
+                        findNavController().navigate(
+                            AbilitiesDetailFragmentDirections.actionAbilitiesDetailFragmentToNavHomeDetail(
+                                pokemonId
+                            )
                         )
                     }
                 }
-
             }
 
         }
     }
-
-
 }

@@ -1,36 +1,53 @@
 package com.example.pokinfo.viewModels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
 import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.mapper.AttackMapper
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
+import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
+import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
 import com.example.pokinfo.data.models.fragmentDataclasses.AttacksListData
-import com.example.pokinfo.data.models.fragmentDataclasses.PokemonMoveData
-import com.example.pokinfo.data.util.AttackFilter
-import com.example.pokinfo.data.util.AttackFilter2
+import com.example.pokinfo.data.enums.AttackFilter
+import com.example.pokinfo.data.enums.AttackFilter2
+import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 class AttacksViewModel(application: Application) : AndroidViewModel(application) {
-    private var languageId by Delegates.notNull<Int>()
-    fun setLangId(languageId: Int) {
-        this.languageId = languageId
-    }
-
-    fun getLangId(): Int {
-        return languageId
-    }
-
-
+    /** Variables **/
     private val repository = RepositoryProvider.provideRepository(application)
+
+    private var languageId by application.sharedPreferences("languageId", 9)
 
     private var isDataLoaded = false // to limit the api calls
 
+    var versionNames: List<VersionNames> = emptyList()
+        private set
+    var languageNames: List<LanguageNames> = emptyList()
+        private set
+
+    var pokemonTypeNames: List<PokemonTypeName> = emptyList()
+        private set
+
+
+    init {
+        loadGenericData()
+    }
+
+    private fun loadGenericData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            versionNames = repository.getVersionNames(languageId)
+            languageNames = repository.getLanguageNames()
+            pokemonTypeNames = repository.getPokemonTypeNames(languageId)
+        }
+    }
     //region Attacks Fragment
 
     // live-data to manage filters
@@ -52,10 +69,19 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
 
     private val _allAttacksList = MutableLiveData<List<AttacksListData>>()
 
-    private val _clickedAttack = MutableLiveData<PokemonMoveData>()
-    val clickedAttack: LiveData<PokemonMoveData>
+    private val _clickedAttack = MutableLiveData<AttackDetailsQuery.Data?>()
+    val clickedAttack: LiveData<AttackDetailsQuery.Data?>
         get() = _clickedAttack
 
+    fun setLangId(languageId: Int) {
+        this.languageId = languageId
+    }
+    fun getLangId(): Int {
+        return languageId
+    }
+    fun getLanguageName(languageId: Int): String {
+        return languageNames.find { it.languageId == languageId }?.name ?: "No Languagename found"
+    }
 
     fun setSearchInputAttacks(input: String) {
         _searchInputAttacks.value = input
@@ -124,16 +150,43 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
     fun loadSingleAttackDetail(moveId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val moveDetails = repository.loadSingleMoveDetails(moveId, languageId)
-            val languageNames = repository.getLanguageNames()
-            val versionNames = repository.getVersionNames(languageId)
-            val typeNames = repository.getPokemonTypeNames(languageId)
-            val mappedData = AttackMapper(languageId).mapClickedMoveData(
-                moveDetails,
-                languageNames,
-                versionNames,
-                typeNames
-            )
-            _clickedAttack.postValue(mappedData)
+            _clickedAttack.postValue(moveDetails)
         }
+    }
+
+    fun getPokemonDescription(languageId: Int, versionId: Int): AttackDetailsQuery.Text? {
+        val data = _clickedAttack.value?.move?.firstOrNull()?.texts
+        var attackDescription = data?.find { it.language_id == languageId && it.version_group_id == versionId }
+        if (attackDescription == null) {
+           attackDescription = data?.firstOrNull { it.language_id == languageId }
+        }
+        return attackDescription
+    }
+
+    fun getFirstVersionId(): Int {
+        val data = _clickedAttack.value?.move?.firstOrNull()?.texts
+        return data?.mapNotNull { it.version_group_id }?.min() ?: -1
+    }
+
+    fun getFirstVersionIdOfLanguage(languageId: Int): Int? {
+        val data =
+            _clickedAttack.value?.move?.firstOrNull()?.texts?.filter { it.language_id == languageId }
+        return data?.mapNotNull { it.version_group_id }?.minOrNull()
+    }
+
+    fun getAvailableLanguageNames(): List<LanguageNames> {
+        val attacks = _clickedAttack.value?.move?.firstOrNull()?.texts?.map { it.language_id } ?: return emptyList()
+        return languageNames.filter { attacks.any { it == languageId } }
+    }
+
+    fun getAvailableVersions(languageId: Int): List<VersionNames> {
+        val data = _clickedAttack.value?.move?.firstOrNull() ?: return emptyList()
+        val filtered = data.texts.filter { it.language_id == languageId }
+        val versions = filtered.map { it.version_group_id }.toSet()
+        return versionNames.filter { it.versionId in versions }
+    }
+
+    fun getVersionName(actualVersionId: Int): String {
+        return versionNames.find { it.versionId == actualVersionId }?.name ?: "No versionname found"
     }
 }
