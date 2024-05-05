@@ -18,7 +18,6 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.type.PokemonTypeName
 import com.example.pokinfo.databinding.FragmentAttacksDetailBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
-import com.example.pokinfo.ui.misc.dialogs.showConfirmationDialog
 import com.example.pokinfo.viewModels.AttacksViewModel
 import com.example.pokinfo.viewModels.PokeViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

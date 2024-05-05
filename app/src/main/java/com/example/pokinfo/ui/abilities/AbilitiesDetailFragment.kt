@@ -13,7 +13,6 @@ import com.example.pokinfo.adapter.abilities.AbilityDetailAdapter
 import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.databinding.FragmentAbilitiesDetailBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
-import com.example.pokinfo.ui.misc.dialogs.showConfirmationDialog
 import com.example.pokinfo.viewModels.AbilityViewModel
 import com.example.pokinfo.viewModels.PokeViewModel
 
