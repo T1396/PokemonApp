@@ -10,8 +10,8 @@ import com.example.pokinfo.data.models.database.type.DamageRelation
 import com.example.pokinfo.data.models.database.type.GameIndex
 import com.example.pokinfo.data.models.database.type.MoveWithType
 import com.example.pokinfo.data.models.database.type.PokemonType
-import com.example.pokinfo.data.models.database.type.PokemonWithThisType
 import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.type.PokemonWithThisType
 
 @Dao
 interface PokemonTypeDao {
@@ -30,8 +30,8 @@ interface PokemonTypeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(pokemonType: PokemonType)
 
-    @Query("SELECT * from pokemon_types_type_names where languageId = :languageId")
-    suspend fun getTypeName(languageId: Int): List<PokemonTypeName>
+    @Query("SELECT * from pokemon_types_type_names where languageId =:languageId")
+    suspend fun getTypeNames(languageId: Int): List<PokemonTypeName>
 
     @Query("SELECT id FROM pokemon_types where name = :typeName")
     suspend fun getTypeId(typeName: String): Int

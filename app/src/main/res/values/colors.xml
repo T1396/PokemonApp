@@ -39,7 +39,7 @@
     <color name="md_theme_dark_onSecondary">#442A25</color>
     <color name="md_theme_dark_secondaryContainer">#5D3F3A</color>
     <color name="md_theme_dark_onSecondaryContainer">#FFDAD4</color>
-    <color name="md_theme_dark_tertiary">#4FD8EB</color>
+    <color name="md_theme_dark_tertiary">#00897B</color>
     <color name="md_theme_dark_onTertiary">#00363D</color>
     <color name="md_theme_dark_tertiaryContainer">#004F58</color>
     <color name="md_theme_dark_onTertiaryContainer">#97F0FF</color>
@@ -65,6 +65,9 @@
 
     <color name="activeChipColor">#F3B5B5</color>
     <color name="transparent">#00E89D9D</color>
+
+    <color name="chip_selected_light">#81D4FA</color>
+    <color name="chip__selected_dark">#781E08</color>
 
     <color name="type_colour_normal">#9099a1</color>
     <color name="type_colour_fighting">#ce4069</color>

@@ -1,4 +1,4 @@
-package com.example.pokinfo.data.util
+package com.example.pokinfo.data.enums
 
 enum class AttackFilter(val filterName: String, val genId: Int) {
     FROM_GEN1("Inv. in Gen1", 1),

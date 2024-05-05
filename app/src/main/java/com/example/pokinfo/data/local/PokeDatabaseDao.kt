@@ -58,7 +58,7 @@ interface PokeDatabaseDao {
         val mainData = getPokemonData(pokemonId)
         val specyInfo = getSpecyInfo(mainData.specieId)
         val pokeNames = getSpecyNames(mainData.specieId)
-        val formInfos = getPokemonForms(mainData.specieId)
+        val formInfos = getPokemonForms(mainData.specieId, pokemonId)
         val abilitiesToJoins = getAbilitieIds(pokemonId)
         val abilityInfo = abilitiesToJoins.map {
             getAbility(it.abilityId)
@@ -217,8 +217,8 @@ interface PokeDatabaseDao {
     @Query("SELECT id FROM pokemon_move_data WHERE name =:name")
     suspend fun getMoveId(name: String?): Int
 
-    @Query("SELECT * FROM pokemon_forms where speciesId =:speciesId AND pokemonId !=:speciesId")
-    fun getPokemonForms(speciesId: Int): List<PkForms>
+    @Query("SELECT * FROM pokemon_forms where speciesId =:speciesId AND pokemonId !=:pokemonId")
+    fun getPokemonForms(speciesId: Int, pokemonId: Int): List<PkForms>
 
     @Query("SELECT * FROM pokemon_move_version_group_details WHERE pokemonId =:pokemonId")
     suspend fun getPokemonMoveVGDs(pokemonId: Int): List<PkMoveVersionGroupDetail>

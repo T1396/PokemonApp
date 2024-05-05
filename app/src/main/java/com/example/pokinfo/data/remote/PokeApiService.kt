@@ -24,6 +24,7 @@ import retrofit2.http.Path
 
 
 private const val BASE_URL = "https://pokeapi.co/api/v2/"
+//private const val BASE_URL = BuildConfig.localApiUrl
 private const val LOCAL_GRAPH_URL = BuildConfig.localGraphqlUrl
 
 interface PokeApiService {
@@ -47,30 +48,34 @@ class GraphApiServiceImpl(private val apolloClient: ApolloClient) {
             .execute()
         return response.data
     }
+
     /** For Home-Detail Fragment */
     suspend fun secondPokemonQuery(nr: Int, languageId: Int): PokemonDetail2Query.Data? {
         val response = apolloClient.query(PokemonDetail2Query(nr, languageId))
             .execute()
         return response.data
     }
+
     /** For Home-Detail Fragment */
     suspend fun thirdPokemonQuery(speciesId: Int, languageId: Int): FormQuery.Data? {
         val response = apolloClient.query(FormQuery(speciesId, languageId)).execute()
         return response.data
     }
+
     /** All Attacks */
-    suspend fun sendAttackListQuery(languageId: Int) : AttacksQuery.Data? {
+    suspend fun sendAttackListQuery(languageId: Int): AttacksQuery.Data? {
         val response = apolloClient.query(AttacksQuery(languageId))
             .execute()
         return response.data
     }
 
     /** Details for an attack */
-    suspend fun sendAttackDetailQuery(moveId: Int, languageId: Int) : AttackDetailsQuery.Data? {
+    suspend fun sendAttackDetailQuery(moveId: Int, languageId: Int): AttackDetailsQuery.Data? {
         val response = apolloClient.query(AttackDetailsQuery(moveId, languageId))
             .execute()
         return response.data
     }
+
     /** All Abilities*/
     suspend fun sendAbilitiesListQuery(languageId: Int): AllAbilitiesQuery.Data? {
         val response = apolloClient.query(AllAbilitiesQuery(languageId)).execute()
@@ -83,30 +88,12 @@ class GraphApiServiceImpl(private val apolloClient: ApolloClient) {
         return response.data
     }
 
-    /** Gets every LanguageName */
-    suspend fun sendLanguageNamesQuery(languageId: Int): LanguageAndVersionNamesQuery.Data? {
+    /** Gets every LanguageName and Version Names (Red, Yellow etc) */
+    suspend fun sendLanguageVersionNameQuery(languageId: Int): LanguageAndVersionNamesQuery.Data? {
         val response = apolloClient.query(LanguageAndVersionNamesQuery(languageId)).execute()
         return response.data
     }
 }
-
-/*private val loggingInterceptor = HttpLoggingInterceptor().apply {
-    level =
-        HttpLoggingInterceptor.Level.BODY // or HttpLoggingInterceptor.Level.BASIC for less details
-}
-
-private val httpClient = OkHttpClient.Builder()
-    .addInterceptor(loggingInterceptor)
-    .build()*/
-
-private val moshi = Moshi.Builder()
-    .add(KotlinJsonAdapterFactory())
-    .build()
-
-private val retrofit = Retrofit.Builder()
-    .addConverterFactory(MoshiConverterFactory.create(moshi))
-    .baseUrl(BASE_URL)
-    .build()
 
 private val loggingInterceptor = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY // Zeigt die vollständigen Anfragedetails
@@ -120,6 +107,16 @@ private val apolloClient = ApolloClient.Builder()
     .serverUrl(LOCAL_GRAPH_URL)
     .okHttpClient(httpClient)
     .addHttpHeader("x-hasura-admin-secret", "pokemon")
+    .build()
+
+private val moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .build()
+
+private val retrofit = Retrofit.Builder()
+    .client(httpClient)
+    .addConverterFactory(MoshiConverterFactory.create(moshi))
+    .baseUrl(BASE_URL)
     .build()
 
 

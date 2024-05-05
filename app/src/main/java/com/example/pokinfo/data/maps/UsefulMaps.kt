@@ -142,33 +142,3 @@ val versionGroupMap = mapOf(
     26 to "the-teal-mask" to 9,
     27 to "the-indigo-disk" to 9
 )
-
-val versionGroupIdMap = mapOf(
-    "red-blue" to 1,
-    "yellow" to 2,
-    "gold-silver" to 3,
-    "crystal" to 4,
-    "ruby-sapphire" to 5,
-    "emerald" to 6,
-    "firered-leafgreen" to 7,
-    "diamond-pearl" to 8,
-    "platinum" to 9,
-    "heartgold-soulsilver" to 10,
-    "black-white" to 11,
-    "colosseum" to 12,
-    "xd" to 13,
-    "black-2-white-2" to 14,
-    "x-y" to 15,
-    "omega-ruby-alpha-sapphire" to 16,
-    "sun-moon" to 17,
-    "ultra-sun-ultra-moon" to 18,
-    "lets-go-pikachu-lets-go-eevee" to 19,
-    "sword-shield" to 20,
-    "the-isle-of-armor" to 21,
-    "the-crown-tundra" to 22,
-    "brilliant-diamond-and-shining-pearl" to 23,
-    "legends-arceus" to 24,
-    "scarlet-violet" to 25,
-    "the-teal-mask" to 26,
-    "the-indigo-disk" to 27
-)

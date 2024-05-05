@@ -6,7 +6,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import androidx.appcompat.content.res.AppCompatResources
 import com.example.pokinfo.R
-import com.example.pokinfo.data.util.PokemonSortFilterState
+import com.example.pokinfo.data.enums.PokemonSortFilterState
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
 

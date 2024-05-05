@@ -64,7 +64,7 @@
     </com.google.android.material.card.MaterialCardView>
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/btnShowPokemonWithAbility"
         style="@style/Widget.Material3.Button.ElevatedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -98,21 +98,6 @@
         app:layout_constraintTop_toTopOf="@+id/textView3" />
 
     <Button
-        android:id="@+id/btnAppleLogin"
-        style="@style/FirebaseUI.Button.AccountChooser.AppleButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center_horizontal|center_vertical"
-        android:minWidth="40dp"
-        android:text="@string/loginApple"
-        app:cornerRadius="20dp"
-        app:iconGravity="textStart"
-        app:layout_constraintEnd_toEndOf="@+id/btnGoogleLogin"
-        app:layout_constraintStart_toStartOf="@+id/btnGoogleLogin"
-        app:layout_constraintTop_toBottomOf="@+id/btnGoogleLogin" />
-
-    <Button
         android:id="@+id/btnGoogleLogin"
         style="@style/FirebaseUI.Button.AccountChooser.GoogleButton"
         android:layout_width="0dp"

@@ -108,7 +108,7 @@
     <string name="discard_changes">Discard Changes</string>
 
 
-    <string name="choose_your_attacks_selected">Choose your Attacks ( %d selected )</string>
+    <string name="choose_your_attacks_selected">%d selected</string>
     <string name="male">Male</string>
     <string name="female">Female</string>
     <string name="_100" translatable="false">100</string>
@@ -180,7 +180,7 @@
     <string name="yes_update">Update</string>
     <string name="make_a_copy">Create a copy of the team</string>
     <string name="navigate_dialog_title">Are you sure you want to navigate to that Pokemon?</string>
-    <string name="every_pokemon_with_ability">Every Pokemon with the Ability</string>
+    <string name="every_pokemon_with_ability">Every Pokemon with the Ability \'%s\'</string>
     <string name="navigate">Yes</string>
     <string name="change_profile_picture">Do you want to update your Picture?</string>
     <string name="image_is_uploading">The upload can take a few seconds…</string>
@@ -202,4 +202,7 @@
     <string name="nr">Nr</string>
     <string name="image_button_forms">Image Button to show Pokemon Forms</string>
     <string name="show_pokemon_with_this_ability">Show Pokemon with this ability</string>
+
+
+    <string name="credential_error">There was an unexpected error with google sign… try again</string>
 </resources>
