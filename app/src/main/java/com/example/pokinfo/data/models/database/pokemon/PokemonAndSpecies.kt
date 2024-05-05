@@ -51,6 +51,7 @@ data class Pokemon(
     val id: Int,
     val order: Int,
     val name: String,
+    val displayName: String,
     val height: Int,
     val weight: Int,
     val specieId: Int,

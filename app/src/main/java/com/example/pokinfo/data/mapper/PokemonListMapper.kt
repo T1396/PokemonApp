@@ -3,11 +3,9 @@ package com.example.pokinfo.data.mapper
 import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.StatValues
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
 
 
 class PokemonListMapper {
@@ -35,12 +33,13 @@ class PokemonListMapper {
                             val id = pokemonData.pokemon_id ?: -1
                             val typeId1 = pokemon.types.firstOrNull()?.type_id ?: 10001
                             val typeId2 = pokemon.types.getOrNull(1)?.type_id
-                            val name =
-                                if (pokemon.is_default) {
-                                    pokemon.specy?.names?.data?.firstOrNull()?.name
-                                } else {
-                                    pokemon.pokemon_v2_pokemonforms_aggregate.nodes.firstOrNull()?.pokemon_v2_pokemonformnames_aggregate?.nodes?.find { it.language_id == languageId }?.pokemon_name
-                                }
+                            var name: String?
+                            name = pokemon.specy?.names?.data?.firstOrNull()?.name
+                            val tempName: String? = name
+                            if (!pokemon.is_default) {
+                                name = pokemon.pokemon_v2_pokemonforms_aggregate.nodes.firstOrNull()?.pokemon_v2_pokemonformnames_aggregate?.nodes?.find { it.language_id == languageId }?.pokemon_name
+                                if (name.isNullOrEmpty()) name = "$tempName (*)"
+                            }
                             PokemonForList(
                                 id = id,
                                 height = pokemon.height ?: -1,

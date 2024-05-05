@@ -42,6 +42,9 @@ class PokemonDatabaseMapper(private val repository: Repository) {
 
     private suspend fun createPokemonDbEntry(
         part1: PokemonDetail1Query.Pokemon,
+        part3: FormQuery.Data,
+        pokemonId: Int,
+        languageId: Int,
         type1: PokemonDetail1Query.TypeInfo?,
         type2: PokemonDetail1Query.TypeInfo?,
         spritesJson: String,
@@ -55,6 +58,11 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 )
             }
         }.awaitAll()
+        var displayName = part3.pokemon_v2_pokemonform_aggregate.nodes.find { it.pokemon_id == pokemonId }?.pokemon_v2_pokemonformnames
+            ?.find { it.language_id == languageId }?.pokemon_name
+        if (displayName.isNullOrEmpty()) {
+            displayName = part1.specy?.allNames?.find { it.language_id == languageId }?.name
+        }
         return@coroutineScope Pokemon(
             id = part1.id,
             specieId = part1.specy?.id ?: -1,
@@ -75,7 +83,8 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 )
             },
             pkStatInfos = stats,
-            sprites = spritesJson
+            sprites = spritesJson,
+            displayName = displayName ?: ""
         )
     }
 
@@ -312,6 +321,7 @@ class PokemonDatabaseMapper(private val repository: Repository) {
 
     suspend fun savePokemonDetailsIntoDatabase(
         pokemonDataWrapper: PokemonDataWrapper,
+        languageId: Int,
         onSaved: (Boolean) -> Unit,
     ) {
 
@@ -345,7 +355,7 @@ class PokemonDatabaseMapper(private val repository: Repository) {
             val (abilityNames, effectTexts, flavorTexts) = namesAndTexts
 
             // create a db entry with some basic infos like sprites types and other small things
-            val pokeDbEntry = createPokemonDbEntry(part1, type1, type2, spritesJson)
+            val pokeDbEntry = createPokemonDbEntry(part1, part3, pokemonId ?: -1, languageId, type1, type2, spritesJson)
             // species info and names
             val (speciesInfo, specieNames) = getSpeciesInfo(
                 pokemonId,
