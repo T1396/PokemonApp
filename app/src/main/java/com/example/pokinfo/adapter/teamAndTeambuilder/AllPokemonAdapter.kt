@@ -118,9 +118,6 @@ class AllPokemonAdapter(
             bindMap[index+1]?.text = statValues.statValue.toString()
         }
     }
-
-
-
 }
 
 
