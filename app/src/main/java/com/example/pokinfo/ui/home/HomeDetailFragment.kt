@@ -23,11 +23,12 @@ import com.example.pokinfo.adapter.home.detail.ImageViewPagerAdapter
 import com.example.pokinfo.adapter.home.detail.ImagesAdapter
 import com.example.pokinfo.adapter.home.detail.PokedexEntryAdapter
 import com.example.pokinfo.data.maps.typeColorMap
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PkNames
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.util.NoScrollLayoutManager
 import com.example.pokinfo.data.util.UIState
 import com.example.pokinfo.databinding.FragmentHomeDetailBinding
@@ -95,10 +96,12 @@ class HomeDetailFragment : Fragment() {
                 is UIState.Loading -> {
                     // show loading indicator
                     sheetBinding.loadingProgressBar.visibility = View.VISIBLE
+                    sheetBinding.nestedScrollView.visibility = View.INVISIBLE
                 }
 
                 is UIState.Success -> {
                     sheetBinding.loadingProgressBar.visibility = View.GONE
+                    sheetBinding.nestedScrollView.visibility = View.VISIBLE
                     sheetBinding.wholeLayout.visibility = View.VISIBLE
                     fillUI(uiState.data, languageId, typeNames, versionNames, languageNames)
                 }
@@ -109,6 +112,7 @@ class HomeDetailFragment : Fragment() {
             }
         }
     }
+
 
     private fun fillUI(
         pkData: PokemonData,
@@ -124,12 +128,18 @@ class HomeDetailFragment : Fragment() {
         if (pkData.formData.isNotEmpty()) {
             enableFormDialog(translatedName, typeNames)
         }
+        if (pkData.pokemon.id == pkData.specyData.id) {
+            //overlayView = sheetBinding.arrowOverlay
+            if (pkData.evolutionChain != null && !pkData.evolutionDetails.isNullOrEmpty()) {
+                createEvolutionView(pkData.specyData.id, pkData.evolutionDetails)
+            }
+        }
 
         sheetBinding.tvPokemonName.text = name
 
         sheetBinding.tvPokedexNr.text = pkData.specyData.id.toString()
 
-        loadTypeCardview(
+        loadTypeCardView(
             pkData.pokemon.primaryType.typeId,
             sheetBinding.cvTypeOne,
             sheetBinding.ivTypePokemon1,
@@ -137,7 +147,7 @@ class HomeDetailFragment : Fragment() {
             typeNames.find { it.typeId == pkData.pokemon.primaryType.typeId }?.name
                 ?: "Error"
         )
-        loadTypeCardview(
+        loadTypeCardView(
             pkData.pokemon.secondaryType?.typeId,
             sheetBinding.cvTypeTwo,
             sheetBinding.ivTypePokemon2,
@@ -178,11 +188,11 @@ class HomeDetailFragment : Fragment() {
         sheetBinding.btnShowAttacks.setOnClickListener {
             openAttacksList()
         }
-        // sets a chip for each generation a pokemon has move learn datas and submits the first chip infos
+        // sets a chip for each generation a pokemon has move learn data and submits the first chip info
 
 
         val weight = String.format("%.1f", pkData.pokemon.weight / 10.0)
-        // Basic Infos Card
+        // Basic Info Card
         val height = String.format("%.1f", pkData.pokemon.height / 10.0)
         sheetBinding.tvHeightValue.text = getString(R.string.m, height)
         sheetBinding.tvWeightValue.text = getString(R.string.kg, weight)
@@ -232,6 +242,16 @@ class HomeDetailFragment : Fragment() {
         }
     }
 
+    /** Gets the evolutionStages of a pokemon and sets this stage to a custom evolution view to show the evolution tree */
+    private fun createEvolutionView(speciesId: Int, evolutionDetails: List<PkEvolutionDetails>) {
+        val evolutionStages = pokeViewModel.startEvolutionTree(
+            clickedSpeciesId = speciesId,
+            evolutionDetails = evolutionDetails
+        ).toMutableList()
+        val evolutionView = sheetBinding.evolutionArrows
+        evolutionView.setPokemon(evolutionStages.removeFirst())
+    }
+
     /** Shows an info icon if the pokemon has various forms and opens a dialog to navigate to them */
     private fun enableFormDialog(
         translatedName: String?,
@@ -268,7 +288,7 @@ class HomeDetailFragment : Fragment() {
         }
     }
 
-    /** Sets the on click listener for the Nr / Name Cardview to show names in different languages
+    /** Sets the on click listener for the Nr / Name Card view to show names in different languages
      * and creates the pokedexAdapter  */
     private fun setNamePopupAndPokedexAdapter(
         specieNames: List<PkNames>,
@@ -288,9 +308,9 @@ class HomeDetailFragment : Fragment() {
             { versionId -> onVersionSelected(versionId, pokedexAdapter) } // callback fun2
         )
         sheetBinding.rvPokedexFlavor.adapter = pokedexAdapter
-        val pokedexList = pokeViewModel.filterPokedexInfos()
+        val pokedexList = pokeViewModel.filterPokedexInfo()
         pokedexAdapter.submitList(pokedexList)
-        // to prevent more than 1 snaphelper gets attached
+        // to prevent more than 1 snap helper gets attached
         if (snapHelperPokedexTexts == null) {
             snapHelperPokedexTexts = PagerSnapHelper()
             snapHelperPokedexTexts?.attachToRecyclerView(sheetBinding.rvPokedexFlavor)
@@ -349,7 +369,7 @@ class HomeDetailFragment : Fragment() {
             }
         }
 
-        // keeps track of the checked chipbutton so that it cant be disabled
+        // keeps track of the checked chip button so that it cant be disabled
         var lastCheckedId = chipGroup[0].id
         chipGroup.check(lastCheckedId) // check the first chip -> submits the first list of images
         chipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
@@ -363,9 +383,9 @@ class HomeDetailFragment : Fragment() {
     }
 
     /**
-     * Opens a dialog when pokedex Infos languageButton is clicked
+     * Opens a dialog when pokedex Info languageButton is clicked
      * @param languageList the list of all languages to be chosen from
-     * @param adapter reference to pass to submitPokedexInfos function
+     * @param adapter reference to pass to submitPokedexInfo function
      *
      */
     private fun openLanguageMenu(
@@ -378,7 +398,7 @@ class HomeDetailFragment : Fragment() {
             .setTitle(title)
             .setItems(nameList) { _, which ->
                 val languageId = which + 1
-                val list = pokeViewModel.filterPokedexInfos(languageId)
+                val list = pokeViewModel.filterPokedexInfo(languageId)
                 adapter.submitList(list)
             }.show()
     }
@@ -393,7 +413,7 @@ class HomeDetailFragment : Fragment() {
     }
 
     /**
-     * Creates a text depending on the genderrate
+     * Creates a text depending on the gender rate
      *
      * @param genderRate gender ratio of the pokemon in eight (8 = 100% female, 1 = 12.5% female, -1 = genderless)
      */
@@ -412,7 +432,7 @@ class HomeDetailFragment : Fragment() {
         )
     }
 
-    //region Functions to fill Bars / TypeCardViews/ Radarchart
+    //region Functions to fill Bars / TypeCardViews/ Radar chart
     private fun fillProgressBars(statList: List<Float>) {
         val listBindings = listOf(
             binding.bottomSheetBinding.hpBar,
@@ -428,15 +448,15 @@ class HomeDetailFragment : Fragment() {
     }
 
     /**
-     * Changes the colour of the Type Cardviews depending on the Pokemontype - ID
+     * Changes the colour of the Type Card views depending on the Pokemon type - ID
      *
-     * @param typeId the ID of the pokemontype
-     * @param cardView Cardview to be edited
+     * @param typeId the ID of the pokemon type
+     * @param cardView Card view to be edited
      * @param imageView to Display Type Icon
      * @param textView to set Typename Text
      * @param name the TypeName to be displayed in the TextView
      */
-    private fun loadTypeCardview(
+    private fun loadTypeCardView(
         typeId: Int?,
         cardView: MaterialCardView,
         imageView: ImageView,
@@ -505,7 +525,7 @@ class HomeDetailFragment : Fragment() {
 
         radarChart.yAxis.axisMinimum = 0f
         radarChart.xAxis.textSize = 14f
-        radarChart.yAxis.axisMaximum = 255f // Wähle eine Granularität, die zu deinen Werten passt
+        radarChart.yAxis.axisMaximum = 255f
         radarChart.yAxis.setDrawLabels(false)
 
         radarChart.legend.isEnabled = false

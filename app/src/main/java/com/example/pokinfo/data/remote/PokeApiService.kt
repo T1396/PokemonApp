@@ -6,11 +6,11 @@ import com.example.pokeinfo.data.graphModel.AbilityDetailQuery
 import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
 import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
 import com.example.pokeinfo.data.graphModel.AttacksQuery
-import com.example.pokeinfo.data.graphModel.FormQuery
 import com.example.pokeinfo.data.graphModel.LanguageAndVersionNamesQuery
 import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail2Query
+import com.example.pokeinfo.data.graphModel.PokemonDetail3Query
 import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.data.models.typeInfo.Type
 import com.squareup.moshi.Moshi
@@ -57,8 +57,8 @@ class GraphApiServiceImpl(private val apolloClient: ApolloClient) {
     }
 
     /** For Home-Detail Fragment */
-    suspend fun thirdPokemonQuery(speciesId: Int, languageId: Int): FormQuery.Data? {
-        val response = apolloClient.query(FormQuery(speciesId, languageId)).execute()
+    suspend fun thirdPokemonQuery(speciesId: Int, languageId: Int): PokemonDetail3Query.Data? {
+        val response = apolloClient.query(PokemonDetail3Query(speciesId, languageId)).execute()
         return response.data
     }
 

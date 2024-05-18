@@ -148,7 +148,36 @@ query PokeList($languageId: Int!) {
 
 
 
-query FormQuery($speciesId: Int!, $languageId: Int!) {
+query PokemonDetail3($speciesId: Int!, $languageId: Int!) {
+    pokemon_v2_evolutionchain(where: {pokemon_v2_pokemonspecies: {id: {_eq: $speciesId}}}) {
+        baby_trigger_item_id
+        id
+        pokemon_v2_pokemonspecies {
+            evolves_from_species_id
+            name
+            order
+            evolution_chain_id
+            id
+            pokemon_v2_pokemonevolutions {
+                party_type_id
+                party_species_id
+                needs_overworld_rain
+                min_level
+                min_happiness
+                min_beauty
+                min_affection
+                location_id
+                known_move_type_id
+                known_move_id
+                id
+                held_item_id
+                evolved_species_id
+                gender_id
+                evolution_trigger_id
+                evolution_item_id
+            }
+        }
+    }
     pokemon_v2_pokemonform_aggregate(where: {pokemon_v2_pokemon: {pokemon_species_id: {_eq: $speciesId}}}) {
         nodes {
             form_name
@@ -177,62 +206,6 @@ query FormQuery($speciesId: Int!, $languageId: Int!) {
         }
     }
 }
-
-
-query PokemonDetail3($nr: Int!, $languageId: Int!) {
-    pokemon: pokemon_v2_pokemon(where: {id: {_eq: $nr}}) {
-        id
-        name
-        encounters: pokemon_v2_encounters(where: {pokemon_v2_encounterslot: {encounter_method_id: {_nin: [18, 19]}}}, order_by: {version_id: asc}) {
-            id
-            location_area_id
-            encounter_slot_id
-            version: pokemon_v2_version {
-                name
-                version_group_id
-            }
-            max_level
-            min_level
-            encounterslot: pokemon_v2_encounterslot {
-                id
-                method: pokemon_v2_encountermethod {
-                    id
-                    name
-                    nameTranslated: pokemon_v2_encountermethodnames(where: {language_id: {_eq: $languageId}}) {
-                        id
-                        name
-                    }
-                }
-            }
-            conditionValues: pokemon_v2_encounterconditionvaluemaps {
-                id
-                encounter_condition_value_id
-                value: pokemon_v2_encounterconditionvalue {
-                    id
-                    name
-                    nameTranslated: pokemon_v2_encounterconditionvaluenames(where: {language_id: {_eq: $languageId}}) {
-                        id
-                        name
-                        pokemon_v2_encounterconditionvalue {
-                            id
-                            is_default
-                            name
-                        }
-                    }
-                }
-            }
-            locationArea: pokemon_v2_locationarea {
-                id
-                name
-                pokemon_v2_locationareanames {
-                    id
-                    name
-                }
-            }
-        }
-    }
-}
-
 
 
 
@@ -414,7 +387,6 @@ query PokemonDetail1($nr: Int!, $languageId: Int!) {
     }
 
 }
-
 query AttacksQuery($languageId: Int!) {
     moves: pokemon_v2_move {
         names: pokemon_v2_movenames(where: {language_id: {_in: [$languageId, 9]}}) {
@@ -433,6 +405,12 @@ query AttacksQuery($languageId: Int!) {
         move_effect_chance
         priority
         pp
+        pokemon_v2_moveeffect {
+            pokemon_v2_moveeffecteffecttexts(where: {language_id: {_eq: $languageId}}) {
+                short_effect
+                effect
+            }
+        }
         machines: pokemon_v2_machines {
             machine_number
             version_group_id
@@ -441,8 +419,8 @@ query AttacksQuery($languageId: Int!) {
             }
         }
     }
-
 }
+
 
 
 
