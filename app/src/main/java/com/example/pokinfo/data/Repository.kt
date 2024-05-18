@@ -8,10 +8,10 @@ import com.example.pokeinfo.data.graphModel.AbilityDetailQuery
 import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
 import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
 import com.example.pokeinfo.data.graphModel.AttacksQuery
-import com.example.pokeinfo.data.graphModel.FormQuery
 import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail2Query
+import com.example.pokeinfo.data.graphModel.PokemonDetail3Query
 import com.example.pokinfo.R
 import com.example.pokinfo.data.local.PokeDatabase
 import com.example.pokinfo.data.mapper.TypeInfoForDatabase
@@ -21,9 +21,9 @@ import com.example.pokinfo.data.models.database.pokemon.PkMove
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.remote.PokeApi
 import com.example.pokinfo.data.util.UIState
 import com.google.firebase.Timestamp
@@ -36,7 +36,7 @@ import kotlinx.coroutines.sync.withPermit
 data class PokemonDataWrapper(
     val data1: PokemonDetail1Query.Data?,
     val data2: PokemonDetail2Query.Data?,
-    val data3: FormQuery.Data?
+    val data3: PokemonDetail3Query.Data?
 )
 
 private const val SIXTY_DAYS_IN_MILLIS = 5184000000
