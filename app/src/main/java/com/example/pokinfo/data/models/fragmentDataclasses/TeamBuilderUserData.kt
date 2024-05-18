@@ -1,11 +1,10 @@
 package com.example.pokinfo.data.models.fragmentDataclasses
 
+import com.example.pokinfo.data.models.firebase.EvIvData
+
 data class TeamBuilderData(
-    val ivList: List<Int>,
-    val ivNames: List<String>,
-    val evNames: List<String>,
-    val evList: List<Int>,
+    val ivList: List<EvIvData>,
+    val evList: List<EvIvData>,
     val gender: Int,
     val level: Int,
-    val selectedAbility: Pair<String, String>
 )

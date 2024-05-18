@@ -58,8 +58,7 @@ data class TeamPokemon(
     var attackFour: AttacksData? = null,
     var evList: List<EvIvData> = emptyList(),
     var ivList: List<EvIvData> = emptyList(),
-    var abilityName: String = "",
-    var abilityEffect: String = "",
+    var abilityId: Int = 0
 ) : Parcelable {
     companion object {
         @JvmStatic
@@ -89,8 +88,7 @@ data class TeamPokemon(
                     ?: emptyList(),
                 ivList = (map["ivList"] as? List<Map<String, Any?>>)?.map { EvIvData.fromMap(it) }
                     ?: emptyList(),
-                abilityName = map["abilityName"] as? String ?: "",
-                abilityEffect = map["abilityEffect"] as? String ?: ""
+                abilityId = (map["abilityId"] as? Number)?.toInt() ?: 0
             )
         }
     }
@@ -98,13 +96,13 @@ data class TeamPokemon(
 
 @Parcelize
 data class EvIvData(
-    val statName: String = "",
+    val statId: Int = -1,
     val value: Int = 0,
 ) : Parcelable {
     companion object {
         fun fromMap(map: Map<String, Any?>): EvIvData {
             return EvIvData(
-                statName = map["statName"] as? String ?: "",
+                statId = (map["statId"] as? Number)?.toInt() ?: -1,
                 value = (map["value"] as? Number)?.toInt() ?: 0
             )
         }
@@ -113,6 +111,7 @@ data class EvIvData(
 
 @Parcelize
 data class AttacksData(
+    val attackId: Int = -1,
     val name: String = "No data found",
     val levelLearned: Int = 0,
     val accuracy: Int? = null,
@@ -120,6 +119,7 @@ data class AttacksData(
     val moveDamageClassId: Int = 0,
     val power: Int = 0,
     val pp: Int = 0,
+    val generationId: Int = 0,
     val typeId: Int = 0,
     var isExpanded: Boolean = false
 ) : Parcelable
@@ -127,6 +127,7 @@ data class AttacksData(
     companion object {
         fun fromMap(map: Map<String, Any?>): AttacksData {
             return AttacksData(
+                attackId = (map["attackId"] as? Number)?.toInt() ?: -1,
                 name = map["name"] as? String ?: "No data found",
                 levelLearned = (map["levelLearned"] as? Number)?.toInt() ?: 0,
                 accuracy = (map["accuracy"] as? Number)?.toInt(),

@@ -13,7 +13,9 @@ import com.example.pokinfo.adapter.teamAndTeambuilder.PokemonTeamAdapter
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.databinding.FragmentTeamsBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
-import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
+import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -25,9 +27,13 @@ class TeamsFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-
-    private val fireBaseViewModel: FirebaseViewModel by activityViewModels()
-    private val pokeViewModel: PokeViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val fireBaseViewModel: FirebaseViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
+    private val teamsViewModel: TeamBuilderViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private var fabAddTeam: FloatingActionButton? = null
 
 
@@ -49,8 +55,7 @@ class TeamsFragment : Fragment() {
             showEditTeamConfirmation(it)
         }
         binding.rvTeams.adapter = adapter
-        fireBaseViewModel.listenForTeamsInFirestore{
-
+        fireBaseViewModel.listenForTeamsInFireStore {
 
             fireBaseViewModel.pokemonTeams.observe(viewLifecycleOwner) { teams ->
                 if (teams.isNotEmpty()) {
@@ -59,15 +64,13 @@ class TeamsFragment : Fragment() {
                     binding.tvNoTeams.visibility = View.GONE
                 }
             }
-        } // start snapshot listener for teams
+        }
 
         fabAddTeam?.setOnClickListener {
             // delete old values if present
-            pokeViewModel.resetTeamData()
-            pokeViewModel.resetChosenAttacks()
+            teamsViewModel.resetTeamData()
             findNavController().navigate(TeamsFragmentDirections.actionNavTeambuilderToTeamBuild())
         }
-
     }
 
     override fun onDestroyView() {
@@ -92,6 +95,7 @@ class TeamsFragment : Fragment() {
         val share = view.findViewById<TextView>(R.id.shareText)
 
         edit.setOnClickListener {
+            teamsViewModel.setNewTeamIndex(0)
             findNavController().navigate(TeamsFragmentDirections.actionNavTeambuilderToTeamBuild(pokemonTeam))
             dialog.dismiss()
         }
