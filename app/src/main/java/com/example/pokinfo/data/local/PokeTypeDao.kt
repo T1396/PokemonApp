@@ -6,12 +6,12 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.example.pokinfo.data.mapper.TypeInfoForDatabase
-import com.example.pokinfo.data.models.database.type.DamageRelation
-import com.example.pokinfo.data.models.database.type.GameIndex
-import com.example.pokinfo.data.models.database.type.MoveWithType
-import com.example.pokinfo.data.models.database.type.PokemonType
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
-import com.example.pokinfo.data.models.database.type.PokemonWithThisType
+import com.example.pokinfo.data.models.database.pokemon.DamageRelation
+import com.example.pokinfo.data.models.database.pokemon.GameIndex
+import com.example.pokinfo.data.models.database.pokemon.MoveWithType
+import com.example.pokinfo.data.models.database.pokemon.PokemonType
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonWithThisType
 
 @Dao
 interface PokemonTypeDao {
