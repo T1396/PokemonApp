@@ -10,20 +10,26 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.PagerSnapHelper
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.abilities.AbilityDetailAdapter
-import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.databinding.FragmentAbilitiesDetailBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
 import com.example.pokinfo.viewModels.AbilityViewModel
 import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 
 
 class AbilitiesDetailFragment : Fragment() {
 
     private var _binding: FragmentAbilitiesDetailBinding? = null
     private val binding get() = _binding!!
-    private val pokeViewModel: PokeViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val pokeViewModel: PokeViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private val abilityViewModel: AbilityViewModel by activityViewModels()
     private var snapHelperAbility: PagerSnapHelper? = null
+    private lateinit var adapter: AbilityDetailAdapter
+    private var languageId = 9
 
 
     override fun onCreateView(
@@ -32,6 +38,7 @@ class AbilitiesDetailFragment : Fragment() {
     ): View {
         // Inflate the layout for this fragment
         _binding = FragmentAbilitiesDetailBinding.inflate(inflater, container, false)
+        languageId = pokeViewModel.getLangId()
         return binding.root
     }
 
@@ -43,42 +50,18 @@ class AbilitiesDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val languageId = pokeViewModel.getLangId()
-        abilityViewModel.abilityDetail.observe(viewLifecycleOwner) { response ->
-            val typeNames = pokeViewModel.pokemonTypeNames
-            val ability = response?.data?.firstOrNull()
-            val abilityName =
-                ability?.names?.nodes?.find { it.language_id == languageId }?.name
-                    ?: ability?.name
+        createAdapter()
+        val typeNames = pokeViewModel.pokemonTypeNames
+
+        abilityViewModel.abilityDetail.observe(viewLifecycleOwner) {
+            abilityViewModel.prepareAbilityDetails()
+
+
+            val abilityName = abilityViewModel.getAbilityName()
             binding.tvAbilityName.text = abilityName
 
-            val adapter = AbilityDetailAdapter()
-            binding.rvAbility.adapter = adapter
 
-            if (snapHelperAbility == null) {
-                snapHelperAbility = PagerSnapHelper()
-                snapHelperAbility?.attachToRecyclerView(binding.rvAbility)
-            }
-            // map data to AbilityDataClass for RecyclerView
-
-            val list = ability?.effectTexts?.map { abilityData ->
-                val effectTextLangId = abilityData.language_id
-                AbilityEffectText(
-                    id = abilityData.ability_id ?: -1,
-                    name = ability.names.nodes.find { it.language_id == effectTextLangId }?.name
-                        ?: "Error",
-                    languageId = effectTextLangId ?: -1,
-                    textLong = abilityData.effect,
-                    textShort = abilityData.short_effect,
-                    slot = -1
-                )
-
-            } ?: emptyList()
-            // sorts the lists so that elements with the actual languageid comes first
-            adapter.submitList(list.sortedWith(compareBy { it.languageId != pokeViewModel.getLangId() }))
-
-            val idList = ability?.pokemonList?.map { it.pokemon_id ?: -1 } ?: emptyList()
-            abilityViewModel.getPokemonListWhoLearnMove(idList) { pokemonList ->
+            abilityViewModel.getPokemonListWhoLearnMove { pokemonList ->
 
                 binding.btnShowPokemonWithAbility.setOnClickListener {
                     // shows dialog with list of all pokemon who learns the ability
@@ -101,6 +84,19 @@ class AbilitiesDetailFragment : Fragment() {
                 }
             }
 
+
+            abilityViewModel.abilityEffectTexts.observe(viewLifecycleOwner) { abilityDetails ->
+                adapter.submitList(abilityDetails)
+            }
+        }
+    }
+
+    private fun createAdapter() {
+        adapter = AbilityDetailAdapter()
+        binding.rvAbility.adapter = adapter
+        if (snapHelperAbility == null) {
+            snapHelperAbility = PagerSnapHelper()
+            snapHelperAbility?.attachToRecyclerView(binding.rvAbility)
         }
     }
 }

@@ -8,17 +8,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.pokeinfo.data.graphModel.AbilityDetailQuery
 import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
 import com.example.pokinfo.adapter.abilities.AbilityInfo
+import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.enums.AbilityFilter
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.properties.Delegates
 
 class AbilityViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = RepositoryProvider.provideRepository(application)
@@ -46,14 +45,6 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun setLangId(languageId: Int) {
-        this.languageId = languageId
-    }
-
-    fun getLangId(): Int {
-        return languageId
-    }
-
     private val _allAbilities = MutableLiveData<List<AbilityInfo>>()
     private val abilityMapper: (AllAbilitiesQuery.Data?) -> List<AbilityInfo> = { response ->
         response?.response?.data?.map { ability ->
@@ -65,9 +56,38 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         } ?: emptyList()
     }
 
+
     private var _abilityDetails = MutableLiveData<AbilityDetailQuery.Data?>()
     val abilityDetail: LiveData<AbilityDetailQuery.Data?>
         get() = _abilityDetails
+
+    // Define a mapper function for ability details similar to abilityMapper
+    private val detailMapper: (AbilityDetailQuery.Data?) -> List<AbilityEffectText> = { data ->
+        data?.data?.firstOrNull()?.let { detail ->
+            detail.effectTexts.map { effectText ->
+                val effectTextLangId = effectText.language_id
+                AbilityEffectText(
+                    abilityId = effectText.ability_id ?: -1,
+                    name = detail.names.nodes.find { it.language_id == effectTextLangId }?.name ?: "No name found",
+                    languageId = effectTextLangId ?: -1,
+                    textLong = effectText.effect,
+                    textShort = effectText.short_effect,
+                    slot = -1
+                )
+            }.sortedWith(compareBy { it.languageId != languageId })
+        } ?: emptyList()
+    }
+
+    // Use the mapper to transform the LiveData from repository data
+    fun prepareAbilityDetails() {
+        val ability = _abilityDetails.value
+        val mappedDetails = detailMapper(ability)
+        _abilityEffectTexts.postValue(mappedDetails)
+    }
+
+    private val _abilityEffectTexts = MutableLiveData<List<AbilityEffectText>>()
+    val abilityEffectTexts: LiveData<List<AbilityEffectText>> get() = _abilityEffectTexts
+
 
     private val _selectedAbilityFilter = MutableLiveData<AbilityFilter?>()
     private val selectedAbilityFilter: LiveData<AbilityFilter?>
@@ -104,7 +124,10 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** Gets all Pokemon who learns the move the user is inspecting */
-    fun getPokemonListWhoLearnMove(ids: List<Int>, onLoadFinished: (List<PokemonForList>) -> Unit) {
+    fun getPokemonListWhoLearnMove(onLoadFinished: (List<PokemonForList>) -> Unit) {
+        val ids = _abilityDetails.value?.data?.firstOrNull()?.pokemonList?.mapNotNull {
+            it.pokemon_id
+        } ?: return
         viewModelScope.launch(Dispatchers.IO) {
             val list = repository.getPokemonWhoLearnSpecificAttack(ids)
             onLoadFinished(list)
@@ -133,6 +156,12 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
             // if a filter is selected filter the ability where genID match with filter genID else don't filter
         }
         _filteredAbilityList.postValue(filteredList)
+    }
+
+    fun getAbilityName(): String {
+        val ability = _abilityDetails.value?.data?.firstOrNull()
+        val abilityName = ability?.names?.nodes?.find { it.language_id == this.languageId }?.name
+        return abilityName ?: ability?.name ?: "No Name found"
     }
 
 }

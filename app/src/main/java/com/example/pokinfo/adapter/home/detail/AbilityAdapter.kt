@@ -8,7 +8,7 @@ import com.example.pokinfo.R
 import com.example.pokinfo.databinding.ItemListAbilityBinding
 
 
-class AbilityAdapter() :
+class AbilityAdapter :
     RecyclerView.Adapter<AbilityAdapter.ItemViewHolder>() {
     private var dataset: List<AbilityEffectText> = emptyList()
 
@@ -46,7 +46,7 @@ class AbilityAdapter() :
 }
 
 data class AbilityEffectText(
-    val id: Int,
+    val abilityId: Int,
     val name: String = "No data found",
     val slot: Int,
     val textLong: String = "",
