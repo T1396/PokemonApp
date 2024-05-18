@@ -1,11 +1,11 @@
 package com.example.pokinfo.data.mapper
 
 import com.example.pokinfo.data.maps.languageMap
-import com.example.pokinfo.data.models.database.type.DamageRelation
-import com.example.pokinfo.data.models.database.type.MoveWithType
-import com.example.pokinfo.data.models.database.type.PokemonType
-import com.example.pokinfo.data.models.database.type.PokemonWithThisType
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.DamageRelation
+import com.example.pokinfo.data.models.database.pokemon.MoveWithType
+import com.example.pokinfo.data.models.database.pokemon.PokemonType
+import com.example.pokinfo.data.models.database.pokemon.PokemonWithThisType
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.typeInfo.Type
 
 /** Helper Class to map Type Information from the pokeapi to dataclasses to save in the database */

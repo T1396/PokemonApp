@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.databinding.ItemListPokedexBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 

@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 fun Fragment.showConfirmationDialog(
@@ -33,7 +33,7 @@ fun Fragment.openPokemonListDialog(
     listOfPokemon: List<PokemonForList>,
     title: String,
     typeNames: List<PokemonTypeName>,
-    navigateCallback:(Int) -> Unit,
+    navigateCallback: (Int) -> Unit,
 ) {
     val inflater = requireActivity().layoutInflater
     val view = inflater.inflate(R.layout.popup_pokemon_list, null)
@@ -46,9 +46,12 @@ fun Fragment.openPokemonListDialog(
     }.create()
 
     val adapter = PokeListAdapter(typeNames) { pokemonId ->
-        showConfirmationDialog(onConfirm = {
-            navigateCallback(pokemonId)
-        }, onCancel = null)
+        showConfirmationDialog(
+            onConfirm = {
+                navigateCallback(pokemonId)
+            },
+            onCancel = null
+        )
         dialog.dismiss() // close dialog if pokemon is selected
     }
     rvList.adapter = adapter

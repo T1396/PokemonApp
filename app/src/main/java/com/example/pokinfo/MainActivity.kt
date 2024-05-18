@@ -24,10 +24,10 @@ import coil.load
 import coil.transform.CircleCropTransformation
 import com.example.pokinfo.data.util.sharedPreferences
 import com.example.pokinfo.databinding.ActivityMainBinding
-import com.example.pokinfo.viewModels.AbilityViewModel
-import com.example.pokinfo.viewModels.AttacksViewModel
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -39,8 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: FirebaseViewModel
     private lateinit var pokeViewModel: PokeViewModel
-    private lateinit var attacksViewModel: AttacksViewModel
-    private lateinit var abilitiesViewModel: AbilityViewModel
+    private lateinit var sharedViewModel: SharedViewModel
 
 
     private var isInitialized by sharedPreferences("isInitialized", false)
@@ -65,14 +64,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        viewModel = ViewModelProvider(this)[FirebaseViewModel::class.java]
+        sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
+        val factory = ViewModelFactory(application, sharedViewModel)
+        viewModel = ViewModelProvider(this, factory)[FirebaseViewModel::class.java]
         pokeViewModel =
-            ViewModelProvider(this)[PokeViewModel::class.java]
-        attacksViewModel =
-            ViewModelProvider(this)[AttacksViewModel::class.java]
-        abilitiesViewModel =
-            ViewModelProvider(this)[AbilityViewModel::class.java]
+            ViewModelProvider(this, factory)[PokeViewModel::class.java]
 
         setSupportActionBar(binding.appBarMain.mainToolbar)
 
@@ -169,26 +165,15 @@ class MainActivity : AppCompatActivity() {
                 viewModel.getProfilePicture {
                     updateProfilePicture(it)
                 }
-
             }
         }
 
-        viewModel.messageSender.observe(this) { messageId ->
-            val displayMessage = getString(messageId)
-            Snackbar.make(coordinatorLayout, displayMessage, Snackbar.LENGTH_SHORT).show()
+        sharedViewModel.snackbarSender.observe(this) { message ->
+            Snackbar.make(coordinatorLayout, message, Toast.LENGTH_SHORT).show()
         }
 
-        viewModel.errorMessage.observe(this) { errorMessage ->
-            if (!errorMessage.isNullOrEmpty()) {
-                Snackbar.make(coordinatorLayout, errorMessage, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        pokeViewModel.snackBarMessageSender.observe(this) { resId ->
-            if (resId != null) {
-                val message = getString(resId)
-                Snackbar.make(coordinatorLayout, message, Toast.LENGTH_SHORT).show()
-            }
+        sharedViewModel.snackbarResSender.observe(this) { res ->
+            Snackbar.make(coordinatorLayout, getString(res), Snackbar.LENGTH_SHORT).show()
         }
 
 

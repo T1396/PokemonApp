@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="60dp"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/rounded_button_shape"
-    android:backgroundTint="?attr/colorSurfaceContainerHighest"
+    android:background="@drawable/item_shape"
     android:clickable="true"
     android:focusable="true"
     android:foreground="@drawable/ripple">

@@ -151,7 +151,6 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
             android:gravity="end"
-            android:text="1 Selected"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -167,13 +166,14 @@
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout3"
-        tools:listitem="@layout/item_list_team_builder_attacks" />
+        tools:listitem="@layout/item_list_attacks" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floatingActionButton"

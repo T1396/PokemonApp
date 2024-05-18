@@ -8,8 +8,7 @@
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp"
     android:layout_marginBottom="6dp"
-    android:background="@drawable/rounded_button_shape"
-    android:backgroundTint="?attr/colorSurfaceContainerHighest"
+    android:background="@drawable/item_shape"
     android:clickable="true"
     android:focusable="true"
     android:foreground="@drawable/ripple">

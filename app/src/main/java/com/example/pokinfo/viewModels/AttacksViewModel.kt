@@ -1,7 +1,6 @@
 package com.example.pokinfo.viewModels
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,12 +9,12 @@ import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
 import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.mapper.AttackMapper
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
-import com.example.pokinfo.data.models.fragmentDataclasses.AttacksListData
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.enums.AttackFilter
 import com.example.pokinfo.data.enums.AttackFilter2
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,7 +34,6 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
 
     var pokemonTypeNames: List<PokemonTypeName> = emptyList()
         private set
-
 
     init {
         loadGenericData()
@@ -61,26 +59,24 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
         get() = _selectedAttackTypeFilter
 
     // filtered Attacks Live-Data
-    private val _filteredAttackList = MutableLiveData<List<AttacksListData>>()
-    val filteredAttackList: LiveData<List<AttacksListData>> = _filteredAttackList
+    private val _filteredAttackList = MutableLiveData<List<AttacksData>>()
+    val filteredAttackList: LiveData<List<AttacksData>> = _filteredAttackList
 
     // search input
     private val _searchInputAttacks = MutableLiveData("")
 
-    private val _allAttacksList = MutableLiveData<List<AttacksListData>>()
+    private val _allAttacksList = MutableLiveData<List<AttacksData>>()
 
     private val _clickedAttack = MutableLiveData<AttackDetailsQuery.Data?>()
     val clickedAttack: LiveData<AttackDetailsQuery.Data?>
         get() = _clickedAttack
 
-    fun setLangId(languageId: Int) {
-        this.languageId = languageId
-    }
     fun getLangId(): Int {
         return languageId
     }
+
     fun getLanguageName(languageId: Int): String {
-        return languageNames.find { it.languageId == languageId }?.name ?: "No Languagename found"
+        return languageNames.find { it.languageId == languageId }?.name ?: "No language name found"
     }
 
     fun setSearchInputAttacks(input: String) {
@@ -154,11 +150,12 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun getPokemonDescription(languageId: Int, versionId: Int): AttackDetailsQuery.Text? {
+    fun getAttackDescription(languageId: Int, versionId: Int): AttackDetailsQuery.Text? {
         val data = _clickedAttack.value?.move?.firstOrNull()?.texts
-        var attackDescription = data?.find { it.language_id == languageId && it.version_group_id == versionId }
+        var attackDescription =
+            data?.find { it.language_id == languageId && it.version_group_id == versionId }
         if (attackDescription == null) {
-           attackDescription = data?.firstOrNull { it.language_id == languageId }
+            attackDescription = data?.firstOrNull { it.language_id == languageId }
         }
         return attackDescription
     }
@@ -175,18 +172,20 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getAvailableLanguageNames(): List<LanguageNames> {
-        val attacks = _clickedAttack.value?.move?.firstOrNull()?.texts?.map { it.language_id } ?: return emptyList()
+        val attacks = _clickedAttack.value?.move?.firstOrNull()?.texts?.map { it.language_id }
+            ?: return emptyList()
         return languageNames.filter { attacks.any { it == languageId } }
     }
 
     fun getAvailableVersions(languageId: Int): List<VersionNames> {
         val data = _clickedAttack.value?.move?.firstOrNull() ?: return emptyList()
         val filtered = data.texts.filter { it.language_id == languageId }
-        val versions = filtered.map { it.version_group_id }.toSet()
-        return versionNames.filter { it.versionId in versions }
+        val versionIds = filtered.map { it.version_group_id }.toSet()
+        return versionNames.filter { it.versionId in versionIds }
     }
 
     fun getVersionName(actualVersionId: Int): String {
-        return versionNames.find { it.versionId == actualVersionId }?.name ?: "No versionname found"
+        return versionNames.find { it.versionId == actualVersionId }?.name
+            ?: "No version name found"
     }
 }

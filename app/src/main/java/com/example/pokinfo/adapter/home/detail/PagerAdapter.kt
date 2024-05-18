@@ -15,7 +15,7 @@ class ImageViewPagerAdapter(
 
     inner class ImageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.ivPokemonPager)
-        val textView: TextView = view.findViewById(R.id.tvPokemonnamePager)
+        val textView: TextView = view.findViewById(R.id.tvPokemonNamePager)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {

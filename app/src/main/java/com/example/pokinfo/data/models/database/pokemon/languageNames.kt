@@ -1,4 +1,4 @@
-package com.example.pokinfo.data.models.database.versionAndLanguageNames
+package com.example.pokinfo.data.models.database.pokemon
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

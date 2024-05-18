@@ -81,6 +81,7 @@
     <string name="value">Value</string>
 
     <string name="pokedex_info_title">Pokedex Entries</string>
+    <string name="evolution_header">%s\'s Evolutions</string>
 
     <string name="e_mail" translatable="false">E-Mail</string>
     <string name="password">Password</string>
@@ -138,7 +139,7 @@
     <string name="show_pokemon_attacks">Show Pokemon Attacks</string>
     <string name="go_the_the_next_picture">Go to the Next Picture</string>
     <string name="go_to_the_previous_picture">Go to the previous Picture</string>
-    <string name="the_elemental_type_icon_of_the_pokemontype">The elemental Type Icon of the Pokemontype</string>
+    <string name="the_elemental_type_icon_of_the_pokemon_type">The elemental Type Icon of the Pokemontype</string>
     <string name="creata_a_new_pokemon_team">Creata a new Pokemon Team</string>
     <string name="username" translatable="false">Username</string>
     <string name="or">OR</string>
@@ -159,6 +160,7 @@
     <string name="you_need_at_least_1_attack">You need to add at least one Attack to your Pokemon!</string>
     <string name="you_need_to_select_1_pokemon">You need to select a Pokemon first</string>
     <string name="failed_to_insert_team">Failed to insert Team into Firebase… try again or report</string>
+    <string name="failed_to_update_team">Failed to update team in Firebase… try again or report</string>
     <string name="successfully_saved_team">Successfully saved your Team</string>
     <string name="need_to_save_first_pokemon">You need to save at least 1 pokemon on the bottom Button</string>
     <string name="sucessfully_saved_pokemon">Saved Pokemon!</string>
@@ -205,4 +207,5 @@
 
 
     <string name="credential_error">There was an unexpected error with google sign… try again</string>
+    <string name="button_to_change_text_of_game_version">Button to change Text of Game Version</string>
 </resources>

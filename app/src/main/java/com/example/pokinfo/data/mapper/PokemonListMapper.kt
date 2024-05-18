@@ -50,7 +50,7 @@ class PokemonListMapper {
                                 isDefault = pokemon.is_default,
                                 officialImageUrl = loadImageUrl("official", id),
                                 name = name ?: "No name found",
-                                stats = createStatValueList(stat) ?: emptyList(),
+                                baseStats = createStatValueList(stat) ?: emptyList(),
                                 typeId1 = typeId1,
                                 typeId2 = typeId2
                             )

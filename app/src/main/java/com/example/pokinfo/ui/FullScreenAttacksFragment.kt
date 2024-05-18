@@ -1,12 +1,11 @@
 package com.example.pokinfo.ui
 
-import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -18,15 +17,27 @@ import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.util.UIState
 import com.example.pokinfo.databinding.FragmentAttacksFullscreenBinding
 import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
+import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.color.MaterialColors
 
+/** Fragment can have 2 different use cases
+ *  1. To just simply show Attacks of a pokemon within different generations (selection Mode = false)
+ *  2. To show a list of the attacks a pokemon can learn in newest gens to select up to 4 of that for the teambuilder
+ * */
 class FullScreenAttacksFragment : Fragment() {
 
     private lateinit var attacksAdapter: AttacksAdapter
     private lateinit var binding: FragmentAttacksFullscreenBinding
-    private val pokeViewModel: PokeViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val pokeViewModel: PokeViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
+    private val teamsViewModel: TeamBuilderViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private val args: FullScreenAttacksFragmentArgs by navArgs()
     private lateinit var allAttackDetails: List<PkMoveVersionGroupDetail>
 
@@ -54,9 +65,8 @@ class FullScreenAttacksFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.floatingActionButton.visibility = View.GONE
-
-        val pkData = pokeViewModel.clickedPokemon.value
-        val pokemonName = pokeViewModel.getTranslatedName()
+        val pkData = if (!isSelectionMode) pokeViewModel.clickedPokemon.value else teamsViewModel.clickedPokemon.value
+        val pokemonName = if (!isSelectionMode) pokeViewModel.getTranslatedName() else teamsViewModel.getTranslatedName()
         if (pkData != null) {
             (activity as AppCompatActivity).supportActionBar?.title =
                 getString(R.string.show_attacks_placeholder, pokemonName)
@@ -73,7 +83,7 @@ class FullScreenAttacksFragment : Fragment() {
             val typeNames = pokeViewModel.pokemonTypeNames
 
             if (!isSelectionMode) {
-                attacksAdapter = AttacksAdapter(typeNames, false)
+                attacksAdapter = AttacksAdapter(typeNames, true, showLevel = true, showPosition = false)
                 // not needed in selection mode
                 setChipsForEachGenAndListener(
                     chipGroup,
@@ -81,12 +91,12 @@ class FullScreenAttacksFragment : Fragment() {
                 ) // this submits the attacks also
 
             } else {
-                selectedAttackList = pokeViewModel.teamBuilderSelectedAttacks.value ?: emptyList()
+                selectedAttackList = teamsViewModel.teamBuilderSelectedAttacks.value ?: emptyList()
                 attacksAdapter =
-                    AttacksAdapter(typeNames, true) { selectedAttacks ->
+                    AttacksAdapter(typeNames, true, showLevel = false, selectAttackEnabled = true) { selectedAttacks ->
                         updateAttacksSelectedCount(selectedAttacks)
                     }
-                val attacksList = pokeViewModel.getAttacksFromNewestVersion()
+                val attacksList = teamsViewModel.getAttacksFromNewestVersion()
                 attacksAdapter.submitList(attacksList)
                 attacksAdapter.selectAttacks(selectedAttackList)
             }
@@ -95,8 +105,8 @@ class FullScreenAttacksFragment : Fragment() {
 
         binding.floatingActionButton.setOnClickListener {
             val attacks = attacksAdapter.getSelectedAttacks()
-            Log.d("selectedAttacksFragment", attacks.toString())
-            pokeViewModel.setSelectedAttacks(attacks)
+            teamsViewModel.setSelectedAttacks(attacks)
+            teamsViewModel.updatePokemonAttacks()
             findNavController().navigateUp()
         }
     }
@@ -131,50 +141,23 @@ class FullScreenAttacksFragment : Fragment() {
         val generationNrs = versionGroupSet.map {
             pokeViewModel.getGenerationOfVersion(it ?: 0)
         }.filterNot { it == 0 }.toSet().toList()
-        val unselectedColor = MaterialColors.getColor(
-            requireView(),
-            com.google.android.material.R.attr.colorOnSurface
-        )
-        val selectedColor =
-            MaterialColors.getColor(requireView(), com.google.android.material.R.attr.colorTertiary)
-        val textColorSelected = MaterialColors.getColor(
-            requireView(),
-            com.google.android.material.R.attr.colorOnTertiary
-        )
-        val textColorUnselected =
-            MaterialColors.getColor(requireView(), com.google.android.material.R.attr.colorSurface)
 
-        val states = arrayOf(
-            intArrayOf(android.R.attr.state_selected), // Zustand: ausgewählt
-            intArrayOf(-android.R.attr.state_selected) // Zustand: nicht ausgewählt
-        )
-
-        val colors = intArrayOf(
-            selectedColor,
-            unselectedColor
-        )
-        val textColors = intArrayOf(
-            textColorSelected, // Farbe für den ausgewählten Zustand
-            textColorUnselected // Farbe für den nicht ausgewählten Zustand
-        )
 
         generationNrs.forEachIndexed { index, _ ->
             Chip(requireContext()).apply {
                 text = getString(R.string.generation_nr_placeholder, generationNrs[index])
-                isClickable = true
-                isFocusable = false
                 isCheckable = true
-                chipBackgroundColor = ColorStateList(states, colors)
-                setTextColor(ColorStateList(states, textColors))
+                isClickable = true
+                chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary)
+                setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary_text))
                 tag =
                     generationNrs[index] // use the number of the gen as tag to call viewmodel gen filter function on click
-                chipGroup.addView(this)
-
                 setOnCheckedChangeListener { _, _ ->
                     val list = pokeViewModel.getFilteredAttacks(this.tag as Int)
                     attacksAdapter.submitList(list)
                 }
                 // checks first chip so list will be submitted due to onCheckedChangeListener
+                chipGroup.addView(this)
                 if (index == 0) chipGroup.check(this.id)
             }
 

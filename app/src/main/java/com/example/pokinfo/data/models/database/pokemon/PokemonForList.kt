@@ -18,7 +18,7 @@ data class PokemonForList(
     val imageUrl: String = "",
     val altImageUrl: String = "",
     val officialImageUrl: String = "",
-    val stats: List<StatValues> = emptyList(),
+    val baseStats: List<StatValues> = emptyList(),
     val typeId1: Int = 0,
     val typeId2: Int? = null
 ) : Parcelable
@@ -32,7 +32,7 @@ data class PokemonForList(
                 height = (map["height"] as? Number)?.toInt() ?: -1,
                 imageUrl = map["imageUrl"] as? String ?: "",
                 altImageUrl = map["altImageUrl"] as? String ?: "",
-                stats = (map["stats"] as? List<Map<String, Any?>>)?.map { StatValues.fromMap(it) } ?: emptyList(),
+                baseStats = (map["baseStats"] as? List<Map<String, Any?>>)?.map { StatValues.fromMap(it) } ?: emptyList(),
                 typeId1 = (map["typeId1"] as? Number)?.toInt() ?: -1,
                 typeId2 = (map["typeId2"] as? Number)?.toInt(),
             )
