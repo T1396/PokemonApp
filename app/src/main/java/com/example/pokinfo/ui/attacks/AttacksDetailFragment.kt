@@ -12,10 +12,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.R
-import com.example.pokinfo.R.drawable
-import com.example.pokinfo.R.string
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.databinding.FragmentAttacksDetailBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
 import com.example.pokinfo.viewModels.AttacksViewModel
@@ -50,8 +48,6 @@ class AttacksDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnShowPokemonWithMove.isEnabled = false
 
-        val languageNames = pokeViewModel.languageNames
-        val versionNames = pokeViewModel.versionNames
         val typeNames = pokeViewModel.pokemonTypeNames
 
         // Our actual language ID
@@ -83,9 +79,9 @@ class AttacksDetailFragment : Fragment() {
             binding.cvAtkType.setCardBackgroundColor(cardColor)
             val attackCategoryRes =
                 when (moveDetails?.move_damage_class_id) { // damage class id defines if its attack move or status etc
-                    1 -> drawable.pokemon_status_atk_icon
-                    2 -> drawable.pokemon_atk_icon
-                    else -> drawable.pokemon_sp_atk_icon
+                    1 -> R.drawable.pokemon_status_atk_icon
+                    2 -> R.drawable.pokemon_atk_icon
+                    else -> R.drawable.pokemon_sp_atk_icon
                 }
             val attackTypeDrawable = ContextCompat.getDrawable(
                 requireContext(),
@@ -127,7 +123,7 @@ class AttacksDetailFragment : Fragment() {
 
     private fun fillAttackDescription() {
 
-        val description = attacksViewModel.getPokemonDescription(actualLanguageId, actualVersionId ?: 1)
+        val description = attacksViewModel.getAttackDescription(actualLanguageId, actualVersionId ?: 1)
 
 
         binding.tvAttackDescription.text = description?.flavor_text
@@ -170,13 +166,13 @@ class AttacksDetailFragment : Fragment() {
     ) {
         openPokemonListDialog(
             listOfPokemon = listOfPokemon,
-            title = getString(string.every_pokemon_with_move, attackName),
+            title = getString(R.string.every_pokemon_with_move, attackName),
             typeNames
         ) { pokemonId ->
             // fetch pokemon data and navigate
             pokeViewModel.getSinglePokemonData(
                 pokemonId,
-                string.failed_load_single_pokemon_data
+                R.string.failed_load_single_pokemon_data
             )
             findNavController().navigate(
                 AttacksDetailFragmentDirections.actionNavAttacksDetailToNavHomeDetail(
@@ -206,7 +202,7 @@ class AttacksDetailFragment : Fragment() {
 
     private fun openLanguageMenu(
     ) {
-        val title = getString(string.choose_language)
+        val title = getString(R.string.choose_language)
         val nameList = attacksViewModel.getAvailableLanguageNames()
         val array = nameList.map { it.name }.toTypedArray()
         MaterialAlertDialogBuilder(requireContext())

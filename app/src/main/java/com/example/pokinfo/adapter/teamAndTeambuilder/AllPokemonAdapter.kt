@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
 import com.example.pokinfo.databinding.ItemListPokemonlistBinding
 
@@ -113,7 +113,7 @@ class AllPokemonAdapter(
         item: PokemonForList,
         bindMap: Map<Int, TextView>
     ) {
-        val stats = item.stats
+        val stats = item.baseStats
         stats.forEachIndexed { index, statValues ->
             bindMap[index+1]?.text = statValues.statValue.toString()
         }
