@@ -1,0 +1,5 @@
+<!-- res/color/special_chip_background_color.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/chip__selected_dark" android:state_selected="true"/>
+    <item android:color="#ADF39F9F"/>
+</selector>

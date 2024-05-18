@@ -7,66 +7,91 @@
     android:layout_height="match_parent"
     tools:context=".ui.abilities.AbilitiesListFragment">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilSearchField"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topBarAbility"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        app:endIconCheckable="false"
+        android:background="?attr/colorPrimary"
+        android:paddingBottom="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/tietSearchAbility"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilSearchField"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/enter_ability_name" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:textColorHint="?attr/colorOnPrimary"
+            android:theme="@style/ThemeOverlay.AppTheme.TextInputEditText.Outlined"
+            app:boxStrokeColor="@color/text_input_layout_stroke"
+            app:cursorColor="?attr/colorOnPrimary"
+            app:endIconCheckable="false"
+            app:endIconDrawable="@drawable/baseline_sort_24"
+            app:endIconMode="custom"
+            app:endIconTint="?attr/colorOnPrimary"
+            app:hintTextColor="?attr/colorOnPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <HorizontalScrollView
-        android:id="@+id/scrollViewChips"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:overScrollMode="never"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilSearchField">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
-
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupFilter"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tietSearchAbility"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/enter_ability_name"
+                android:textColor="?attr/colorOnPrimary"
+                android:textColorHint="@color/text_input_hint_color" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/scrollViewChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:overScrollMode="never"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tilSearchField">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                app:chipSpacingHorizontal="12dp"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
 
-            </com.google.android.material.chip.ChipGroup>
-        </LinearLayout>
 
-    </HorizontalScrollView>
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:chipSpacingHorizontal="12dp"
+                    app:singleLine="true"
+                    app:singleSelection="true">
+
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+
+        </HorizontalScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAbilities"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
         android:layout_marginEnd="8dp"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scrollViewChips"
+        app:layout_constraintTop_toBottomOf="@+id/topBarAbility"
         tools:listitem="@layout/item_list_abilities" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,5 @@
+<!-- res/color/special_chip_text_color.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/md_theme_dark_onBackground" android:state_selected="true"/>
+    <item android:color="@color/chip_text_on_primary_unselected_dark"/>
+</selector>

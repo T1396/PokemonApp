@@ -39,8 +39,8 @@
     <color name="md_theme_dark_onSecondary">#442A25</color>
     <color name="md_theme_dark_secondaryContainer">#5D3F3A</color>
     <color name="md_theme_dark_onSecondaryContainer">#FFDAD4</color>
-    <color name="md_theme_dark_tertiary">#00897B</color>
-    <color name="md_theme_dark_onTertiary">#00363D</color>
+    <color name="md_theme_dark_tertiary">#f8e0a6</color>
+    <color name="md_theme_dark_onTertiary">#392E2E</color>
     <color name="md_theme_dark_tertiaryContainer">#004F58</color>
     <color name="md_theme_dark_onTertiaryContainer">#97F0FF</color>
     <color name="md_theme_dark_error">#FFB4AB</color>
@@ -65,6 +65,16 @@
 
     <color name="activeChipColor">#F3B5B5</color>
     <color name="transparent">#00E89D9D</color>
+
+    <color name="chip_background_on_primary_selected_light">#EC711F</color> <!-- Beispiel für ausgewählten Zustand -->
+    <color name="chip_background_on_primary_unselected_light">#A55A5A</color> <!-- Beispiel für nicht ausgewählten Zustand -->
+    <color name="chip_text_on_primary_selected_light">#100808</color> <!-- Weiß für ausgewählten Text -->
+    <color name="chip_text_on_primary_unselected_light">#E1B4B4</color>
+
+    <color name="chip_background_on_primary_selected_dark">#f8e0a6</color> <!-- Dunkelgrün für ausgewählten Zustand -->
+    <color name="chip_background_on_primary_unselected_dark">#6649463F</color> <!-- Dunkelgrau für nicht ausgewählten Zustand -->
+    <color name="chip_text_on_primary_selected_dark">#392E2E</color> <!-- Weiß bleibt für ausgewählten Text -->
+    <color name="chip_text_on_primary_unselected_dark">#F8E0E0</color>
 
     <color name="chip_selected_light">#81D4FA</color>
     <color name="chip__selected_dark">#781E08</color>
