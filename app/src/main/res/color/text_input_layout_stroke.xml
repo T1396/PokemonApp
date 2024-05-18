@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/color/text_input_layout_stroke_color.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorOnPrimary" android:state_focused="true"/>
+    <item android:color="?attr/colorOutline"/> <!-- Standard, wenn nicht fokussiert -->
+</selector>

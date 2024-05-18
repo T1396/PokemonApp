@@ -36,6 +36,10 @@
         <item name="android:textColor">?attr/colorOnBackground</item>
     </style>
 
+    <style name="ThemeOverlay.AppTheme.TextInputEditText.Outlined" parent="">
+        <item name="colorControlActivated">?attr/colorOnPrimary</item>
+        <item name="strokeWidth">2dp</item>
+    </style>
 
 
     <style name="YourCustomTheme" parent="FirebaseUI">
