@@ -9,10 +9,12 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
 import com.example.pokinfo.data.enums.PokemonSortFilter
 import com.example.pokinfo.databinding.FragmentHomeBinding
+import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.viewModels.PokeViewModel
 import com.google.android.material.chip.ChipGroup
 
@@ -25,6 +27,8 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val pokeViewModel: PokeViewModel by activityViewModels()
     private lateinit var adapter: PokeListAdapter
+    private var isFilterBarExpanded = false
+
 
 
     override fun onCreateView(
@@ -61,11 +65,18 @@ class HomeFragment : Fragment() {
                 binding.rvPokeList.adapter = adapter
                 createFilterChips(binding.chipGroupFilter) // create sort filter chips
                 adapter.submitList(it)
+
+                // re enters the entered text when navigated back to home fragment
                 binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
                 binding.tilPokemonName.editText?.addTextChangedListener { text ->
                     pokeViewModel.setSearchInputPokemonList(text.toString())
                 }
 
+                binding.tilPokemonName.setEndIconOnClickListener {
+                    isFilterBarExpanded = !isFilterBarExpanded
+                    TransitionManager.beginDelayedTransition(binding.topBar)
+                    showOrHideChipGroupAnimated(binding.scrollViewChips, isFilterBarExpanded)
+                }
 
         }
 
@@ -77,14 +88,14 @@ class HomeFragment : Fragment() {
 
     // creates a chip for each PokemonSortFilter
     private fun createFilterChips(chipGroup: ChipGroup) {
-        if (chipGroup.childCount == 0) { // Nur Filterchips erstellen, wenn noch keine vorhanden sind
+        if (chipGroup.childCount == 0) { // only create chips if not already there
             PokemonSortFilter.entries.forEachIndexed { _, filter ->
                 // slightly different version of chip to have 3 states instead of 2
                 val chip = ThreeStateChip(chipGroup.context).apply {
                     text = filter.filterName
-                    setPadding(8, 8, 8, 8)
+
                     isCheckable = false
-                    tag = filter // sets the filter as tag to use it to call the filterfunction
+                    tag = filter // sets the filter as tag to use it to call the filter function
 
                     setOnClickListener {
                         chipGroup.children.forEach { child ->
@@ -112,9 +123,7 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
-
             chipGroup.isSingleSelection = true
         }
     }
-
 }

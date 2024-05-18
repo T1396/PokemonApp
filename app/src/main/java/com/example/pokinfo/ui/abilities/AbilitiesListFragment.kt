@@ -4,14 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
 import com.example.pokinfo.data.enums.AbilityFilter
 import com.example.pokinfo.databinding.FragmentAbilitiesListBinding
+import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AbilityViewModel
 import com.faltenreich.skeletonlayout.Skeleton
@@ -27,7 +30,7 @@ class AbilitiesListFragment : Fragment() {
     private val abilityViewModel: AbilityViewModel by activityViewModels()
     private lateinit var adapter: AbilityListAdapter
     private lateinit var skeleton: Skeleton
-
+    private var isFilterBarExpanded = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -69,6 +72,13 @@ class AbilitiesListFragment : Fragment() {
             onDataLoaded()
         }
 
+
+        binding.tilSearchField.setEndIconOnClickListener {
+            isFilterBarExpanded = !isFilterBarExpanded
+            TransitionManager.beginDelayedTransition(binding.topBarAbility)
+            showOrHideChipGroupAnimated(binding.scrollViewChips, isFilterBarExpanded)
+        }
+
     }
 
     private fun onDataLoaded() {
@@ -85,9 +95,9 @@ class AbilitiesListFragment : Fragment() {
                 val chip = Chip(chipGroup.context).apply {
                     text = filter.filterName
                     isClickable = true
-                    setPadding(8, 8, 8, 8)
                     isCheckable = true
-                    isFocusable = true
+                    chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary)
+                    setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary_text))
                     tag =
                         filter // filter is tagged to the chip so it can be used for filter function call
                 }

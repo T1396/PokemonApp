@@ -1,27 +1,25 @@
 package com.example.pokinfo.ui.attacks
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionManager
 import com.example.pokinfo.R
-import com.example.pokinfo.adapter.attacks.AttacksListAdapter
+import com.example.pokinfo.adapter.home.detail.AttacksAdapter
 import com.example.pokinfo.data.enums.AttackFilter
 import com.example.pokinfo.data.enums.AttackFilter2
 import com.example.pokinfo.databinding.FragmentAttacksListBinding
+import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AttacksViewModel
-import com.example.pokinfo.viewModels.PokeViewModel
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import com.google.android.material.chip.Chip
@@ -32,9 +30,8 @@ class AttacksListFragment : Fragment() {
 
     private var _binding: FragmentAttacksListBinding? = null
     private val binding get() = _binding!!
-    private val pokeViewModel: PokeViewModel by activityViewModels()
     private val attacksViewModel: AttacksViewModel by activityViewModels()
-    private lateinit var adapter: AttacksListAdapter
+    private lateinit var adapter: AttacksAdapter
     private var layOutManagerState: Parcelable? = null // can save scrolling state
     private var isExpanded = false
     private lateinit var skeleton: Skeleton
@@ -57,18 +54,18 @@ class AttacksListFragment : Fragment() {
 
         attacksViewModel.loadAllAttacks(attacksViewModel.getLangId())
 
-        adapter = AttacksListAdapter(
-            pokeViewModel.getTypeColorMap(), emptyList()
-        ) { id ->
-            // when clicked
-            attacksViewModel.loadSingleAttackDetail(id)
-            findNavController()
-                .navigate(AttacksListFragmentDirections.actionNavAttacksToAttacksDetailFragment(id))
-        }
+        adapter = AttacksAdapter(
+            pokemonTypeNames = attacksViewModel.pokemonTypeNames,
+            showExpandButton = true,
+            showPosition = true,
+            onAttackClicked = { attackId ->
+                attacksViewModel.loadSingleAttackDetail(attackId)
+                findNavController().navigate(AttacksListFragmentDirections.actionNavAttacksToAttacksDetailFragment(id))
+            }
+        )
         binding.rvAttackList.adapter = adapter
         showSkeleton()
 
-        adapter.setTypeNames(pokeViewModel.pokemonTypeNames)
 
 
         createFilterChips(binding.chipGroupFilter)
@@ -90,10 +87,11 @@ class AttacksListFragment : Fragment() {
         binding.tietSearch.addTextChangedListener { text ->
             attacksViewModel.setSearchInputAttacks(text.toString())
         }
-
-        binding.ibExpandFilter.setOnClickListener {
+        binding.textInputLayout.setEndIconOnClickListener {
             isExpanded = !isExpanded
-            animateFilterEntrance(isExpanded)
+            TransitionManager.beginDelayedTransition(binding.topBarLayout)
+            showOrHideChipGroupAnimated(binding.scrollViewChips, isExpanded)
+            showOrHideChipGroupAnimated(binding.scrollViewChips2, isExpanded)
         }
     }
 
@@ -115,16 +113,16 @@ class AttacksListFragment : Fragment() {
     }
 
     private fun createFilterChips(chipGroup: ChipGroup) {
-        if (chipGroup.childCount == 0) { // only create filterchips if no chips are there (if navigated back for example)
+        if (chipGroup.childCount == 0) { // only create filter chips if no chips are there (if navigated back for example)
             val list = AttackFilter.entries
             list.forEach { filter ->
 
                 val chip = Chip(chipGroup.context).apply {
                     text = filter.filterName
                     isClickable = true
-                    setPadding(8, 8, 8, 8)
                     isCheckable = true
-                    isFocusable = true
+                    chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary)
+                    setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary_text))
                     tag =
                         filter // filter is tagged to the chip so it can be used for filter function call
                 }
@@ -133,7 +131,7 @@ class AttacksListFragment : Fragment() {
                 }
                 chipGroup.addView(chip)
             }
-            chipGroup.isSingleSelection = false // multiple filters can be enabled
+            chipGroup.isSingleSelection = true // multiple filters can be enabled
         }
     }
 
@@ -152,9 +150,9 @@ class AttacksListFragment : Fragment() {
                 val chip = Chip(chipGroup.context).apply {
                     text = filter.filterName
                     isClickable = true
-                    setPadding(8, 8, 8, 8)
                     isCheckable = true
-                    isFocusable = true
+                    chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary)
+                    setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.chip_on_primary_text))
                     tag = filter
                 }
 
@@ -179,89 +177,6 @@ class AttacksListFragment : Fragment() {
         }
     }
 
-    private fun animateFilterEntrance(
-        isExpanded: Boolean,
-    ) {
-        if (isExpanded) {
-            // Alpha-Animation für beide ScrollViews
-            val fadeInChips =
-                ObjectAnimator.ofFloat(binding.scrollViewChips, "alpha", 0f, 1f)
-            fadeInChips.duration = 500 // Dauer in Millisekunden
-
-            val fadeInChips2 =
-                ObjectAnimator.ofFloat(binding.scrollViewChips2, "alpha", 0f, 1f)
-            fadeInChips2.duration = 500
-
-            // Translation-Animation für beide ScrollViews (vertikal von oben nach unten)
-            val slideInChips = ObjectAnimator.ofFloat(
-                binding.scrollViewChips,
-                "translationY",
-                -binding.scrollViewChips.height.toFloat(),
-                0f
-            )
-            slideInChips.duration = 500
-
-            val slideInChips2 = ObjectAnimator.ofFloat(
-                binding.scrollViewChips2,
-                "translationY",
-                -binding.scrollViewChips2.height.toFloat(),
-                0f
-            )
-            slideInChips2.duration = 500
-
-            // Sichtbarkeit setzen und Animationen starten
-            binding.scrollViewChips.visibility = View.VISIBLE
-            binding.scrollViewChips2.visibility = View.VISIBLE
-            binding.ibExpandFilter.rotation = 180f
-
-            val animatorSet = AnimatorSet()
-            animatorSet.playTogether(fadeInChips, fadeInChips2, slideInChips, slideInChips2)
-            animatorSet.start()
-        } else {
-            // Alpha-Animation für beide ScrollViews
-            val fadeOutChips =
-                ObjectAnimator.ofFloat(binding.scrollViewChips, "alpha", 1f, 0f)
-            fadeOutChips.duration = 500
-
-            val fadeOutChips2 =
-                ObjectAnimator.ofFloat(binding.scrollViewChips2, "alpha", 1f, 0f)
-            fadeOutChips2.duration = 500
-
-            // translation from top to bottom
-            val slideOutChips = ObjectAnimator.ofFloat(
-                binding.scrollViewChips,
-                "translationY",
-                0f,
-                -binding.scrollViewChips.height.toFloat()
-            )
-            slideOutChips.duration = 500
-            val slideOutChips2 = ObjectAnimator.ofFloat(
-                binding.scrollViewChips2,
-                "translationY",
-                0f,
-                -binding.scrollViewChips2.height.toFloat()
-            )
-            slideOutChips2.duration = 500
-
-            val animatorSet = AnimatorSet()
-            animatorSet.playTogether(
-                fadeOutChips,
-                fadeOutChips2,
-                slideOutChips,
-                slideOutChips2
-            )
-
-            animatorSet.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    binding.scrollViewChips.visibility = View.GONE
-                    binding.scrollViewChips2.visibility = View.GONE
-                }
-            })
-
-            binding.ibExpandFilter.rotation = 0f
-            animatorSet.start() // Start the Animation
-        }
-    }
 
 
     private fun showSkeleton() {
