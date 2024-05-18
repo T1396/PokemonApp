@@ -32,34 +32,17 @@ import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.launch
 
 
-class FirebaseViewModel(private val application: Application) : AndroidViewModel(application) {
-
+class FirebaseViewModel(private val application: Application, private val sharedViewModel: SharedViewModel) : AndroidViewModel(application) {
 
     private var auth = Firebase.auth
-    private val firestore = Firebase.firestore
+    private val fireStore = Firebase.firestore
     private val storage = Firebase.storage
 
     private val _user: MutableLiveData<FirebaseUser?> = MutableLiveData()
     val user: LiveData<FirebaseUser?>
         get() = _user
 
-    private val _errorMessage: MutableLiveData<String> = MutableLiveData()
-    val errorMessage: LiveData<String>
-        get() = _errorMessage
-
     private lateinit var profileRef: DocumentReference
-
-
-    fun isUserLoggedIn(): Boolean {
-        val user = auth.currentUser
-        return user != null
-    }
-
-    private val _messageSender: MutableLiveData<Int> = MutableLiveData()
-    val messageSender: LiveData<Int>
-        get() = _messageSender
-
-    private var responseJson: String = ""
     private val webClientId = BuildConfig.webClientId
 
 
@@ -67,10 +50,15 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
         setupUserEnv()
     }
 
+    fun isUserLoggedIn(): Boolean {
+        val user = auth.currentUser
+        return user != null
+    }
+
     private fun setupUserEnv() {
         _user.value = auth.currentUser
         auth.currentUser?.let { firebaseUser ->
-            profileRef = firestore.collection("userData").document(firebaseUser.uid)
+            profileRef = fireStore.collection("userData").document(firebaseUser.uid)
         }
     }
 
@@ -83,7 +71,7 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
                     setupUserEnv()
                     if (isNewUser) updateProfile()
                 } else {
-                    _errorMessage.postValue(task.exception?.message)
+                    sharedViewModel.postMessage(task.exception?.message ?: "Google sign in error")
                     Log.d("FirebaseAuthGoogle", task.exception?.message.toString())
                 }
             }
@@ -112,7 +100,7 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
             } catch (e: GetCredentialException) {
                 // error
                 Log.e("FirebaseViewModel", "Get Credential Error", e)
-                _messageSender.postValue(R.string.credential_error)
+                sharedViewModel.postMessage(R.string.credential_error)
             } catch (e: Exception) {
                 Log.d("FirebaseViewModel", "Cancelled credential", e)
             }
@@ -142,7 +130,7 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
             if (it.isSuccessful) {
                 setupUserEnv()
             } else {
-                _errorMessage.value = it.exception?.message
+                sharedViewModel.postMessage(it.exception?.message ?: "Error with Firebase Login")
             }
         }
     }
@@ -155,11 +143,11 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
     fun register(email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
             if (it.isSuccessful) {
-                //User wurde erstellt
+                // user created
                 setupUserEnv()
                 updateProfile()
             } else {
-                _errorMessage.value = it.exception?.message
+                sharedViewModel.postMessage(it.exception?.message ?: "Error registering to firebase")
             }
         }
     }
@@ -201,12 +189,10 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
             if (task.isSuccessful) {
                 onComplete(task.result)
             } else {
-                Log.d("error", "Bild konnte nicht geladen werden")
+                Log.d("error", "image could not be loaded", task.exception)
                 onComplete(null)
             }
-
         }
-
     }
 
     //endregion
@@ -224,14 +210,14 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
         teamsListenerRegistration?.remove()
     }
 
-    fun listenForTeamsInFirestore(onPostValue: () -> Unit) {
+    fun listenForTeamsInFireStore(onPostValue: () -> Unit) {
         val allTeamsList = mutableListOf<PokemonTeam>()
         val teamsRef = profileRef.collection("createdTeams")
 
         teamsListenerRegistration = teamsRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w("FirebaseViewModel", "Listen for pokemon Teams failed", error)
-                _errorMessage.postValue("An error occured while fetching pokemon teams")
+                sharedViewModel.postMessage("An error occurred while fetching pokemon teams")
                 return@addSnapshotListener
             }
 
@@ -240,14 +226,10 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
                 val teamData = document.data
                 val teamMapped = PokemonTeam.fromMap(teamData, document.id)
                 if (teamMapped?.pokemons?.any { it != null } == true) allTeamsList.add(teamMapped)
-
             }
 
             _pokemonTeams.value = allTeamsList
             onPostValue()
-
-
-            Log.d("snapshotListener", "converted Teams: $allTeamsList")
         }
     }
 
@@ -258,27 +240,29 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
         val teamForFireStore = pokemonTeam.toHashMap()
         documentRef.set(teamForFireStore)
             .addOnSuccessListener {
-                Log.d("MainViewModel", "Successfully saved team into firestore")
+                Log.d("MainViewModel", "Successfully saved team into fireStore")
                 callback(true)
-                _messageSender.value = R.string.successfully_saved_team
+                sharedViewModel.postMessage(R.string.successfully_saved_team)
             }
             .addOnFailureListener {
-                Log.d("MainViewModel", "Failed to save team into firestore", it)
+                Log.d("MainViewModel", "Failed to save team into fireStore", it)
                 callback(false)
-                _messageSender.value = R.string.failed_to_insert_team
+                sharedViewModel.postMessage(R.string.failed_to_insert_team)
             }
     }
 
-    fun updateTeam(pokemonTeam: PokemonTeam) {
-        try {
+    fun updateTeam(pokemonTeam: PokemonTeam): Boolean {
+        return try {
             val teamDocumentReference =
                 profileRef.collection("createdTeams").document(pokemonTeam.id)
             teamDocumentReference.update(pokemonTeam.toHashMap())
-            _messageSender.value = R.string.success_update
+            sharedViewModel.postMessage(R.string.success_update)
+            true
         } catch (e: Exception) {
-            Log.d("FirebaseViewModel", "Failed to update team in firestore", e)
+            Log.d("FirebaseViewModel", "Failed to update team in fireStore", e)
+            sharedViewModel.postMessage(R.string.failed_to_update_team)
+            false
         }
-
     }
 
     fun deletePokemonTeam(pokemonTeam: PokemonTeam) {
@@ -286,10 +270,10 @@ class FirebaseViewModel(private val application: Application) : AndroidViewModel
         val teamRef = profileRef.collection("createdTeams").document(teamId)
         teamRef.delete().addOnSuccessListener {
             Log.d("FirebaseViewModel", "Team successfully deleted")
-            _messageSender.postValue(R.string.team_deleted)
+            sharedViewModel.postMessage(R.string.team_deleted)
         }.addOnFailureListener {
             Log.w("FirebaseViewModel", "Error deleting team", it)
-            _messageSender.postValue(R.string.team_deleted_error)
+            sharedViewModel.postMessage(R.string.team_deleted_error)
         }
     }
 
