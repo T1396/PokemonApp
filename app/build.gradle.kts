@@ -64,13 +64,14 @@ dependencies {
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
     val retrofitVersion = "2.11.0"
     val roomVersion = "2.6.1"
     implementation("com.ultramegasoft.radarchart:radar-chart:0.1.5")
 
-    implementation("androidx.core:core-ktx:1.13.0")
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
@@ -80,7 +81,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
-    implementation("com.google.android.gms:play-services-auth:21.1.0")
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
     implementation("androidx.credentials:credentials:1.2.2")
     implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
     testImplementation("junit:junit:4.13.2")
@@ -97,9 +98,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation ("com.google.android.gms:play-services-auth-api-phone:18.0.2") // Überprüfen Sie die genaue Version
-    implementation("com.google.firebase:firebase-firestore:24.11.1")
-    implementation("com.google.firebase:firebase-storage:20.3.0")
-    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation("com.google.firebase:firebase-firestore:25.0.0")
+    implementation("com.google.firebase:firebase-storage:21.0.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation ("com.firebaseui:firebase-ui-auth:8.0.2")
     // Also add the dependency for the Google Play services library and specify its version
     implementation ("com.faltenreich:skeletonlayout:5.0.0")
