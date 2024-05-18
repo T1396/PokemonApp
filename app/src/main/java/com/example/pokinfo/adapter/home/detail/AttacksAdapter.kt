@@ -1,5 +1,6 @@
 package com.example.pokinfo.adapter.home.detail
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,14 +9,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.data.maps.typeColorMap
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.firebase.AttacksData
-import com.example.pokinfo.databinding.ItemListTeamBuilderAttacksBinding
+import com.example.pokinfo.databinding.ItemListAttacksBinding
 
 class AttacksAdapter(
     //map of typeId to colorRes, IconRes, TextColor
     private val pokemonTypeNames: List<PokemonTypeName>,
     private val showExpandButton: Boolean,
+    private val showLevel: Boolean = true,
+    private val showPosition: Boolean = true,
+    private val selectAttackEnabled: Boolean = false,
     private val onAttackClicked: ((Int) -> Unit)? = null,
 ) :
     ListAdapter<AttacksData, AttacksAdapter.ItemViewHolder>(com.example.pokinfo.data.util.DiffUtil()) {
@@ -46,13 +50,13 @@ class AttacksAdapter(
         selectedAttacks = listPos.toMutableList()
     }
 
-    inner class ItemViewHolder(val binding: ItemListTeamBuilderAttacksBinding) :
+    inner class ItemViewHolder(val binding: ItemListAttacksBinding) :
         RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-            val binding = ItemListTeamBuilderAttacksBinding
-                .inflate(LayoutInflater.from(parent.context), parent, false)
-            return ItemViewHolder(binding)
+        val binding = ItemListAttacksBinding
+            .inflate(LayoutInflater.from(parent.context), parent, false)
+        return ItemViewHolder(binding)
 
     }
 
@@ -61,15 +65,15 @@ class AttacksAdapter(
     }
 
 
-
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val attack = currentList[position]
+        Log.d("attackData", attack.toString())
         val isSelected = selectedAttacks.contains(attack)
         holder.binding.clItem.isSelected = isSelected
         val isExpanded = isAttackExpanded(attack)
 
         // if callBackFunction is given in to adapter create selection behavior
-        if (onAttackClicked != null) {
+        if (selectAttackEnabled) {
             //setIsSelectedBackground(holder.binding.clItem, isSelected)
             holder.binding.clItem.setOnClickListener {
                 if (isSelected) {
@@ -80,15 +84,16 @@ class AttacksAdapter(
                     holder.binding.clItem.isSelected = true
                 }
                 notifyItemChanged(position)
-                onAttackClicked.invoke(selectedAttacks.size)
+                onAttackClicked?.invoke(selectedAttacks.size)
+            }
+        } else {
+            holder.binding.clItem.setOnClickListener {
+                onAttackClicked?.invoke(attack.attackId)
             }
         }
 
         if (showExpandButton) {
             holder.binding.ibExpand.visibility = View.VISIBLE
-            holder.binding.tvLevelLearnedAt.visibility = View.GONE
-
-
             holder.binding.tvEffectText.visibility = if (isExpanded) View.VISIBLE else View.GONE
             holder.binding.tvEffectText.text = attack.effectText
 
@@ -101,17 +106,25 @@ class AttacksAdapter(
             holder.binding.tvLevelLearnedAt.visibility = View.VISIBLE
             holder.binding.ibExpand.visibility = View.GONE
         }
+        holder.binding.tvLevelLearnedAt.visibility = if (showLevel) View.VISIBLE else View.GONE
 
         holder.binding.tvEffectText.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
-        holder.binding.tvLevelLearnedAt.text =
+        holder.binding.tvLevelLearnedAt.text = if (!showPosition) {
             if (attack.levelLearned > 0) attack.levelLearned.toString() else "-"
+        } else {
+            (position + 1).toString()
+        }
+
         holder.binding.tvAtkName.text = attack.name
         holder.binding.tvPower.text = if (attack.power > 0) attack.power.toString() else "-"
         holder.binding.tvAccuracy.text = if (attack.accuracy == null) "-" else {
-            holder.itemView.context.getString(R.string.common_percent_placeholder, attack.accuracy.toString())
+            holder.itemView.context.getString(
+                R.string.common_percent_placeholder,
+                attack.accuracy.toString()
+            )
         }
-
+        holder.binding.tvAP.text = attack.pp.toString()
         // gets color and icon resource ids from map value on the specific typeId
         val colorRes = typeColorMap[attack.typeId]?.first ?: -1
 
