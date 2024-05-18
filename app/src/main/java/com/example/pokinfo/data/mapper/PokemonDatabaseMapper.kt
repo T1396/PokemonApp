@@ -1,8 +1,8 @@
 package com.example.pokinfo.data.mapper
 
-import com.example.pokeinfo.data.graphModel.FormQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail2Query
+import com.example.pokeinfo.data.graphModel.PokemonDetail3Query
 import com.example.pokinfo.data.PokemonDataWrapper
 import com.example.pokinfo.data.Repository
 import com.example.pokinfo.data.models.database.pokemon.PkAbilitiesToJoin
@@ -10,6 +10,8 @@ import com.example.pokinfo.data.models.database.pokemon.PkAbilityEffectText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityFlavorText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityInfo
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityName
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PkForms
 import com.example.pokinfo.data.models.database.pokemon.PkMove
 import com.example.pokinfo.data.models.database.pokemon.PkMoveMachines
@@ -17,7 +19,7 @@ import com.example.pokinfo.data.models.database.pokemon.PkMoveNames
 import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.database.pokemon.PkMoves
 import com.example.pokinfo.data.models.database.pokemon.PkNames
-import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfos
+import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfo
 import com.example.pokinfo.data.models.database.pokemon.PkStatInfos
 import com.example.pokinfo.data.models.database.pokemon.PkType
 import com.example.pokinfo.data.models.database.pokemon.Pokemon
@@ -28,6 +30,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
+
+/** Extracts Data of a Pokemon to insert it afterwards into the database
+ *  Details of a Pokemon includes:
+ *  PokemonDetails, Forms, Moves, Sprites, Abilities, Types
+ *
+ * */
 class PokemonDatabaseMapper(private val repository: Repository) {
 
     data class MoveWrapper(
@@ -37,12 +45,114 @@ class PokemonDatabaseMapper(private val repository: Repository) {
         val versionGroupDetails: List<PkMoveVersionGroupDetail>
     )
 
+    //
     private val moveIdSet = mutableSetOf<Long>()
+
+    suspend fun savePokemonDetailsIntoDatabase(
+        pokemonDataWrapper: PokemonDataWrapper,
+        languageId: Int,
+        onSaved: (Boolean) -> Unit,
+    ) {
+
+        val part1 = pokemonDataWrapper.data1?.pokemon?.first()
+        val part2 = pokemonDataWrapper.data2
+        val part3 = pokemonDataWrapper.data3
+
+        val gson = Gson()
+        val sprites = part1?.sprites
+        val spritesJson = gson.toJson(sprites)
+
+        val pokemonId = part1?.id
+        val allSpeciesInfo = part1?.specy
+        val type1 = part1?.typeInfos?.firstOrNull()
+        val type2 = part1?.typeInfos?.getOrNull(1)
+        val abilities = part2?.pokemon?.firstOrNull()?.abilities
+        val formInfo = part3?.pokemon_v2_pokemonform_aggregate?.nodes
+
+
+        if (part1 != null && part2 != null && part3 != null) {
+            val evolutionDetails = getEvolutionDetails(part3, pokemonId, allSpeciesInfo?.id)
+
+            //
+            val allExistingAbilities = repository.getAbilitiesFromDB()
+            val newAbilities = mutableListOf<PokemonDetail2Query.Ability>()
+            abilities?.forEach { ability ->
+                if (!allExistingAbilities.any { it.id == ability.ability_id }) {
+                    newAbilities.add(ability)
+                }
+            }
+            val (abilityInfo, namesAndTexts) = getAllAbilityDetails(newAbilities)
+            val (abilityNames, effectTexts, flavorTexts) = namesAndTexts
+
+            // create a db entry with some basic info like sprites types and other small things
+            val pokeDbEntry = createPokemonDbEntry(
+                part1,
+                part3,
+                pokemonId ?: -1,
+                languageId,
+                type1,
+                type2,
+                spritesJson
+            )
+            // species info and names
+            val (speciesInfo, specieNames) = getSpeciesInfo(pokemonId, allSpeciesInfo)
+            val formList = mapFormInfo(formInfo, speciesInfo.id)
+            val pokedexData = part2.pokemon.firstOrNull()?.specy
+            val pokedexEntries = getPokedexTexts(pokedexData)
+
+            // get all moves that exists in the database to exclude those to not insert it more than 1 time in to database
+            val allExistingMoves = repository.getAllMovesFromDB()
+            val moveData = processPokemonMoves(
+                part2.pokemon.firstOrNull()?.moves ?: emptyList(),
+                allExistingMoves,
+                pokemonId ?: -1,
+            )
+
+            // creates a list of every move id the pokemon can learn
+            val pkMoves = PkMoves(
+                pokemonId = pokemonId ?: -1,
+                moveIds = moveIdSet.toList().sortedBy { it }
+            )
+            // join list / table holds info which pokemon have which ability
+            val joinList = abilities?.map {
+                PkAbilitiesToJoin(
+                    pokemonId = pokemonId ?: -1,
+                    abilityId = it.ability_id ?: -1,
+                    slot = it.slot
+                )
+            } ?: emptyList()
+            // put all chunks into one Data type to give it to the repo
+
+            val pokemonData = PokemonData(
+                pokemon = pokeDbEntry,
+                abilityInfoList = abilityInfo,
+                abilitiesToJoin = joinList,
+                pokemonMoves = pkMoves,
+                pokedexEntries = pokedexEntries,
+                moves = moveData.moves,
+                moveMachines = moveData.moveMachines,
+                moveNames = moveData.moveNames,
+                specyData = speciesInfo,
+                specyNames = specieNames,
+                abilityFlavorTexts = flavorTexts,
+                abilityEffectTexts = effectTexts,
+                abilityNames = abilityNames,
+                versionGroupDetails = moveData.versionGroupDetails,
+                formData = formList,
+                evolutionChain = evolutionDetails?.first,
+                evolutionDetails = evolutionDetails?.second
+            )
+
+            repository.insertPokemonDataIntoDB(pokemonData) { success ->
+                onSaved(success)
+            }
+        }
+    }
 
 
     private suspend fun createPokemonDbEntry(
         part1: PokemonDetail1Query.Pokemon,
-        part3: FormQuery.Data,
+        part3: PokemonDetail3Query.Data,
         pokemonId: Int,
         languageId: Int,
         type1: PokemonDetail1Query.TypeInfo?,
@@ -58,8 +168,9 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 )
             }
         }.awaitAll()
-        var displayName = part3.pokemon_v2_pokemonform_aggregate.nodes.find { it.pokemon_id == pokemonId }?.pokemon_v2_pokemonformnames
-            ?.find { it.language_id == languageId }?.pokemon_name
+        var displayName =
+            part3.pokemon_v2_pokemonform_aggregate.nodes.find { it.pokemon_id == pokemonId }?.pokemon_v2_pokemonformnames
+                ?.find { it.language_id == languageId }?.pokemon_name
         if (displayName.isNullOrEmpty()) {
             displayName = part1.specy?.allNames?.find { it.language_id == languageId }?.name
         }
@@ -107,15 +218,15 @@ class PokemonDatabaseMapper(private val repository: Repository) {
 
                 val moveId = move.move_id
                 moveIdSet.add(moveId?.toLong() ?: -1)
-                synchronized(alreadyAddedMoveIdSet) { // Korrekter Synchronisierungsblock
+                synchronized(alreadyAddedMoveIdSet) {
                     if (!alreadyAddedMoveIdSet.contains(moveId)) {
-                        // Überprüfen Sie, ob die Bewegung bereits in der Datenbank existiert
+
                         val moveExistsInDB = allExistingMoves.any { it.id.toInt() == moveId }
 
                         if (!moveExistsInDB) {
                             alreadyAddedMoveIdSet.add(moveId)
 
-                            // Erstellen Sie die Instanzen von dbMove, moveNames und moveMachines basierend auf Ihren Daten
+
                             val dbMove = PkMove(
                                 id = moveId?.toLong() ?: -1,
                                 name = move.move?.name ?: "error",
@@ -142,23 +253,19 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                                     versionGroupId = machineInfo.version_group_id ?: -1
                                 )
                             } ?: emptyList()
-
-                            // Ergebnisse für spätere Verwendung außerhalb des synchronisierten Blocks speichern
                             Triple(
                                 dbMove,
                                 moveNames,
                                 moveMachines
-                            ) // Return values to add to lists outside of synchronized block
-                        } else null // Wenn die Bewegung bereits hinzugefügt wurde, nichts zurückgeben
-                    } else null // Wenn die ID bereits in alreadyAddedMoveIdSet ist, nichts zurückgeben
+                            )
+                        } else null
+                    } else null
                 }?.also { (dbMove, moveNames, moveMachines) ->
-                    // Fügen Sie die Details außerhalb des synchronisierten Blocks hinzu
                     moveListResult.add(dbMove)
                     moveNamesResult.addAll(moveNames)
                     moveMachinesResult.addAll(moveMachines)
                 }
 
-                // Erstellen Sie das Detail-Objekt, unabhängig von der Synchronisation
                 PkMoveVersionGroupDetail(
                     id = move.id.toLong(),
                     levelLearnedAt = move.level,
@@ -169,11 +276,11 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                     pokemonId = pokemonId
                 )
             }
-        }.awaitAll() // Warten auf die Vollendung aller asynchronen Vorgänge
+        }.awaitAll()
         moveVersionVersionGroupDetails.addAll(versionGroupDetails)
 
         return@coroutineScope MoveWrapper(
-            moveListResult.toList(), // Convert to list to avoid any mutable access after function return
+            moveListResult.toList(),
             moveNamesResult.toList(),
             moveMachinesResult.toList(),
             moveVersionVersionGroupDetails.toList()
@@ -183,26 +290,16 @@ class PokemonDatabaseMapper(private val repository: Repository) {
     private fun getSpeciesInfo(
         pokemonId: Int?,
         allSpeciesInfo: PokemonDetail1Query.Specy?,
-    ): Pair<PkSpecieInfos, List<PkNames>> {
-
-        // checks if the pokemon evolves from any other species to show the evolution chain
-        val evolutionChain = allSpeciesInfo?.evolutions
-
-        val evolvesFromId = allSpeciesInfo?.evolves_from_species_id
-        val evolvesToIdList = evolutionChain?.species?.nodes?.map {
-            it.id.toLong()
-        }?.filter { it != allSpeciesInfo.id.toLong() && it != evolvesFromId?.toLong() }
-            ?: emptyList()
+    ): Pair<PkSpecieInfo, List<PkNames>> {
 
         //create the data object we will insert into database
-        val speciesInfos = PkSpecieInfos(
+        val speciesInfo = PkSpecieInfo(
             id = allSpeciesInfo?.id ?: -1,
             pokemonId = pokemonId ?: -1,
             isLegendary = allSpeciesInfo?.is_legendary ?: false,
             isMythical = allSpeciesInfo?.is_mythical ?: false,
             order = allSpeciesInfo?.order ?: -1,
-            evolvesFromSpeciesId = evolvesFromId,
-            evolvesToSpeciesIds = evolvesToIdList,
+            evolutionChainId = allSpeciesInfo?.evolution_chain_id,
             name = allSpeciesInfo?.name ?: "error",
             genderRate = allSpeciesInfo?.gender_rate,
             captureRate = allSpeciesInfo?.capture_rate,
@@ -217,70 +314,69 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 languageId = it.language_id ?: -1
             )
         } ?: emptyList()
-        return Pair(speciesInfos, speciesNames)
+        return Pair(speciesInfo, speciesNames)
     }
 
     private fun getAllAbilityDetails(
         newAbilities: MutableList<PokemonDetail2Query.Ability>,
     ): Pair<List<PkAbilityInfo>, Triple<List<PkAbilityName>, List<PkAbilityEffectText>, List<PkAbilityFlavorText>>> {
-            val nameList = mutableListOf<PkAbilityName>()
-            val effectTextList = mutableListOf<PkAbilityEffectText>()
-            val flavorTextList = mutableListOf<PkAbilityFlavorText>()
+        val nameList = mutableListOf<PkAbilityName>()
+        val effectTextList = mutableListOf<PkAbilityEffectText>()
+        val flavorTextList = mutableListOf<PkAbilityFlavorText>()
 
-            val deferredResults = newAbilities.map { ability ->
-                    // Ihre Logik hier, um die Daten für eine einzelne Fähigkeit zu verarbeiten
-                    val names = ability.ability?.nameTranslated?.map {
-                        PkAbilityName(
-                            abilityId = ability.ability_id ?: -1,
-                            name = it.name,
-                            languageId = it.language_id ?: -1
-                        )
-                    } ?: emptyList()
-                    nameList.addAll(names)
+        val deferredResults = newAbilities.map { ability ->
 
-                    // flavor texts
-                    val flavorEntry = ability.ability?.shortText?.map { text ->
-                        PkAbilityFlavorText(
-                            abilityId = text.ability_id ?: -1,
-                            effectTextShort = text.flavor_text,
-                            languageId = text.language_id ?: -1,
-                            versionGroupId = text.version_group_id ?: -1
-                        )
-                    } ?: emptyList()
-                    flavorTextList.addAll(flavorEntry)
+            val names = ability.ability?.nameTranslated?.map {
+                PkAbilityName(
+                    abilityId = ability.ability_id ?: -1,
+                    name = it.name,
+                    languageId = it.language_id ?: -1
+                )
+            } ?: emptyList()
+            nameList.addAll(names)
 
-                    // effect texts
-                    val effectEntry = ability.ability?.longText?.map { text ->
-                        PkAbilityEffectText(
-                            abilityId = text.ability_id ?: -1,
-                            effectTextLong = text.effect,
-                            languageId = text.language_id ?: -1,
-                        )
-                    } ?: emptyList()
-                    effectTextList.addAll(effectEntry)
+            // flavor texts
+            val flavorEntry = ability.ability?.shortText?.map { text ->
+                PkAbilityFlavorText(
+                    abilityId = text.ability_id ?: -1,
+                    effectTextShort = text.flavor_text,
+                    languageId = text.language_id ?: -1,
+                    versionGroupId = text.version_group_id ?: -1
+                )
+            } ?: emptyList()
+            flavorTextList.addAll(flavorEntry)
 
-                    // Ability
-                    PkAbilityInfo(
-                        id = ability.ability_id ?: -1,
-                        name = ability.ability?.name ?: "error",
-                    )
-                }
-            //return
-            return Pair(
-                deferredResults,
-                Triple(nameList, effectTextList, flavorTextList)
+            // effect texts
+            val effectEntry = ability.ability?.longText?.map { text ->
+                PkAbilityEffectText(
+                    abilityId = text.ability_id ?: -1,
+                    effectTextLong = text.effect,
+                    languageId = text.language_id ?: -1,
+                )
+            } ?: emptyList()
+            effectTextList.addAll(effectEntry)
+
+            // Ability
+            PkAbilityInfo(
+                id = ability.ability_id ?: -1,
+                name = ability.ability?.name ?: "error",
             )
         }
+        return Pair(
+            deferredResults,
+            Triple(nameList, effectTextList, flavorTextList)
+        )
+    }
 
     private suspend fun getPokedexTexts(
-        specyData: PokemonDetail2Query.Specy?,
+        specieData: PokemonDetail2Query.Specy?,
     ): List<PokemonDexEntries> =
         coroutineScope {
-            val deferredResults = specyData?.pokedexTexts?.map { entry ->
+            val deferredResults = specieData?.pokedexTexts?.map { entry ->
                 async {
                     PokemonDexEntries(
                         id = entry.id.toLong(),
-                        speciesId = specyData.id,
+                        speciesId = specieData.id,
                         text = entry.text,
                         versionGroupId = entry.version_id ?: -1,
                         languageId = entry.language_id ?: -1
@@ -291,11 +387,11 @@ class PokemonDatabaseMapper(private val repository: Repository) {
             return@coroutineScope deferredResults
         }
 
-    private suspend fun mapFormInfos(
-        formInfos: List<FormQuery.Node>?,
+    private suspend fun mapFormInfo(
+        formInfo: List<PokemonDetail3Query.Node>?,
         specieId: Int
     ): List<PkForms> = coroutineScope {
-        val deferredForms = formInfos?.map { formInfo ->
+        val deferredForms = formInfo?.map { formInfo ->
             async {
                 val sprites = formInfo.pokemon_v2_pokemonformsprites_aggregate.nodes
                 val spritesJson = Gson().toJson(sprites)
@@ -318,103 +414,26 @@ class PokemonDatabaseMapper(private val repository: Repository) {
         return@coroutineScope deferredForms
     }
 
-
-    suspend fun savePokemonDetailsIntoDatabase(
-        pokemonDataWrapper: PokemonDataWrapper,
-        languageId: Int,
-        onSaved: (Boolean) -> Unit,
-    ) {
-
-        val part1 = pokemonDataWrapper.data1?.pokemon?.first()
-        val part2 = pokemonDataWrapper.data2
-        val part3 = pokemonDataWrapper.data3
-
-        val gson = Gson()
-        val sprites = part1?.sprites
-        val spritesJson = gson.toJson(sprites)
-
-        val pokemonId = part1?.id
-        val allSpeciesInfo = part1?.specy
-        val type1 = part1?.typeInfos?.firstOrNull()
-        val type2 = part1?.typeInfos?.getOrNull(1)
-        val abilities = part2?.pokemon?.firstOrNull()?.abilities
-        val formInfos = part3?.pokemon_v2_pokemonform_aggregate?.nodes
-
-
-        if (part1 != null && part2 != null && part3 != null) {
-
-            //
-            val allExistingAbilities = repository.getAbilitiesFromDB()
-            val newAbilities = mutableListOf<PokemonDetail2Query.Ability>()
-            abilities?.forEach { ability ->
-                if (!allExistingAbilities.any { it.id == ability.ability_id }) {
-                    newAbilities.add(ability)
-                }
-            }
-            val (abilityInfos, namesAndTexts) = getAllAbilityDetails(newAbilities)
-            val (abilityNames, effectTexts, flavorTexts) = namesAndTexts
-
-            // create a db entry with some basic infos like sprites types and other small things
-            val pokeDbEntry = createPokemonDbEntry(part1, part3, pokemonId ?: -1, languageId, type1, type2, spritesJson)
-            // species info and names
-            val (speciesInfo, specieNames) = getSpeciesInfo(
-                pokemonId,
-                allSpeciesInfo,
+    private fun getEvolutionDetails(
+        part3: PokemonDetail3Query.Data,
+        pokemonId: Int?,
+        speciesId: Int?
+    ): Pair<PkEvolutionChain, List<PkEvolutionDetails>>? {
+        if (pokemonId != speciesId) return null
+        val chain = part3.pokemon_v2_evolutionchain.firstOrNull() ?: return null
+        val evolutionChainForDb = PkEvolutionChain(id = chain.id)
+        val evolutionDetails = chain.pokemon_v2_pokemonspecies.map { species ->
+            val speciesIdNew = species.id
+            val evolvesToSpeciesId = chain.pokemon_v2_pokemonspecies.find { it.evolves_from_species_id == speciesIdNew }?.id
+            PkEvolutionDetails(
+                name = species.name,
+                evolutionChainId = species.evolution_chain_id ?: -1,
+                evolvesFromSpeciesId = species.evolves_from_species_id,
+                minLevel = species.pokemon_v2_pokemonevolutions.firstOrNull()?.min_level,
+                speciesId = species.id,
+                evolvesToSpeciesId = evolvesToSpeciesId
             )
-
-            val formList = mapFormInfos(formInfos, speciesInfo.id)
-
-            val pokedexData = part2.pokemon.firstOrNull()?.specy
-            val pokedexEntries = getPokedexTexts(pokedexData)
-
-            // get all moves that exists in the database to exclude those to not insert it more than 1 time in to database
-            val allExistingMoves = repository.getAllMovesFromDB()
-            val moveData = processPokemonMoves(
-                part2.pokemon.firstOrNull()?.moves ?: emptyList(),
-                allExistingMoves,
-                pokemonId ?: -1,
-            )
-
-            // creates a list of every move id the pokemon can learn
-            val pkMoves = PkMoves(
-                pokemonId = pokemonId ?: -1,
-                moveIds = moveIdSet.toList().sortedBy { it }
-            )
-            // join list / table holds info which pokemon have which ability
-            val joinList = abilities?.map {
-                PkAbilitiesToJoin(
-                    pokemonId = pokemonId ?: -1,
-                    abilityId = it.ability_id ?: -1,
-                    slot = it.slot
-                )
-            } ?: emptyList()
-            // put all chunks into one Data type to give it to the repo
-
-            val pokemonData = PokemonData(
-                pokemon = pokeDbEntry,
-                abilityInfoList = abilityInfos,
-                abilitiesToJoin = joinList,
-                pokemonMoves = pkMoves,
-                pokedexEntries = pokedexEntries,
-                moves = moveData.moves,
-                moveMachines = moveData.moveMachines,
-                moveNames = moveData.moveNames,
-                specyData = speciesInfo,
-                specyNames = specieNames,
-                abilityFlavorTexts = flavorTexts,
-                abilityEffectTexts = effectTexts,
-                abilityNames = abilityNames,
-                versionGroupDetails = moveData.versionGroupDetails,
-                formData = formList
-            )
-
-
-            repository.insertPokemonDataIntoDB(pokemonData) { success ->
-                onSaved(success)
-            }
-
-
         }
+        return Pair(evolutionChainForDb, evolutionDetails)
     }
-
 }

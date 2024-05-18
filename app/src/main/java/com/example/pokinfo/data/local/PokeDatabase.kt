@@ -13,12 +13,14 @@ import com.example.pokinfo.data.local.converter.StatValueConverter
 import com.example.pokinfo.data.local.converter.StringListConverter
 import com.example.pokinfo.data.local.converter.TimeConverter
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.PkAbilitiesToJoin
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityEffectText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityFlavorText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityInfo
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityName
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PkForms
 import com.example.pokinfo.data.models.database.pokemon.PkMove
 import com.example.pokinfo.data.models.database.pokemon.PkMoveMachines
@@ -26,17 +28,17 @@ import com.example.pokinfo.data.models.database.pokemon.PkMoveNames
 import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.database.pokemon.PkMoves
 import com.example.pokinfo.data.models.database.pokemon.PkNames
-import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfos
+import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfo
 import com.example.pokinfo.data.models.database.pokemon.Pokemon
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
 import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
-import com.example.pokinfo.data.models.database.type.DamageRelation
-import com.example.pokinfo.data.models.database.type.GameIndex
-import com.example.pokinfo.data.models.database.type.MoveWithType
-import com.example.pokinfo.data.models.database.type.PokemonType
-import com.example.pokinfo.data.models.database.type.PokemonWithThisType
-import com.example.pokinfo.data.models.database.type.PokemonTypeName
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.DamageRelation
+import com.example.pokinfo.data.models.database.pokemon.GameIndex
+import com.example.pokinfo.data.models.database.pokemon.MoveWithType
+import com.example.pokinfo.data.models.database.pokemon.PokemonType
+import com.example.pokinfo.data.models.database.pokemon.PokemonWithThisType
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 
 
 @Database(
@@ -51,7 +53,7 @@ import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionN
         PokemonWithThisType::class,
         Pokemon::class,
         PkNames::class,
-        PkSpecieInfos::class,
+        PkSpecieInfo::class,
         PokemonDexEntries::class,
         PkMoves::class,
         PkMoveNames::class,
@@ -65,9 +67,11 @@ import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionN
         LanguageNames::class,
         VersionNames::class,
         PkMoveMachines::class,
-        PkForms::class
+        PkForms::class,
+        PkEvolutionChain::class,
+        PkEvolutionDetails::class
     ],
-    version = 34
+    version = 40
 )
 @TypeConverters(
     StringListConverter::class,

@@ -8,7 +8,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.MoveInformation
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityEffectText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityFlavorText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityInfo
@@ -17,7 +17,7 @@ import com.example.pokinfo.data.models.database.pokemon.PkMove
 import com.example.pokinfo.data.models.database.pokemon.PkMoveNames
 import com.example.pokinfo.data.models.database.pokemon.PkMoves
 import com.example.pokinfo.data.models.database.pokemon.PkNames
-import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfos
+import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfo
 import com.example.pokinfo.data.models.database.pokemon.Pokemon
 import com.example.pokinfo.data.models.database.pokemon.PkAbilitiesToJoin
 import com.example.pokinfo.data.models.database.pokemon.PkForms
@@ -25,8 +25,10 @@ import com.example.pokinfo.data.models.database.pokemon.PkMoveMachines
 import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
-import com.example.pokinfo.data.models.database.versionAndLanguageNames.VersionNames
+import com.example.pokinfo.data.models.database.pokemon.VersionNames
 
 @Dao
 interface PokeDatabaseDao {
@@ -52,7 +54,32 @@ interface PokeDatabaseDao {
         insertAbilityFlavorTexts(pokemonData.abilityFlavorTexts)
         insertAbilityEffectTexts(pokemonData.abilityEffectTexts)
 
+        if (pokemonData.evolutionChain != null && pokemonData.evolutionDetails != null ) {
+            val existingChain = getEvolutionChainById(pokemonData.evolutionChain.id)
+
+            if (existingChain == null) {
+                insertEvolutionChain(pokemonData.evolutionChain)
+                insertEvolutionDetails(pokemonData.evolutionDetails)
+            }
+
+        }
+
     }
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEvolutionChain(evolutionChain: PkEvolutionChain)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEvolutionDetails(evolutionSpecies: List<PkEvolutionDetails>)
+
+    @Query("SELECT * FROM pokemon_evolution_chain WHERE id = :chainId")
+    suspend fun getEvolutionChainById(chainId: Int): PkEvolutionChain?
+
+    @Query("SELECT * FROM pokemon_evolutions WHERE evolutionChainId =:chainId")
+    suspend fun getEvolutionDetails(chainId: Int): List<PkEvolutionDetails>
+
+
 
     suspend fun getInfosForOnePokemon(pokemonId: Int, languageId: Int): PokemonData {
         val mainData = getPokemonData(pokemonId)
@@ -76,6 +103,9 @@ interface PokeDatabaseDao {
 
         val moveInfo = getMoveInfosForAPokemon(pokemonId, languageId)
 
+        val evoChain = getEvolutionChainById(specyInfo.evolutionChainId ?: -1)
+        val evoDetails = if (evoChain != null) getEvolutionDetails(evoChain.id) else null
+
         return PokemonData(
             pokemon = mainData,
             abilityInfoList = abilityInfo,
@@ -91,7 +121,9 @@ interface PokeDatabaseDao {
             abilityFlavorTexts = flavorTexts,
             abilityEffectTexts = effectTexts,
             versionGroupDetails = moveInfo.moveVersionDetails,
-            formData = formInfos
+            formData = formInfos,
+            evolutionChain = evoChain,
+            evolutionDetails = evoDetails
         )
 
     }
@@ -165,7 +197,7 @@ interface PokeDatabaseDao {
     suspend fun insertPokemonMoves(moves: PkMoves)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSpecyInfo(info: PkSpecieInfos)
+    suspend fun insertSpecyInfo(info: PkSpecieInfo)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpecyNames(names: List<PkNames>)
@@ -224,7 +256,7 @@ interface PokeDatabaseDao {
     suspend fun getPokemonMoveVGDs(pokemonId: Int): List<PkMoveVersionGroupDetail>
 
     @Query("SELECT * FROM pokemon_specy WHERE id =:pokemonId")
-    suspend fun getSpecyInfo(pokemonId: Int): PkSpecieInfos
+    suspend fun getSpecyInfo(pokemonId: Int): PkSpecieInfo
 
     @Query("SELECT * FROM pokemon_specy_names WHERE speciesId =:specyId AND languageId <= 10")
     suspend fun getSpecyNames(specyId: Int): List<PkNames>
@@ -260,4 +292,3 @@ interface PokeDatabaseDao {
     fun checkPokemonInsertStatus(pokemonId: Int): PokemonInsertStatus?
 
 }
-
