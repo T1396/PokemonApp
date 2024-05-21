@@ -97,8 +97,16 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 spritesJson
             )
             // species info and names
-            val (speciesInfo, specieNames) = getSpeciesInfo(pokemonId, allSpeciesInfo)
-            val formList = mapFormInfo(formInfo, speciesInfo.id)
+            val specyAlreadyExists = repository.doesSpeciesExistAlready(allSpeciesInfo?.id ?: -1)
+            var speciesInfo: PkSpecieInfo? = null
+            var specieNames: List<PkNames> = emptyList()
+            if (!specyAlreadyExists) {
+                val (a, b) = getSpeciesInfo(pokemonId, allSpeciesInfo)
+                speciesInfo = a
+                specieNames = b
+            }
+
+            val formList = mapFormInfo(formInfo, speciesInfo?.id ?: -1)
             val pokedexData = part2.pokemon.firstOrNull()?.specy
             val pokedexEntries = getPokedexTexts(pokedexData)
 
@@ -113,7 +121,7 @@ class PokemonDatabaseMapper(private val repository: Repository) {
             // creates a list of every move id the pokemon can learn
             val pkMoves = PkMoves(
                 pokemonId = pokemonId,
-                moveIds = moveIdSet.toList().sortedBy { it }
+                moveIds = moveIdSet.toList().sorted()
             )
             // join list / table holds info which pokemon have which ability
             val joinList = abilities?.map {

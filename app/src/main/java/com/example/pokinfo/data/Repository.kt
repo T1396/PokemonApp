@@ -30,6 +30,7 @@ import com.example.pokinfo.data.util.UIState
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -329,11 +330,11 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
                 jobs.add(job)
             }
             // wait for every job to finish
-            jobs.forEach { it.await() }
+            jobs.awaitAll()
             insertTypeInfoIntoDatabase(typeInfoList)
 
         } catch (e: Exception) {
-            Log.d(TAG, "Failed to load type Details from API", e)
+            Log.d(TAG, "Failed to load Pokemon type Details from API", e)
         }
     }
 
@@ -341,7 +342,16 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         try {
             database.pokeTypeDao.insertCompleteTypeInfo(typeInfoList)
         } catch (e: Exception) {
-            Log.d(TAG, "Failed to insert Type Infos into Database")
+            Log.d(TAG, "Failed to insert Type Info into Database")
+        }
+    }
+
+    suspend fun doesSpeciesExistAlready(speciesId: Int): Boolean {
+        return try {
+            database.pokeDao.existsSpecies(speciesId)
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to check if species exists already in database", e)
+            false
         }
     }
     //endregion

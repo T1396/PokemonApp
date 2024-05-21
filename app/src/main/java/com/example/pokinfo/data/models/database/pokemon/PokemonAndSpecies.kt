@@ -12,7 +12,7 @@ data class PokemonData(
     val pokemon: Pokemon,
     val abilityInfoList: List<PkAbilityInfo>,
     val abilitiesToJoin: List<PkAbilitiesToJoin>,
-    val specyData: PkSpecieInfo,
+    val specyData: PkSpecieInfo?,
     val formData: List<PkForms>,
     val pokemonMoves: PkMoves,
     val pokedexEntries: List<PokemonDexEntries>,

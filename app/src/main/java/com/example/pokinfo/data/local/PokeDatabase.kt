@@ -73,7 +73,7 @@ import com.example.pokinfo.data.models.database.pokemon.VersionNames
         PkEvolutionDetails::class,
         PokemonAbilitiesList::class
     ],
-    version = 43
+    version = 44
 )
 @TypeConverters(
     StringListConverter::class,
@@ -96,7 +96,7 @@ abstract class PokeDatabase : RoomDatabase() {
 //                val instance = Room.databaseBuilder(
 //                    context.applicationContext,
 //                    PokeDatabase::class.java,
-//                    "poke_database.db"
+//                    "poke_database.db.db"
 //                )
 //                    .fallbackToDestructiveMigration()
 //                    .build()

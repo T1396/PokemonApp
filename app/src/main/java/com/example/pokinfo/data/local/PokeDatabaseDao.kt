@@ -37,7 +37,7 @@ interface PokeDatabaseDao {
     @Transaction
     suspend fun insertAllPokemonData(pokemonData: PokemonData) {
         insertPokemonData(pokemonData.pokemon)
-        insertSpecyInfo(pokemonData.specyData)
+        pokemonData.specyData?.let { insertSpecyInfo(it) }
         insertAbilityInfo(pokemonData.abilityInfoList)
         insertMoves(pokemonData.moves)
 
@@ -268,8 +268,12 @@ interface PokeDatabaseDao {
     @Query("SELECT * FROM pokemon_move_version_group_details WHERE pokemonId =:pokemonId")
     suspend fun getPokemonMoveVGDs(pokemonId: Int): List<PkMoveVersionGroupDetail>
 
-    @Query("SELECT * FROM pokemon_specy WHERE id =:pokemonId")
-    suspend fun getSpecyInfo(pokemonId: Int): PkSpecieInfo
+    @Query("SELECT * FROM pokemon_specy WHERE id =:speciesId")
+    suspend fun getSpecyInfo(speciesId: Int): PkSpecieInfo
+
+    @Query("SELECT EXISTS(SELECT 1 FROM pokemon_specy WHERE id = :speciesId)")
+    suspend fun existsSpecies(speciesId: Int): Boolean
+
 
     @Query("SELECT * FROM pokemon_specy_names WHERE speciesId =:specyId AND languageId <= 10")
     suspend fun getSpecyNames(specyId: Int): List<PkNames>
