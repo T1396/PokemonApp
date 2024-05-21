@@ -78,7 +78,6 @@ class AbilitySheetAdapter(
         private val onItemClicked: (Int) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(pokemon: PokemonForList, typeNames: List<PokemonTypeName>) {
-
             loadAnyImage(binding.ivPokemon, pokemon.imageUrl, pokemon.altImageUrl, pokemon.officialImageUrl)
             binding.tvPokemonName.text = pokemon.name
             binding.tvNr.text = pokemon.speciesId.toString()
