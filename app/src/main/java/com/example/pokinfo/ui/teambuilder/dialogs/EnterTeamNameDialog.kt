@@ -20,7 +20,6 @@ class EnterTeamNameDialogFragment : DialogFragment() {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         listener = parentFragment as? EnterTeamNameListener ?: context as? EnterTeamNameListener
-        Log.d("EnterTeamName", "Listener assigned: $listener")
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -45,7 +44,6 @@ class EnterTeamNameDialogFragment : DialogFragment() {
 
                     posButton.setOnClickListener {
                         val teamName = inputLayout.editText?.text.toString().trim()
-                        Log.d("Listener", listener.toString())
                         listener?.onTeamNameEntered(teamName)
                         dismiss()
                     }

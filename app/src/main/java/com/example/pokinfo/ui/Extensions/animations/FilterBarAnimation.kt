@@ -7,9 +7,8 @@ import android.animation.ValueAnimator
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
-import androidx.fragment.app.Fragment
 
-fun Fragment.showOrHideChipGroupAnimated(scrollView: HorizontalScrollView, shouldExpand: Boolean) {
+fun showOrHideChipGroupAnimated(scrollView: HorizontalScrollView, shouldExpand: Boolean) {
     if (shouldExpand) {
         scrollView.visibility = View.VISIBLE
         val targetHeight = ViewGroup.LayoutParams.WRAP_CONTENT

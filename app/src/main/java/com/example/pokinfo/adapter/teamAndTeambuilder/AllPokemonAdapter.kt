@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
@@ -15,7 +16,6 @@ import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
 import com.example.pokinfo.databinding.ItemListPokemonlistBinding
 
 
-
 class AllPokemonAdapter(
     private val pokemonTypeNames: List<PokemonTypeName>,
     private val onItemClicked: (PokemonForList) -> Unit
@@ -24,10 +24,9 @@ class AllPokemonAdapter(
     private var dataset: List<PokemonForList> = emptyList()
 
     @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<PokemonForList>, callback: (() -> Unit)? = null) {
+    fun submitList(list: List<PokemonForList>) {
         dataset = list
         notifyDataSetChanged()
-        callback?.invoke()
     }
 
 
@@ -46,14 +45,14 @@ class AllPokemonAdapter(
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-
+        val binding = holder.binding
         val bindMap = mapOf(
-            1 to holder.binding.tvHpVal,
-            2 to holder.binding.tvAtkVal,
-            3 to holder.binding.tvDefVal,
-            4 to holder.binding.tvSpAtkVal,
-            5 to holder.binding.tvSpDefVal,
-            6 to holder.binding.tvInitVal
+            1 to binding.tvHpVal,
+            2 to binding.tvAtkVal,
+            3 to binding.tvDefVal,
+            4 to binding.tvSpAtkVal,
+            5 to binding.tvSpDefVal,
+            6 to binding.tvInitVal
         )
         val item = dataset[position]
         var isExpanded = false
@@ -64,33 +63,12 @@ class AllPokemonAdapter(
 
 
         holder.binding.tvPokemonName.text = item.name
-
-        // set primary type name
-        val primTypeName = pokemonTypeNames.find { it.typeId == item.typeId1 }?.name
-        holder.binding.tvPrimaryType.text = primTypeName
-
-        // set primary cardview color
-        val primaryTypeColorRes = typeColorMap.entries.find { it.key == item.typeId1 }?.value?.first
-            ?: R.color.type_colour_unknown
-        val primaryColor = ContextCompat.getColor(holder.itemView.context, primaryTypeColorRes)
-        holder.binding.cvTypeOne.setCardBackgroundColor(primaryColor)
-
-        if (item.typeId2 != null) {
-            // if pokemon has a secondary type
-                // set typename
-                val secTypeName = pokemonTypeNames.find { it.typeId == item.typeId2 }?.name
-                holder.binding.tvSecondaryType.text = secTypeName
-                // set card color
-                val secondaryTypeColorRes =
-                    typeColorMap.entries.find { it.key == item.typeId2 }?.value?.first
-                        ?: R.color.type_colour_unknown
-                val secondaryColor =
-                    ContextCompat.getColor(holder.itemView.context, secondaryTypeColorRes)
-                holder.binding.cvTypeTwo.setCardBackgroundColor(secondaryColor)
-                // make cardview visible
-                holder.binding.cvTypeTwo.visibility = View.VISIBLE
-        } else {
+        bindPokeTypeCardView(holder, binding.cvTypeOne, item.typeId1, binding.tvPrimaryType)
+        if (item.typeId2 == null) {
             holder.binding.cvTypeTwo.visibility = View.INVISIBLE
+        } else {
+            bindPokeTypeCardView(holder, binding.cvTypeTwo, item.typeId2, binding.tvSecondaryType)
+            holder.binding.cvTypeTwo.visibility = View.VISIBLE
         }
 
         fillTableLayout(item, bindMap)
@@ -107,6 +85,20 @@ class AllPokemonAdapter(
             onItemClicked(item)
         }
 
+    }
+
+    private fun bindPokeTypeCardView(
+        holder: AllPokemonAdapter.ItemViewHolder,
+        cardView: CardView,
+        typeId: Int,
+        textView: TextView
+    ) {
+        val typeColorRes = typeColorMap.entries.find { it.key == typeId }?.value?.first
+            ?: R.color.type_colour_unknown
+        val color = ContextCompat.getColor(holder.itemView.context, typeColorRes)
+        cardView.setCardBackgroundColor(color)
+        val primTypeName = pokemonTypeNames.find { it.typeId == typeId }?.name
+        textView.text = primTypeName
     }
 
     private fun fillTableLayout(

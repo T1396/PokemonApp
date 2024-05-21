@@ -122,13 +122,9 @@ class AttacksDetailFragment : Fragment() {
     }
 
     private fun fillAttackDescription() {
-
         val description = attacksViewModel.getAttackDescription(actualLanguageId, actualVersionId ?: 1)
-
-
         binding.tvAttackDescription.text = description?.flavor_text
         binding.btnLanguage.text = attacksViewModel.getLanguageName(actualLanguageId)
-        Log.d("actualLanguageId", actualVersionId.toString())
         binding.btnGameVersion.text = attacksViewModel.getVersionName(actualVersionId ?: -1)
     }
 
