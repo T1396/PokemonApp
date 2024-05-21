@@ -1,7 +1,9 @@
 package com.example.pokinfo.ui.teambuilder
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.adapter.teamAndTeambuilder.AllPokemonAdapter
@@ -120,6 +123,34 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         fabSavePokemon?.isEnabled = true
     }
 
+    private fun adjustRecyclerViewHeight(recyclerView: RecyclerView, maxItems: Int) {
+        recyclerView.post {
+            val totalItemCount = recyclerView.adapter?.itemCount ?: 0
+            if (totalItemCount == 0) {
+                recyclerView.layoutParams = recyclerView.layoutParams.apply {
+                    height = 0
+                }
+                return@post
+            }
+
+            val oneItemHeight = (recyclerView.getChildAt(0)?.measuredHeight) ?: 0
+
+
+            val totalHeight = (oneItemHeight * totalItemCount.coerceAtMost(maxItems)) +
+                    (6 * dpToPx(recyclerView.context, (totalItemCount).coerceAtMost(maxItems)))
+
+            recyclerView.layoutParams = recyclerView.layoutParams.apply {
+                height = totalHeight
+            }
+        }
+    }
+
+    private fun dpToPx(context: Context, dp: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics
+        ).toInt()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -138,7 +169,9 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         // display search results in a recyclerview
         pokeViewModel.filteredListTeamBuilder.observe(viewLifecycleOwner) {
             pokeListAdapter?.let { pokeListAdapter ->
-                pokeListAdapter.submitList(it)
+                pokeListAdapter.submitList(it) {
+                    adjustRecyclerViewHeight(binding.rvPokeList, 5)
+                }
                 binding.rvPokeList.visibility =
                     if (it.isEmpty()) View.GONE else View.VISIBLE
             }
