@@ -1,24 +1,30 @@
 package com.example.pokinfo.ui.home
 
 
+import android.annotation.SuppressLint
+import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SnapHelper
 import com.example.pokinfo.R
-import com.example.pokinfo.adapter.home.detail.AbilityAdapter
+import com.example.pokinfo.adapter.home.detail.AbilityEffectText
+import com.example.pokinfo.adapter.home.detail.AbilitySheetAdapter
 import com.example.pokinfo.adapter.home.detail.ImageViewPagerAdapter
 import com.example.pokinfo.adapter.home.detail.ImagesAdapter
 import com.example.pokinfo.adapter.home.detail.PokedexEntryAdapter
@@ -26,20 +32,25 @@ import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PkNames
+import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.util.NoScrollLayoutManager
+import com.example.pokinfo.data.util.ScrollStateListener
 import com.example.pokinfo.data.util.UIState
 import com.example.pokinfo.databinding.FragmentHomeDetailBinding
 import com.example.pokinfo.databinding.IncludeHomeDetailBottomSheetBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
+import com.example.pokinfo.ui.misc.dialogs.showConfirmationDialog
 import com.example.pokinfo.viewModels.PokeViewModel
 import com.github.mikephil.charting.charts.RadarChart
 import com.github.mikephil.charting.data.RadarData
 import com.github.mikephil.charting.data.RadarDataSet
 import com.github.mikephil.charting.data.RadarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
@@ -56,7 +67,6 @@ class HomeDetailFragment : Fragment() {
     private val binding get() = _binding!!
     private val pokeViewModel: PokeViewModel by activityViewModels()
     private lateinit var pokedexAdapter: PokedexEntryAdapter
-    private var snapHelperAbility: SnapHelper? = null
     private var snapHelperPokedexTexts: SnapHelper? = null
     private lateinit var sheetBinding: IncludeHomeDetailBottomSheetBinding
     private lateinit var statMap: Map<String, Pair<TextView, TextView>>
@@ -75,12 +85,22 @@ class HomeDetailFragment : Fragment() {
         _binding = null
     }
 
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         sheetBinding = binding.bottomSheetBinding
         createStatMap()
-        sheetBinding.nestedScrollView.scrollTo(0, 0)
 
+
+        val swipeRefreshLayout = binding.swipeRefreshLayout
+        swipeRefreshLayout.setOnRefreshListener {
+            swipeRefreshLayout.isRefreshing = false
+            pokeViewModel.getSinglePokemonData(args.pokemonId, R.string.failed_load_single_pokemon_data) {
+
+            }
+
+        }
 
 
         fillImagePager(args.pokemonId)
@@ -89,25 +109,34 @@ class HomeDetailFragment : Fragment() {
         val versionNames = pokeViewModel.versionNames
 
 
-        pokeViewModel.clickedPokemon.observe(viewLifecycleOwner) { uiState -> //pkData ->
+        pokeViewModel.clickedPokemon.observe(viewLifecycleOwner) { uiState ->
             val typeNames = pokeViewModel.pokemonTypeNames
             val languageId = pokeViewModel.getLangId()
             when (uiState) {
                 is UIState.Loading -> {
                     // show loading indicator
-                    sheetBinding.loadingProgressBar.visibility = View.VISIBLE
-                    sheetBinding.nestedScrollView.visibility = View.INVISIBLE
+                    binding.clLoadingIndicator.visibility = View.VISIBLE
+                    //sheetBinding.wholeLayout.visibility = View.INVISIBLE
+                    binding.tvError.visibility = View.GONE
+                    //binding.scrollView.setOnTouchListener { v, event -> true }
                 }
 
                 is UIState.Success -> {
-                    sheetBinding.loadingProgressBar.visibility = View.GONE
-                    sheetBinding.nestedScrollView.visibility = View.VISIBLE
+                    binding.clLoadingIndicator.visibility = View.GONE
                     sheetBinding.wholeLayout.visibility = View.VISIBLE
+                    binding.tvError.visibility = View.GONE
                     fillUI(uiState.data, languageId, typeNames, versionNames, languageNames)
+                    // Re-enable scrolling when data successfully loaded
+                    //binding.scrollView.setOnTouchListener(null)  // Remove custom touch listener
+
                 }
 
                 is UIState.Error -> {
-                    // to be done
+                    binding.clLoadingIndicator.visibility = View.GONE
+
+                    binding.tvError.visibility = View.VISIBLE
+                    //binding.scrollView.setOnTouchListener { v, event -> true }
+
                 }
             }
         }
@@ -132,6 +161,8 @@ class HomeDetailFragment : Fragment() {
             //overlayView = sheetBinding.arrowOverlay
             if (pkData.evolutionChain != null && !pkData.evolutionDetails.isNullOrEmpty()) {
                 createEvolutionView(pkData.specyData.id, pkData.evolutionDetails)
+                sheetBinding.cvEvolutions.visibility = View.VISIBLE
+                sheetBinding.tvEvolutionsHeader.text = getString(R.string.evolution_header, translatedName)
             }
         }
 
@@ -176,13 +207,8 @@ class HomeDetailFragment : Fragment() {
 
         // Abilities Card
         val abilitiesList = pokeViewModel.mapAbilitiesDetail()
-        val abilityAdapter = AbilityAdapter()
-        sheetBinding.rvAbility.adapter = abilityAdapter
-        abilityAdapter.submitList(abilitiesList)
-        if (snapHelperAbility == null) {
-            snapHelperAbility = PagerSnapHelper()
-            snapHelperAbility?.attachToRecyclerView(sheetBinding.rvAbility)
-        }
+        setupAbilityChips(abilitiesList, pkData.abilitiesPokemonList ?: emptyList(), typeNames)
+
 
 
         sheetBinding.btnShowAttacks.setOnClickListener {
@@ -204,11 +230,18 @@ class HomeDetailFragment : Fragment() {
         // map of all sprites categorized on their origins
         pokeViewModel.extractSpritesWithCategories { sortedSpriteMap ->
 
-            val imageAdapter = ImagesAdapter()
+            val imageAdapter = ImagesAdapter(viewLifecycleOwner.lifecycleScope)
             // creates chip buttons for each category
             createButtons(sortedSpriteMap, imageAdapter)
             // custom layoutManager to disable scrolling
-            sheetBinding.rvImages.layoutManager = NoScrollLayoutManager(requireContext())
+            sheetBinding.rvImages.layoutManager = NoScrollLayoutManager(
+                requireContext(),
+                LinearLayoutManager.HORIZONTAL,
+                false
+            ).also {
+                it.setScrollEnabled(false)
+                sheetBinding.rvImages.addOnScrollListener(ScrollStateListener(it))
+            }
             sheetBinding.rvImages.adapter = imageAdapter
 
             // gets the first key name to give it to the adapter as parameter to display it
@@ -222,24 +255,90 @@ class HomeDetailFragment : Fragment() {
         }
 
 
-        // go to previous image on the bottom cardview with images
         sheetBinding.ibPicturesNext.setOnClickListener {
-            // next image
-            val currentPosition =
-                (sheetBinding.rvImages.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+            val layoutManager = sheetBinding.rvImages.layoutManager as NoScrollLayoutManager
+            val currentPosition = layoutManager.findFirstVisibleItemPosition()
             val itemCount = sheetBinding.rvImages.adapter?.itemCount ?: 0
             if (currentPosition < itemCount - 1) {
-                sheetBinding.rvImages.scrollToPosition(currentPosition + 1)
+                layoutManager.setScrollEnabled(true)
+                sheetBinding.rvImages.smoothScrollToPosition(currentPosition + 1)
             }
         }
-        // go to next image
+
         sheetBinding.ibPicturesPrevious.setOnClickListener {
-            val currentPosition =
-                (sheetBinding.rvImages.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+            val layoutManager = sheetBinding.rvImages.layoutManager as NoScrollLayoutManager
+            val currentPosition = layoutManager.findFirstVisibleItemPosition()
             if (currentPosition > 0) {
-                sheetBinding.rvImages.scrollToPosition(currentPosition - 1)
+                layoutManager.setScrollEnabled(true)
+                sheetBinding.rvImages.smoothScrollToPosition(currentPosition - 1)
             }
         }
+    }
+
+    private fun setupAbilityChips(
+        abilitiesList: List<AbilityEffectText>,
+        abilitiesPokemonList: List<PokemonAbilitiesList>,
+        typeNames: List<PokemonTypeName>
+    ) {
+        val chipGroup = sheetBinding.chipGroupAbilities
+        chipGroup.removeAllViews()
+        abilitiesList.forEach { ability ->
+            val chip = Chip(requireContext()).apply {
+                text = if (ability.isHidden) "${ability.name} (Hidden)" else ability.name
+                isClickable = true
+                isCheckable = false
+                setOnClickListener {
+                    showAbilitySheet(ability, abilitiesPokemonList, typeNames)
+                }
+            }
+            chipGroup.addView(chip)
+        }
+    }
+
+    private fun showAbilitySheet(
+        ability: AbilityEffectText,
+        abilitiesPokemonList: List<PokemonAbilitiesList>,
+        typeNames: List<PokemonTypeName>
+    ) {
+        val pokemonIdList = abilitiesPokemonList.find { it.abilityId == ability.abilityId }
+            ?.pokemonIds ?: emptyList()
+        pokeViewModel.getPokemonListWhoHaveAbility(pokemonIdList) { pokemonList ->
+            requireActivity().runOnUiThread {
+                val bottomSheetDialog = BottomSheetDialog(requireContext())
+
+                val view = layoutInflater.inflate(R.layout.layout_ability_bottom_sheet, null)
+                val abilityNameTV = view.findViewById<TextView>(R.id.tvAbilityNameSheet)
+                abilityNameTV.text = ability.name
+
+
+                val recyclerView = view.findViewById<RecyclerView>(R.id.rvAbilitySheet)
+                val adapter = AbilitySheetAdapter(ability, typeNames) { pokemonId ->
+                    showConfirmationDialog(
+                        onConfirm = {
+                            pokeViewModel.getSinglePokemonData(pokemonId)
+                            bottomSheetDialog.dismiss()
+                        }
+                    )
+                }
+
+                recyclerView.adapter = adapter
+                adapter.submitList(pokemonList.sortedBy { it.speciesId })
+                bottomSheetDialog.setContentView(view)
+                bottomSheetDialog.show()
+
+
+                val bottomSheetInternal = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as FrameLayout?
+                val behavior = BottomSheetBehavior.from(bottomSheetInternal!!)
+
+                val displayMetrics = Resources.getSystem().displayMetrics
+                val screenHeight = displayMetrics.heightPixels
+                behavior.peekHeight = (screenHeight / 2)
+                behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+
+
+            }
+        }
+
     }
 
     /** Gets the evolutionStages of a pokemon and sets this stage to a custom evolution view to show the evolution tree */
@@ -435,12 +534,12 @@ class HomeDetailFragment : Fragment() {
     //region Functions to fill Bars / TypeCardViews/ Radar chart
     private fun fillProgressBars(statList: List<Float>) {
         val listBindings = listOf(
-            binding.bottomSheetBinding.hpBar,
-            binding.bottomSheetBinding.atkBar,
-            binding.bottomSheetBinding.defBar,
-            binding.bottomSheetBinding.spAtkBar,
-            binding.bottomSheetBinding.spDefBar,
-            binding.bottomSheetBinding.initBar,
+            sheetBinding.includeStats.hpBar,
+            sheetBinding.includeStats.atkBar,
+            sheetBinding.includeStats.defBar,
+            sheetBinding.includeStats.spAtkBar,
+            sheetBinding.includeStats.spDefBar,
+            sheetBinding.includeStats.initBar,
         )
         listBindings.forEachIndexed { index, bar ->
             bar.progress = statList[index].toInt()
@@ -554,12 +653,27 @@ class HomeDetailFragment : Fragment() {
     private fun createStatMap() {
         statMap =
             mapOf(
-                "hp" to Pair(sheetBinding.tvHpVal, sheetBinding.tvHpName),
-                "attack" to Pair(sheetBinding.tvAtkVal, sheetBinding.tvAtkName),
-                "defense" to Pair(sheetBinding.tvDefVal, sheetBinding.tvDefName),
-                "special-attack" to Pair(sheetBinding.tvSpAtkVal, sheetBinding.tvSpAtkName),
-                "special-defense" to Pair(sheetBinding.tvSpDefVal, sheetBinding.tvSpDefName),
-                "speed" to Pair(sheetBinding.tvTableInitVal, sheetBinding.tvInitName)
+                "hp" to Pair(sheetBinding.includeStats.tvHpVal, sheetBinding.includeStats.tvHpName),
+                "attack" to Pair(
+                    sheetBinding.includeStats.tvAtkVal,
+                    sheetBinding.includeStats.tvAtkName
+                ),
+                "defense" to Pair(
+                    sheetBinding.includeStats.tvDefVal,
+                    sheetBinding.includeStats.tvDefName
+                ),
+                "special-attack" to Pair(
+                    sheetBinding.includeStats.tvSpAtkVal,
+                    sheetBinding.includeStats.tvSpAtkName
+                ),
+                "special-defense" to Pair(
+                    sheetBinding.includeStats.tvSpDefVal,
+                    sheetBinding.includeStats.tvSpDefName
+                ),
+                "speed" to Pair(
+                    sheetBinding.includeStats.tvInitVal,
+                    sheetBinding.includeStats.tvInitName
+                )
             )
     }
 

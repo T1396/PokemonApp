@@ -13,6 +13,7 @@ import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
 import com.example.pokinfo.data.enums.PokemonSortFilter
+import com.example.pokinfo.data.util.sharedPreferences
 import com.example.pokinfo.databinding.FragmentHomeBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.viewModels.PokeViewModel
@@ -22,13 +23,13 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
     private val pokeViewModel: PokeViewModel by activityViewModels()
     private lateinit var adapter: PokeListAdapter
     private var isFilterBarExpanded = false
-
 
 
     override fun onCreateView(
@@ -48,35 +49,50 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-            // show all pokemons and navigate if one is clicked
-            pokeViewModel.pokemonList.observe(viewLifecycleOwner) {
-                val typeNames = pokeViewModel.pokemonTypeNames
-                // create adapter and set callback function
-                adapter = PokeListAdapter(typeNames) { pokemonId ->
-                    // when callback invoked
-                    pokeViewModel.getSinglePokemonData(
-                        pokemonId,
-                        R.string.failed_load_single_pokemon_data
-                    )
-                    findNavController().navigate(
-                        HomeFragmentDirections.actionNavHomeToNavHomeDetail(pokemonId)
-                    )
-                }
-                binding.rvPokeList.adapter = adapter
-                createFilterChips(binding.chipGroupFilter) // create sort filter chips
-                adapter.submitList(it)
+        val swipeRefreshLayout = binding.homeRefreshLayout
 
-                // re enters the entered text when navigated back to home fragment
-                binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
-                binding.tilPokemonName.editText?.addTextChangedListener { text ->
-                    pokeViewModel.setSearchInputPokemonList(text.toString())
-                }
 
-                binding.tilPokemonName.setEndIconOnClickListener {
-                    isFilterBarExpanded = !isFilterBarExpanded
-                    TransitionManager.beginDelayedTransition(binding.topBar)
-                    showOrHideChipGroupAnimated(binding.scrollViewChips, isFilterBarExpanded)
-                }
+        //pokeViewModel.fetchEveryPokemonData()
+        binding.homeRefreshLayout.setOnRefreshListener {
+            val isInitialized by requireContext().sharedPreferences("isInitialized", false)
+            if (!isInitialized) pokeViewModel.initializeDataForApp()
+            else swipeRefreshLayout.isRefreshing = false
+        }
+
+        pokeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            swipeRefreshLayout.isRefreshing = isLoading
+        }
+
+        // show all pokemons and navigate if one is clicked
+        pokeViewModel.pokemonList.observe(viewLifecycleOwner) {
+            val typeNames = pokeViewModel.pokemonTypeNames
+            // create adapter and set callback function
+            adapter = PokeListAdapter(typeNames) { pokemonId ->
+                // when callback invoked
+                pokeViewModel.getSinglePokemonData(
+                    pokemonId,
+                    R.string.failed_load_single_pokemon_data
+                )
+                findNavController().navigate(
+                    HomeFragmentDirections.actionNavHomeToNavHomeDetail(pokemonId)
+                )
+            }
+            binding.rvPokeList.adapter = adapter
+            binding.rvPokeList.setHasFixedSize(true)
+            createFilterChips(binding.chipGroupFilter) // create sort filter chips
+            adapter.submitList(it)
+
+            // re enters the entered text when navigated back to home fragment
+            binding.tilPokemonName.editText?.setText(pokeViewModel.getSearchInputPokemonList())
+            binding.tilPokemonName.editText?.addTextChangedListener { text ->
+                pokeViewModel.setSearchInputPokemonList(text.toString())
+            }
+
+            binding.tilPokemonName.setEndIconOnClickListener {
+                isFilterBarExpanded = !isFilterBarExpanded
+                TransitionManager.beginDelayedTransition(binding.topBar)
+                showOrHideChipGroupAnimated(binding.scrollViewChips, isFilterBarExpanded)
+            }
 
         }
 
