@@ -69,7 +69,7 @@
     <color name="chip_background_on_primary_selected_light">#EC711F</color> <!-- Beispiel für ausgewählten Zustand -->
     <color name="chip_background_on_primary_unselected_light">#A55A5A</color> <!-- Beispiel für nicht ausgewählten Zustand -->
     <color name="chip_text_on_primary_selected_light">#100808</color> <!-- Weiß für ausgewählten Text -->
-    <color name="chip_text_on_primary_unselected_light">#E1B4B4</color>
+    <color name="chip_text_on_primary_unselected_light">#615A5A</color>
 
     <color name="chip_background_on_primary_selected_dark">#f8e0a6</color> <!-- Dunkelgrün für ausgewählten Zustand -->
     <color name="chip_background_on_primary_unselected_dark">#6649463F</color> <!-- Dunkelgrau für nicht ausgewählten Zustand -->

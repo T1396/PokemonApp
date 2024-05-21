@@ -108,6 +108,8 @@ dependencies {
 
 
     implementation("io.coil-kt:coil:2.6.0")
+    implementation("io.coil-kt:coil-gif:2.6.0")
+    implementation ("com.caverock:androidsvg:1.4")
     implementation("com.apollographql.apollo3:apollo-runtime:3.8.3")
     implementation("com.apollographql.apollo3:apollo-http-cache:3.8.3")
 

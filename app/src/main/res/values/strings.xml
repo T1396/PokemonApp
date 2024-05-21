@@ -132,7 +132,8 @@
     <string name="enter_pokemon_name">Enter the name of the pokemon</string>
     <string name="enter_name_error">You need to enter a name</string>
 
-
+    <string name="failed_to_load_abilities">There was an error while fetching abilities list data… Try again or report this as a bug</string>
+    <string name="failed_to_load_attacks">There was an error while fetching attack data… Try again or report this as a bug</string>
     <string name="failed_load_single_pokemon_data">Oops… something went wrong while loading the pokemon data</string>
     <string name="button_to_change_language">Button to change Language</string>
     <string name="indicate_if_special_physical_or_status_attack">Imageview to indicate if Special Physical or Status Attack</string>
@@ -207,5 +208,10 @@
 
 
     <string name="credential_error">There was an unexpected error with google sign… try again</string>
+    <string name="no_google_account">It seems like you have no google account added to your phone…</string>
     <string name="button_to_change_text_of_game_version">Button to change Text of Game Version</string>
+    <string name="right_picture_of_pokemon_images_cardview">Right Picture of Pokemon Images CardView</string>
+    <string name="left_picture_of_pokemon_images_cardview">Left Picture of Pokemon Images CardView</string>
+
+    <string name="retry">Retry</string>
 </resources>
