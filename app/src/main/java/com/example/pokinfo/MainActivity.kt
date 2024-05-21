@@ -25,7 +25,6 @@ import coil.transform.CircleCropTransformation
 import com.example.pokinfo.data.util.sharedPreferences
 import com.example.pokinfo.databinding.ActivityMainBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
-import com.example.pokinfo.viewModels.PokeViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.google.android.material.appbar.MaterialToolbar
@@ -38,24 +37,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: FirebaseViewModel
-    private lateinit var pokeViewModel: PokeViewModel
     private lateinit var sharedViewModel: SharedViewModel
 
 
     private var isInitialized by sharedPreferences("isInitialized", false)
     private val fabSaveIconRes = R.drawable.baseline_save_as_24
     private val fabAddIconRes = R.drawable.baseline_add_24
-
-    private val getContent =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            if (uri != null) {
-                Snackbar.make(binding.root, R.string.image_is_uploading, Snackbar.LENGTH_SHORT)
-                    .show()
-                viewModel.uploadProfilePicture(uri) {
-                    updateProfilePicture(it)
-                }
-            }
-        }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,17 +54,17 @@ class MainActivity : AppCompatActivity() {
         sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
         val factory = ViewModelFactory(application, sharedViewModel)
         viewModel = ViewModelProvider(this, factory)[FirebaseViewModel::class.java]
-        pokeViewModel =
-            ViewModelProvider(this, factory)[PokeViewModel::class.java]
 
         setSupportActionBar(binding.appBarMain.mainToolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
-        val headerView = navView.getHeaderView(0)
-        val imageView: ImageView = headerView.findViewById(R.id.ivProfilePic)
+        val drawerLayoutHeader = navView.getHeaderView(0)
+        val drawerLayoutImage: ImageView = drawerLayoutHeader.findViewById(R.id.ivProfilePic)
+        val coordinatorLayout = binding.appBarMain.coordinatorLayout
+        val fab = coordinatorLayout.findViewById<FloatingActionButton>(R.id.fabMain)
 
-        imageView.setOnClickListener {
+        drawerLayoutImage.setOnClickListener {
             askIfUserWantsToUpdatePicture()
         }
 
@@ -94,8 +81,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        val coordinatorLayout = binding.appBarMain.coordinatorLayout
-        val fab = coordinatorLayout.findViewById<FloatingActionButton>(R.id.fabMain)
+
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.nav_register, R.id.nav_login -> {
@@ -152,10 +138,6 @@ class MainActivity : AppCompatActivity() {
             if (firebaseUser == null) {
                 navController.navigate(R.id.nav_login)
             } else {
-                // once user is logged in initialize Data if not already done
-//                if (!isInitialized) {
-//                    pokeViewModel.initializeDataForApp()
-//                }
 
                 val currentDestination = navController.currentDestination?.id
                 // prevents to navigate to home when the dark/white mode is switched (can lead to a activity restart)
@@ -164,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                         navController.navigate(R.id.nav_home) //
                     }
                 }
-                val emailTv = headerView.findViewById<TextView>(R.id.tvHeaderMail)
+                val emailTv = drawerLayoutHeader.findViewById<TextView>(R.id.tvHeaderMail)
                 emailTv.text = firebaseUser.email
                 viewModel.getProfilePicture {
                     updateProfilePicture(it)
@@ -172,6 +154,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
+        // Snack bar live-data observation
         sharedViewModel.snackbarSender.observe(this) { message ->
             Snackbar.make(coordinatorLayout, message, Toast.LENGTH_SHORT).show()
         }
@@ -183,12 +167,10 @@ class MainActivity : AppCompatActivity() {
         sharedViewModel.snackBarResWithAction.observe(this) { snackBarWithAction ->
             snackBarWithAction?.let {
                 val snackbar = if (it.messageResId != null) {
-                    Snackbar.make(findViewById(android.R.id.content), it.messageResId, Snackbar.LENGTH_LONG)
+                    Snackbar.make(coordinatorLayout, it.messageResId, Snackbar.LENGTH_LONG)
                 } else {
-                    Snackbar.make(findViewById(android.R.id.content),
-                        it.message.toString(), Snackbar.LENGTH_LONG)
+                    Snackbar.make(coordinatorLayout, it.message.toString(), Snackbar.LENGTH_LONG)
                 }
-
                 it.action?.let { action ->
                     snackbar.setAction(R.string.retry) { action() }
                 }
@@ -196,7 +178,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
+        // back - button logic
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (viewModel.user.value != null) {
@@ -209,16 +191,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    /** dialog to update profile pic */
-    private fun askIfUserWantsToUpdatePicture() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.change_profile_picture))
-            .setPositiveButton(getString(R.string.yes_update)) { _, _ ->
-                getContent.launch("image/*") // start intent and let user choose a picture
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
-    }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -238,8 +211,32 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    /** dialog to update profile pic */
+    private fun askIfUserWantsToUpdatePicture() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.change_profile_picture))
+            .setPositiveButton(getString(R.string.yes_update)) { _, _ ->
+                getContent.launch("image/*") // start intent and let user choose a picture
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+
+    private val getContent =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                sharedViewModel.postMessage(R.string.image_is_uploading)
+                viewModel.uploadProfilePicture(uri) {
+                    updateProfilePicture(it)
+                }
+            }
+        }
+
+
+    /** Updates the image in the drawer layout */
     private fun updateProfilePicture(photoUrl: Uri?) {
-        val navView: NavigationView = binding.navView
+        val navView = binding.navView
         val headerView = navView.getHeaderView(0)
         val imageView: ImageView = headerView.findViewById(R.id.ivProfilePic)
         imageView.load(photoUrl) {
@@ -253,6 +250,7 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+    /** Restores old drawer navigation logic (if in team builder the navigation logic is modified */
     private fun restoreDrawerNavigation(navView: NavigationView) {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         findViewById<MaterialToolbar>(R.id.mainToolbar).setupWithNavController(

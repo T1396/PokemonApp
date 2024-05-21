@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -30,7 +31,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.launch
 
-
+private const val TAG = "FirebaseViewModel"
 class FirebaseViewModel(
     private val application: Application,
     private val sharedViewModel: SharedViewModel
@@ -100,11 +101,14 @@ class FirebaseViewModel(
                 )
                 handleSignIn(result)
             } catch (e: NoCredentialException) {
-                sharedViewModel.postMessage(R.string.no_google_account)
-                Log.d("FirebaseViewModel", "Get Credential Error", e)
-            } catch (e: Exception) {
+                sharedViewModel.postMessage(R.string.google_error)
+                Log.d(TAG, "Get Credential Error", e)
+            } catch (e: GetCredentialCancellationException) {
+                Log.d(TAG, "Credential Login/Sign in cancelled by user")
+            }
+            catch (e: Exception) {
                 // error
-                Log.e("FirebaseViewModel", "Get Credential Error", e)
+                Log.e(TAG, "Get Credential Error", e)
                 sharedViewModel.postMessage(R.string.credential_error)
             }
         }
@@ -122,7 +126,7 @@ private fun handleSignIn(result: GetCredentialResponse) {
         val googleIdToken = googleIdTokenCredential.idToken
         signInGoogle(googleIdToken)
     } catch (e: GoogleIdTokenParsingException) {
-        Log.e("FirebaseViewModel", "Received an invalid google id token response", e)
+        Log.e(TAG, "Received an invalid google id token response", e)
     }
 }
 
@@ -180,7 +184,7 @@ fun uploadProfilePicture(uri: Uri, onComplete: (Uri?) -> Unit) {
             }
         } else {
             Log.d(
-                "FirebaseViewModel",
+                TAG,
                 "Error while upload new profile picture into storage",
                 it.exception
             )
@@ -221,7 +225,7 @@ fun listenForTeamsInFireStore(onPostValue: () -> Unit) {
 
     teamsListenerRegistration = teamsRef.addSnapshotListener { snapshot, error ->
         if (error != null) {
-            Log.w("FirebaseViewModel", "Listen for pokemon Teams failed", error)
+            Log.w(TAG, "Listen for pokemon Teams failed", error)
             sharedViewModel.postMessage("An error occurred while fetching pokemon teams")
             return@addSnapshotListener
         }
@@ -264,7 +268,7 @@ fun updateTeam(pokemonTeam: PokemonTeam): Boolean {
         sharedViewModel.postMessage(R.string.success_update)
         true
     } catch (e: Exception) {
-        Log.d("FirebaseViewModel", "Failed to update team in fireStore", e)
+        Log.d(TAG, "Failed to update team in fireStore", e)
         sharedViewModel.postMessage(R.string.failed_to_update_team)
         false
     }
@@ -274,10 +278,10 @@ fun deletePokemonTeam(pokemonTeam: PokemonTeam) {
     val teamId = pokemonTeam.id
     val teamRef = profileRef.collection("createdTeams").document(teamId)
     teamRef.delete().addOnSuccessListener {
-        Log.d("FirebaseViewModel", "Team successfully deleted")
+        Log.d(TAG, "Team successfully deleted")
         sharedViewModel.postMessage(R.string.team_deleted)
     }.addOnFailureListener {
-        Log.w("FirebaseViewModel", "Error deleting team", it)
+        Log.w(TAG, "Error deleting team", it)
         sharedViewModel.postMessage(R.string.team_deleted_error)
     }
 }

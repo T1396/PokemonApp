@@ -26,6 +26,7 @@ data class PokemonTeam(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>, documentId: String): PokemonTeam? {
@@ -60,6 +61,8 @@ data class TeamPokemon(
     var ivList: List<EvIvData> = emptyList(),
     var abilityId: Int = 0
 ) : Parcelable {
+
+    @Suppress("UNCHECKED_CAST")
     companion object {
         @JvmStatic
         fun fromMap(map: Map<String, Any?>): TeamPokemon? {

@@ -23,6 +23,8 @@ data class PokemonForList(
     val typeId2: Int? = null
 ) : Parcelable
 {
+
+    @Suppress("UNCHECKED_CAST")
     companion object {
         fun fromMap(map: Map<String, Any?>): PokemonForList {
             return PokemonForList(

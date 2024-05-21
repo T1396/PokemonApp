@@ -13,10 +13,11 @@ import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
 import com.example.pokinfo.data.enums.PokemonSortFilter
-import com.example.pokinfo.data.util.sharedPreferences
 import com.example.pokinfo.databinding.FragmentHomeBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.google.android.material.chip.ChipGroup
 
 class HomeFragment : Fragment() {
@@ -27,7 +28,10 @@ class HomeFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-    private val pokeViewModel: PokeViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val pokeViewModel: PokeViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private lateinit var adapter: PokeListAdapter
     private var isFilterBarExpanded = false
 
@@ -52,12 +56,11 @@ class HomeFragment : Fragment() {
         val swipeRefreshLayout = binding.homeRefreshLayout
 
 
-        //pokeViewModel.fetchEveryPokemonData()
-        binding.homeRefreshLayout.setOnRefreshListener {
+/*        binding.homeRefreshLayout.setOnRefreshListener {
             val isInitialized by requireContext().sharedPreferences("isInitialized", false)
             if (!isInitialized) pokeViewModel.initializeDataForApp()
             else swipeRefreshLayout.isRefreshing = false
-        }
+        }*/
 
         pokeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             swipeRefreshLayout.isRefreshing = isLoading
@@ -98,7 +101,9 @@ class HomeFragment : Fragment() {
 
         // observe the filter/searchinput changes
         pokeViewModel.sortedFilteredPokemonList.observe(viewLifecycleOwner) {
-            adapter.submitList(it)
+            adapter.submitList(it) {
+                binding.rvPokeList.scrollToPosition(0)
+            }
         }
     }
 

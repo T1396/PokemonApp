@@ -31,6 +31,7 @@ import com.example.pokinfo.adapter.home.detail.PokedexEntryAdapter
 import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
+import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.database.pokemon.PkNames
 import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
@@ -44,6 +45,7 @@ import com.example.pokinfo.databinding.IncludeHomeDetailBottomSheetBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
 import com.example.pokinfo.ui.misc.dialogs.showConfirmationDialog
 import com.example.pokinfo.viewModels.PokeViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
 import com.github.mikephil.charting.charts.RadarChart
 import com.github.mikephil.charting.data.RadarData
 import com.github.mikephil.charting.data.RadarDataSet
@@ -55,6 +57,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Locale
 
 
 class HomeDetailFragment : Fragment() {
@@ -65,6 +68,7 @@ class HomeDetailFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+    private val sharedViewModel: SharedViewModel by activityViewModels()
     private val pokeViewModel: PokeViewModel by activityViewModels()
     private lateinit var pokedexAdapter: PokedexEntryAdapter
     private var snapHelperPokedexTexts: SnapHelper? = null
@@ -157,7 +161,7 @@ class HomeDetailFragment : Fragment() {
         if (pkData.formData.isNotEmpty()) {
             enableFormDialog(translatedName, typeNames)
         }
-        if (pkData.pokemon.id == pkData.specyData.id) {
+        if (pkData.pokemon.id == pkData.specyData?.id) {
             //overlayView = sheetBinding.arrowOverlay
             if (pkData.evolutionChain != null && !pkData.evolutionDetails.isNullOrEmpty()) {
                 createEvolutionView(pkData.specyData.id, pkData.evolutionDetails)
@@ -168,7 +172,7 @@ class HomeDetailFragment : Fragment() {
 
         sheetBinding.tvPokemonName.text = name
 
-        sheetBinding.tvPokedexNr.text = pkData.specyData.id.toString()
+        sheetBinding.tvPokedexNr.text = pkData.specyData?.id.toString()
 
         loadTypeCardView(
             pkData.pokemon.primaryType.typeId,
@@ -212,19 +216,19 @@ class HomeDetailFragment : Fragment() {
 
 
         sheetBinding.btnShowAttacks.setOnClickListener {
-            openAttacksList()
+            openAttacksList(pkData.versionGroupDetails)
         }
         // sets a chip for each generation a pokemon has move learn data and submits the first chip info
 
 
-        val weight = String.format("%.1f", pkData.pokemon.weight / 10.0)
+        val weight = String.format(Locale.ROOT, "%.1f", pkData.pokemon.weight / 10.0)
         // Basic Info Card
-        val height = String.format("%.1f", pkData.pokemon.height / 10.0)
+        val height = String.format(Locale.ROOT, "%.1f", pkData.pokemon.height / 10.0)
         sheetBinding.tvHeightValue.text = getString(R.string.m, height)
         sheetBinding.tvWeightValue.text = getString(R.string.kg, weight)
-        sheetBinding.tvCatchrate.text = pkData.specyData.captureRate.toString()
-        sheetBinding.tvHappinessValue.text = pkData.specyData.baseHappiness.toString()
-        sheetBinding.tvGenderValues.text = setGenderText(pkData.specyData.genderRate ?: -1)
+        sheetBinding.tvCatchrate.text = pkData.specyData?.captureRate.toString()
+        sheetBinding.tvHappinessValue.text = pkData.specyData?.baseHappiness.toString()
+        sheetBinding.tvGenderValues.text = setGenderText(pkData.specyData?.genderRate ?: -1)
 
 
         // map of all sprites categorized on their origins
@@ -247,10 +251,8 @@ class HomeDetailFragment : Fragment() {
             // gets the first key name to give it to the adapter as parameter to display it
             val firstName = sortedSpriteMap.keys.firstOrNull()
             sortedSpriteMap[firstName]?.let { imageList ->
-                imageAdapter.submitList(
-                    imageList,
-                    firstName ?: "Error No Data found"
-                )
+                imageAdapter.setCategoryName(firstName ?: "No Data found")
+                imageAdapter.submitList(imageList)
             }
         }
 
@@ -463,7 +465,10 @@ class HomeDetailFragment : Fragment() {
             // each chip submits images from the relating origin with the name of the origin
             chip.setOnClickListener {
                 sortedMap[categoryName]?.let { imageList ->
-                    adapter.submitList(imageList, categoryName)
+                    adapter.setCategoryName(categoryName)
+                    adapter.submitList(imageList) {
+                        sheetBinding.rvImages.scrollToPosition(0)
+                    }
                 }
             }
         }
@@ -523,7 +528,11 @@ class HomeDetailFragment : Fragment() {
         return "$femaleText$maleText"
     }
 
-    private fun openAttacksList() {
+    private fun openAttacksList(versionGroupDetails: List<PkMoveVersionGroupDetail>) {
+        if (versionGroupDetails.isEmpty()) {
+            sharedViewModel.postMessage(R.string.no_attacks_available)
+            return
+        }
         findNavController().navigate(
             HomeDetailFragmentDirections.actionNavHomeDetailToFullScreenDialogFragment(
                 isSelectionMode = false
