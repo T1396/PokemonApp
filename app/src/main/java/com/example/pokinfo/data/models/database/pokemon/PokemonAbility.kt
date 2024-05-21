@@ -5,6 +5,21 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+
+
+@Entity(
+    tableName = "pokemon_pokemon_abilities",
+    primaryKeys = ["abilityId"],
+    foreignKeys = [
+        ForeignKey(entity = PkAbilityInfo::class, parentColumns = ["id"], childColumns = ["abilityId"])
+    ],
+    indices = [Index(value = ["abilityId"])]
+)
+data class PokemonAbilitiesList(
+    val abilityId: Int,
+    val pokemonIds: List<Long>
+)
+
 /** Link Table to hold each pokemon ability references */
 @Entity(
     tableName = "pokemon_abilities_join",
@@ -22,6 +37,7 @@ import androidx.room.PrimaryKey
 data class PkAbilitiesToJoin(
     val pokemonId: Int,
     val abilityId: Int,
+    val isHidden: Boolean,
     val slot: Int // Slot hinzugefügt, um die Position der Fähigkeit zu bestimmen
 )
 

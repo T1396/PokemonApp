@@ -3,6 +3,7 @@ package com.example.pokinfo.data.util
 import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 class NoScrollLayoutManager : LinearLayoutManager {
@@ -11,26 +12,30 @@ class NoScrollLayoutManager : LinearLayoutManager {
 
     constructor(context: Context, orientation: Int, reverseLayout: Boolean) : super(context, orientation, reverseLayout)
 
-    // Hinzufügen des Konstruktors, der von der XML-Inflation benötigt wird
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
 
-    private var isVerticalScrollEnabled = false
-    private var isHorizontalScrollEnabled = false
+    private var isScrollEnabled = false  // Steuere das Scroll-Verhalten
 
-    fun setVerticalScrollEnabled(flag: Boolean) {
-        isVerticalScrollEnabled = flag
+    fun setScrollEnabled(flag: Boolean) {
+        isScrollEnabled = flag
     }
 
-    fun setHorizontalScrollEnabled(flag: Boolean) {
-        isHorizontalScrollEnabled = flag
+
+    override fun canScrollHorizontally(): Boolean {
+        return isScrollEnabled && super.canScrollHorizontally()
     }
 
     override fun canScrollVertically(): Boolean {
-        return isVerticalScrollEnabled && super.canScrollVertically()
-    }
-
-    override fun canScrollHorizontally(): Boolean {
-        return isHorizontalScrollEnabled && super.canScrollHorizontally()
+        return isScrollEnabled && super.canScrollVertically()
     }
 }
 
+// Implementiere OnScrollListener
+class ScrollStateListener(private val layoutManager: NoScrollLayoutManager) : RecyclerView.OnScrollListener() {
+    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+        super.onScrollStateChanged(recyclerView, newState)
+        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+            layoutManager.setScrollEnabled(false)
+        }
+    }
+}

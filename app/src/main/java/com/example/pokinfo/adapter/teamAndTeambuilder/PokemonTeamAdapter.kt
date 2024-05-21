@@ -42,7 +42,6 @@ class PokemonTeamAdapter(private val onItemLongClicked: (PokemonTeam) -> Unit) :
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val team = dataset[position]
         val list = getImageTextViewPairList(holder.binding)
-
         val pokemonList = team.pokemons
 
         holder.binding.tvTeamname.text = team.name
@@ -55,7 +54,6 @@ class PokemonTeamAdapter(private val onItemLongClicked: (PokemonTeam) -> Unit) :
         pokemonList.forEachIndexed { index, teamPokemon ->
 
             val imageView = list[index].first
-            //imageView.dispose() // otherwise image views will behave chaotic
             imageView.setImageResource(R.drawable.pokeball) // placeholder
             val textView = list[index].second
             textView.text = ""

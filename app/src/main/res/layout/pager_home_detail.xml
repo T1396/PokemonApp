@@ -6,12 +6,12 @@
 
     <ImageView
         android:id="@+id/ivPokemonPager"
-        android:layout_width="wrap_content"
-        android:layout_height="180dp"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
         android:layout_marginTop="16dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/main_picture_of_a_pokemon"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

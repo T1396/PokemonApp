@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
@@ -13,6 +15,7 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
 import com.example.pokinfo.databinding.ItemListPokemonBinding
+import java.util.Locale
 
 class PokeListAdapter(
     private val typeNames: List<PokemonTypeName>,
@@ -42,43 +45,40 @@ class PokeListAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-
+        val binding = holder.binding
         val item = dataset[position]
-        val formattedPosition = String.format("%03d", position.plus(1))
+        val formattedPosition = String.format(Locale.ROOT, "%03d", position.plus(1))
         holder.binding.tvNr.text = "#$formattedPosition"
         holder.binding.tvPokemonName.text = item.name
         val ivPokemon = holder.binding.ivPokemon
         loadAnyImage(ivPokemon, item.imageUrl, item.altImageUrl, item.officialImageUrl)
 
-        // set primary cardview color
-        val primaryTypeColorRes = typeColorMap.entries.find { it.key == item.typeId1 }?.value?.first
-            ?: R.color.type_colour_unknown
-        val primaryColor = ContextCompat.getColor(holder.itemView.context, primaryTypeColorRes)
-        holder.binding.cvTypeOne.setCardBackgroundColor(primaryColor)
-        val primTypeName = typeNames.find { it.typeId == item.typeId1 }?.name
-        holder.binding.tvPrimaryType.text = primTypeName
-
-        if (item.typeId2 != null) {
-            // if pokemon has a secondary type
-            // set typename
-            val secTypeName = typeNames.find { it.typeId == item.typeId2 }?.name
-            holder.binding.tvSecondaryType.text = secTypeName
-            // set card color
-            val secondaryTypeColorRes =
-                typeColorMap.entries.find { it.key == item.typeId2 }?.value?.first
-                    ?: R.color.type_colour_unknown
-            val secondaryColor =
-                ContextCompat.getColor(holder.itemView.context, secondaryTypeColorRes)
-            holder.binding.cvTypeTwo.setCardBackgroundColor(secondaryColor)
-            // make cardview visible
-            holder.binding.cvTypeTwo.visibility = View.VISIBLE
-        } else {
+        // bind pokemon types
+        bindPokeTypeCardView(holder, binding.cvTypeOne, item.typeId1, binding.tvPrimaryType)
+        if (item.typeId2 == null) {
             holder.binding.cvTypeTwo.visibility = View.INVISIBLE
+        } else {
+            bindPokeTypeCardView(holder, binding.cvTypeTwo, item.typeId2, binding.tvSecondaryType)
+            holder.binding.cvTypeTwo.visibility = View.VISIBLE
         }
 
         holder.binding.clPokemonListItem.setOnClickListener {
             onItemClicked(item.id)
         }
+    }
+
+    private fun bindPokeTypeCardView(
+        holder: ItemViewHolder,
+        cardView: CardView,
+        typeId: Int,
+        textView: TextView
+    ) {
+        val typeColorRes = typeColorMap.entries.find { it.key == typeId }?.value?.first
+            ?: R.color.type_colour_unknown
+        val color = ContextCompat.getColor(holder.itemView.context, typeColorRes)
+        cardView.setCardBackgroundColor(color)
+        val primTypeName = typeNames.find { it.typeId == typeId }?.name
+        textView.text = primTypeName
     }
 
 }

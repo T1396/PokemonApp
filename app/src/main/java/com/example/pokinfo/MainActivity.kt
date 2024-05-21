@@ -99,22 +99,26 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.nav_register, R.id.nav_login -> {
+                    supportActionBar?.hide()
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                     fab.visibility = View.GONE
                 }
 
                 R.id.nav_teambuilder -> {
+                    supportActionBar?.show()
                     fab.visibility = View.VISIBLE
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabSaveIconRes))
                 }
 
                 R.id.nav_teams_and_builder -> {
+                    supportActionBar?.show()
                     fab.visibility = View.VISIBLE
                     restoreDrawerNavigation(navView)
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabAddIconRes))
                 }
 
                 else -> {
+                    supportActionBar?.show()
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                     fab.visibility = View.GONE
                 }
@@ -149,9 +153,9 @@ class MainActivity : AppCompatActivity() {
                 navController.navigate(R.id.nav_login)
             } else {
                 // once user is logged in initialize Data if not already done
-                if (!isInitialized) {
-                    pokeViewModel.initializeDataForApp()
-                }
+//                if (!isInitialized) {
+//                    pokeViewModel.initializeDataForApp()
+//                }
 
                 val currentDestination = navController.currentDestination?.id
                 // prevents to navigate to home when the dark/white mode is switched (can lead to a activity restart)
@@ -174,6 +178,22 @@ class MainActivity : AppCompatActivity() {
 
         sharedViewModel.snackbarResSender.observe(this) { res ->
             Snackbar.make(coordinatorLayout, getString(res), Snackbar.LENGTH_SHORT).show()
+        }
+
+        sharedViewModel.snackBarResWithAction.observe(this) { snackBarWithAction ->
+            snackBarWithAction?.let {
+                val snackbar = if (it.messageResId != null) {
+                    Snackbar.make(findViewById(android.R.id.content), it.messageResId, Snackbar.LENGTH_LONG)
+                } else {
+                    Snackbar.make(findViewById(android.R.id.content),
+                        it.message.toString(), Snackbar.LENGTH_LONG)
+                }
+
+                it.action?.let { action ->
+                    snackbar.setAction(R.string.retry) { action() }
+                }
+                snackbar.show()
+            }
         }
 
 

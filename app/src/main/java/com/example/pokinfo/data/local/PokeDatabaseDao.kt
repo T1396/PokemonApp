@@ -27,6 +27,7 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
 import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
 import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
+import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
 
@@ -37,7 +38,7 @@ interface PokeDatabaseDao {
     suspend fun insertAllPokemonData(pokemonData: PokemonData) {
         insertPokemonData(pokemonData.pokemon)
         insertSpecyInfo(pokemonData.specyData)
-        insertAbilitieInfos(pokemonData.abilityInfoList)
+        insertAbilityInfo(pokemonData.abilityInfoList)
         insertMoves(pokemonData.moves)
 
         insertFormInfos(pokemonData.formData)
@@ -63,9 +64,13 @@ interface PokeDatabaseDao {
             }
 
         }
-
+        pokemonData.abilitiesPokemonList?.let {
+            insertAbilityPokemonList(it)
+        }
     }
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAbilityPokemonList(list: List<PokemonAbilitiesList>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvolutionChain(evolutionChain: PkEvolutionChain)
@@ -101,6 +106,10 @@ interface PokeDatabaseDao {
         }
         val pokedexEntries = getPokedexEntries(specyInfo.id)
 
+        val abilitiesPokemonList = abilitiesToJoins.map { join ->
+            getPokemonWithAbility(join.abilityId)
+        }
+
         val moveInfo = getMoveInfosForAPokemon(pokemonId, languageId)
 
         val evoChain = getEvolutionChainById(specyInfo.evolutionChainId ?: -1)
@@ -123,7 +132,8 @@ interface PokeDatabaseDao {
             versionGroupDetails = moveInfo.moveVersionDetails,
             formData = formInfos,
             evolutionChain = evoChain,
-            evolutionDetails = evoDetails
+            evolutionDetails = evoDetails,
+            abilitiesPokemonList = abilitiesPokemonList
         )
 
     }
@@ -154,8 +164,11 @@ interface PokeDatabaseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAbilityEffectTexts(texts: List<PkAbilityEffectText>)
 
+    @Query("SELECT * FROM pokemon_pokemon_abilities WHERE abilityId =:abilityId")
+    suspend fun getPokemonWithAbility(abilityId: Int): PokemonAbilitiesList
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAbilitieInfos(infos: List<PkAbilityInfo>)
+    suspend fun insertAbilityInfo(info: List<PkAbilityInfo>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAbilityNames(names: List<PkAbilityName>)
@@ -218,16 +231,16 @@ interface PokeDatabaseDao {
     fun getPokemonList(): LiveData<List<PokemonForList>>
 
     @Query("SELECT * FROM table_list_pokemon WHERE id IN (:list)")
-    suspend fun getSpecificPokemons(list: List<Int>) : List<PokemonForList>
+    suspend fun getSpecificPokemon(list: List<Int>) : List<PokemonForList>
 
     @Query("SELECT * FROM table_list_pokemon WHERE id =:id")
-    suspend fun getPokemonBasicInfos(id: Int): PokemonForList
+    suspend fun getPokemonBasicInfo(id: Int): PokemonForList
 
     @Query("SELECT * FROM table_list_pokemon LIMIT 1025")
     fun getEveryPokemon(): LiveData<List<PokemonForList>>
 
     @Query("SELECT * FROM table_list_pokemon WHERE id IN (:ids)")
-    suspend fun getPkmonListWhoLearnMove(ids: List<Int>) : List<PokemonForList>
+    suspend fun getPokemonListFromIdList(ids: List<Int>) : List<PokemonForList>
 
     @Query("SELECT * FROM pokemon WHERE id =:pokemonId")
     suspend fun getPokemonData(pokemonId: Int): Pokemon

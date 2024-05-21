@@ -1,19 +1,26 @@
 package com.example.pokinfo.ui.loginRegister
 
-import android.os.Build
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentLoginBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.identity.SignInClient
 
-class LoginFragment : Fragment() {
+
+interface ContextProvider {
+    fun getActivityContext(): Context
+}
+
+class LoginFragment : Fragment(), ContextProvider {
 
     private var _binding: FragmentLoginBinding? = null
 
@@ -21,6 +28,8 @@ class LoginFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
     private val viewModel: FirebaseViewModel by activityViewModels()
+    private val webClientId = BuildConfig.webClientId
+    private lateinit var googleSignInClient: SignInClient
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,9 +40,10 @@ class LoginFragment : Fragment() {
         return binding.root
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        googleSignInClient = Identity.getSignInClient(requireActivity())
 
         binding.btnLogin.setOnClickListener {
             viewModel.login(
@@ -43,7 +53,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            viewModel.setUpGoogleSignIn(true)
+            viewModel.setUpGoogleSignIn(this, true)
         }
 
         binding.tvRegister.setOnClickListener {
@@ -55,6 +65,10 @@ class LoginFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun getActivityContext(): Context {
+        return requireActivity()
     }
 
 }

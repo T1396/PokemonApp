@@ -12,6 +12,7 @@ import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail2Query
 import com.example.pokeinfo.data.graphModel.PokemonDetail3Query
+import com.example.pokeinfo.data.graphModel.PokemonWithAbilityQuery
 import com.example.pokinfo.R
 import com.example.pokinfo.data.local.PokeDatabase
 import com.example.pokinfo.data.mapper.TypeInfoForDatabase
@@ -95,9 +96,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
 
     suspend fun getPokemonTableEntries(list: List<Int>): List<PokemonForList> {
         return try {
-            database.pokeDao.getSpecificPokemons(list)
+            database.pokeDao.getSpecificPokemon(list)
         } catch (e: Exception) {
-            Log.d("Repository", "Failed to load pokemons from the table_list_pokemon table", e)
+            Log.d(TAG, "Failed to load pokemons from the table_list_pokemon table", e)
             emptyList()
         }
     }
@@ -105,7 +106,7 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
     // returns 3 different imageUrls of a pokemon in case there is no data in anyone
     suspend fun getPokemonImages(pokemonId: Int): Triple<String, String, String>? {
         return try {
-            val pokeData = database.pokeDao.getPokemonBasicInfos(pokemonId)
+            val pokeData = database.pokeDao.getPokemonBasicInfo(pokemonId)
             val image1 = pokeData.imageUrl
             val image2 = pokeData.altImageUrl
             val image3 = pokeData.officialImageUrl
@@ -119,7 +120,7 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
     /** Returns a list of OriginName to Url Pairs of one Pokemon*/
     suspend fun getPokemonImagesWithNameRes(pokemonId: Int): List<Pair<Int, String>> {
         return try {
-            val pokeData = database.pokeDao.getPokemonBasicInfos(pokemonId)
+            val pokeData = database.pokeDao.getPokemonBasicInfo(pokemonId)
             listOf(
                 Pair(R.string.pokemon_home, pokeData.imageUrl),
                 Pair(R.string.default_sprites, pokeData.altImageUrl),
@@ -136,9 +137,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
     }
 
     // gets a list of all pokemon who learns a specific attack (for attacksdetailfragment)
-    suspend fun getPokemonWhoLearnSpecificAttack(ids: List<Int>): List<PokemonForList> {
+    suspend fun getPokemonListFromIdList(ids: List<Int>): List<PokemonForList> {
         return try {
-            database.pokeDao.getPkmonListWhoLearnMove(ids)
+            database.pokeDao.getPokemonListFromIdList(ids)
         } catch (e: Exception) {
             Log.d(TAG, "Failed to load Pokemons who learn specific move", e)
             emptyList()
@@ -300,6 +301,15 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
+    suspend fun getPokemonListOfAbility(abilityId: Int): PokemonWithAbilityQuery.Data? {
+        return try {
+            api.retrofitGraphService.sendAbilityPokemonListQuery(abilityId)
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to load pokemonList for a ability (pokemons who has that ability", e)
+            null
+        }
+    }
+
     // region type details
     suspend fun loadTypeDetails() = coroutineScope {
         try {
@@ -329,7 +339,7 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
 
     private suspend fun insertTypeInfoIntoDatabase(typeInfoList: List<TypeInfoForDatabase>) {
         try {
-            database.pokeTypeDao.insertCompleteTypeInfos(typeInfoList)
+            database.pokeTypeDao.insertCompleteTypeInfo(typeInfoList)
         } catch (e: Exception) {
             Log.d(TAG, "Failed to insert Type Infos into Database")
         }

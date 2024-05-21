@@ -17,13 +17,13 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonWithThisType
 interface PokemonTypeDao {
 
     @Transaction
-    suspend fun insertCompleteTypeInfos(typeInfos: List<TypeInfoForDatabase>) {
-        typeInfos.forEach { typeInfo ->
-            insert(typeInfo.pokemonType)
-            insertRelation(typeInfo.damageRelation)
-            insertMovesByType(typeInfo.movesWithType)
-            insertTypeNames(typeInfo.pokemonTypeNames)
-            insertAllPokemonWithType(typeInfo.pokemonWithType)
+    suspend fun insertCompleteTypeInfo(typeInfo: List<TypeInfoForDatabase>) {
+        typeInfo.forEach {
+            insert(it.pokemonType)
+            insertRelation(it.damageRelation)
+            insertMovesByType(it.movesWithType)
+            insertTypeNames(it.pokemonTypeNames)
+            insertAllPokemonWithType(it.pokemonWithType)
         }
     }
 

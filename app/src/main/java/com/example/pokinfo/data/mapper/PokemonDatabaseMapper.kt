@@ -23,6 +23,7 @@ import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfo
 import com.example.pokinfo.data.models.database.pokemon.PkStatInfos
 import com.example.pokinfo.data.models.database.pokemon.PkType
 import com.example.pokinfo.data.models.database.pokemon.Pokemon
+import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
 import com.google.gson.Gson
@@ -52,25 +53,26 @@ class PokemonDatabaseMapper(private val repository: Repository) {
         pokemonDataWrapper: PokemonDataWrapper,
         languageId: Int,
         onSaved: (Boolean) -> Unit,
-    ) {
+    ) = coroutineScope {
 
-        val part1 = pokemonDataWrapper.data1?.pokemon?.first()
+        val part1 = pokemonDataWrapper.data1?.pokemon?.firstOrNull()
         val part2 = pokemonDataWrapper.data2
         val part3 = pokemonDataWrapper.data3
 
-        val gson = Gson()
-        val sprites = part1?.sprites
-        val spritesJson = gson.toJson(sprites)
 
-        val pokemonId = part1?.id
-        val allSpeciesInfo = part1?.specy
-        val type1 = part1?.typeInfos?.firstOrNull()
-        val type2 = part1?.typeInfos?.getOrNull(1)
-        val abilities = part2?.pokemon?.firstOrNull()?.abilities
-        val formInfo = part3?.pokemon_v2_pokemonform_aggregate?.nodes
 
 
         if (part1 != null && part2 != null && part3 != null) {
+            val gson = Gson()
+            val sprites = part1.sprites
+            val spritesJson = gson.toJson(sprites)
+
+            val pokemonId = part1.id
+            val allSpeciesInfo = part1.specy
+            val type1 = part1.typeInfos.firstOrNull()
+            val type2 = part1.typeInfos.getOrNull(1)
+            val abilities = part2.pokemon.firstOrNull()?.abilities
+            val formInfo = part3.pokemon_v2_pokemonform_aggregate.nodes
             val evolutionDetails = getEvolutionDetails(part3, pokemonId, allSpeciesInfo?.id)
 
             //
@@ -88,7 +90,7 @@ class PokemonDatabaseMapper(private val repository: Repository) {
             val pokeDbEntry = createPokemonDbEntry(
                 part1,
                 part3,
-                pokemonId ?: -1,
+                pokemonId,
                 languageId,
                 type1,
                 type2,
@@ -105,23 +107,40 @@ class PokemonDatabaseMapper(private val repository: Repository) {
             val moveData = processPokemonMoves(
                 part2.pokemon.firstOrNull()?.moves ?: emptyList(),
                 allExistingMoves,
-                pokemonId ?: -1,
+                pokemonId,
             )
 
             // creates a list of every move id the pokemon can learn
             val pkMoves = PkMoves(
-                pokemonId = pokemonId ?: -1,
+                pokemonId = pokemonId,
                 moveIds = moveIdSet.toList().sortedBy { it }
             )
             // join list / table holds info which pokemon have which ability
             val joinList = abilities?.map {
                 PkAbilitiesToJoin(
-                    pokemonId = pokemonId ?: -1,
+                    pokemonId = pokemonId,
                     abilityId = it.ability_id ?: -1,
-                    slot = it.slot
+                    slot = it.slot,
+                    isHidden = it.is_hidden
                 )
             } ?: emptyList()
             // put all chunks into one Data type to give it to the repo
+
+            val abilityPokemonLists = newAbilities.map { ability ->
+                async {
+                    if (ability.ability_id != null) {
+                        val data =
+                            repository.getPokemonListOfAbility(ability.ability_id)?.pokemon_v2_pokemonability_aggregate
+                        val pokemonIds =
+                            data?.nodes?.map { it.pokemon_v2_pokemon?.id?.toLong() } ?: emptyList()
+                        val abilityId = ability.ability_id
+                        val ac = PokemonAbilitiesList(abilityId, pokemonIds.filterNotNull())
+                        ac
+                    } else {
+                        null
+                    }
+                }
+            }.awaitAll()
 
             val pokemonData = PokemonData(
                 pokemon = pokeDbEntry,
@@ -140,12 +159,15 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 versionGroupDetails = moveData.versionGroupDetails,
                 formData = formList,
                 evolutionChain = evolutionDetails?.first,
-                evolutionDetails = evolutionDetails?.second
+                evolutionDetails = evolutionDetails?.second,
+                abilitiesPokemonList = abilityPokemonLists.filterNotNull()
             )
 
             repository.insertPokemonDataIntoDB(pokemonData) { success ->
                 onSaved(success)
             }
+        } else {
+            onSaved(false)
         }
     }
 

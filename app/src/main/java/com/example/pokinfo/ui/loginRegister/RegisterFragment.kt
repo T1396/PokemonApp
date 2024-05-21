@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.loginRegister
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -16,7 +17,7 @@ import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentRegisterBinding
 
-class RegisterFragment : Fragment() {
+class RegisterFragment : Fragment(), ContextProvider {
 
     private var _binding: FragmentRegisterBinding? = null
     // This property is only valid between onCreateView and
@@ -35,7 +36,6 @@ class RegisterFragment : Fragment() {
         return binding.root
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -71,7 +71,7 @@ class RegisterFragment : Fragment() {
         }
 
         binding.btnRegisterGoogle.setOnClickListener {
-            viewModel.setUpGoogleSignIn(false)
+            viewModel.setUpGoogleSignIn(this, false)
         }
 
     }
@@ -79,5 +79,9 @@ class RegisterFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun getActivityContext(): Context {
+        return requireActivity()
     }
 }

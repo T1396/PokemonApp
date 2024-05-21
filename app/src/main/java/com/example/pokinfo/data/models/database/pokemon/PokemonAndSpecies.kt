@@ -26,6 +26,7 @@ data class PokemonData(
     val versionGroupDetails: List<PkMoveVersionGroupDetail>,
     val evolutionChain: PkEvolutionChain?,
     val evolutionDetails: List<PkEvolutionDetails>?,
+    val abilitiesPokemonList: List<PokemonAbilitiesList>? = null
 )
 
 data class MoveInformation(
