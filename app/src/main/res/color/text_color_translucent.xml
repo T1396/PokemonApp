@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#DE000000" android:state_selected="true"/> <!-- Dunkler für ausgewählten Zustand im Light Mode -->
+    <item android:color="#8A000000"/> <!-- Leichter im nicht ausgewählten Zustand -->
+</selector>

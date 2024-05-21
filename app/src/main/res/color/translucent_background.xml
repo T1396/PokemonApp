@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#E6FFFFFF" android:state_selected="true"/> <!-- Hellerer Weißton für den ausgewählten Zustand im Light Mode -->
+    <item android:color="#CCFFFFFF"/> <!-- Standard milchig weißer Hintergrund im Light Mode -->
+</selector>

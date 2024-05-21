@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#E6000000" android:state_selected="true"/> <!-- Dunklerer Schwarzer Ton für den ausgewählten Zustand im Dark Mode -->
+    <item android:color="#CC000000"/> <!-- Standard milchig schwarzer Hintergrund im Dark Mode -->
+</selector>
