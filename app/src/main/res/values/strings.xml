@@ -52,6 +52,8 @@
     <string name="description">Description</string>
     <string name="basic_attacks_searchtext_attack">Enter the attack name</string>
 
+    <string name="formatted_number">#%1$s</string>
+
     <!-- Home - Detailfragment -->
     <string name="m" translatable="false">%sm</string>
     <string name="kg" translatable="false">%s kg</string>
@@ -186,12 +188,13 @@
     <string name="every_pokemon_with_ability">Every Pokemon with the Ability \'%s\'</string>
     <string name="navigate">Yes</string>
     <string name="change_profile_picture">Do you want to update your Picture?</string>
-    <string name="image_is_uploading">The upload can take a few seconds…</string>
+    <string name="image_is_uploading">Image is being uploaded…</string>
     <string name="slot_placeholder" translatable="false">Slot %d</string>
     <string name="no_place">Your Team is full already…</string>
     <string name="choose_version">Choose a Game Version</string>
 
     <string name="fetching_data">Started fetching data, could take a few seconds…</string>
+    <string name="no_attacks_available">We don\'t have any move data for this pokemon…</string>
     <string name="error_fetching_data">There was an error while initializing the App Data, maybe try again or later </string>
     <string name="every_pokemon_with_move">Every Pokemon who learns \'%s\'</string>
     <string name="pokemon_forms">All Forms %s can have</string>
@@ -208,7 +211,7 @@
 
 
     <string name="credential_error">There was an unexpected error with google sign… try again</string>
-    <string name="no_google_account">It seems like you have no google account added to your phone…</string>
+    <string name="google_error">There was an unexpected error with the google services…</string>
     <string name="button_to_change_text_of_game_version">Button to change Text of Game Version</string>
     <string name="right_picture_of_pokemon_images_cardview">Right Picture of Pokemon Images CardView</string>
     <string name="left_picture_of_pokemon_images_cardview">Left Picture of Pokemon Images CardView</string>
