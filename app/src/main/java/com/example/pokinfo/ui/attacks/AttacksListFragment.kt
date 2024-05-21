@@ -59,8 +59,6 @@ class AttacksListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //attacksViewModel.loadAllAttacks()
-
         val swipeRefreshLayout = binding.attacksRefreshLayout
         swipeRefreshLayout.setOnRefreshListener {
             if (attacksViewModel.isLoading.value == false) {
