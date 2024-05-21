@@ -16,10 +16,13 @@ import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.detail.AttacksAdapter
 import com.example.pokinfo.data.enums.AttackFilter
 import com.example.pokinfo.data.enums.AttackFilter2
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.databinding.FragmentAttacksListBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AttacksViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import com.google.android.material.chip.Chip
@@ -30,17 +33,21 @@ class AttacksListFragment : Fragment() {
 
     private var _binding: FragmentAttacksListBinding? = null
     private val binding get() = _binding!!
-    private val attacksViewModel: AttacksViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val attacksViewModel: AttacksViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private lateinit var adapter: AttacksAdapter
-    private var layOutManagerState: Parcelable? = null // can save scrolling state
+    private var layoutManagerState: Parcelable? = null // can save scrolling state
     private var isExpanded = false
-    private lateinit var skeleton: Skeleton
+    private var skeleton: Skeleton? = null
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
         _binding = FragmentAttacksListBinding.inflate(inflater, container, false)
+        attacksViewModel.loadGenericData()
         return binding.root
     }
 
@@ -52,28 +59,31 @@ class AttacksListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        attacksViewModel.loadAllAttacks(attacksViewModel.getLangId())
+        //attacksViewModel.loadAllAttacks()
 
-        adapter = AttacksAdapter(
-            pokemonTypeNames = attacksViewModel.pokemonTypeNames,
-            showExpandButton = true,
-            showPosition = true,
-            onAttackClicked = { attackId ->
-                attacksViewModel.loadSingleAttackDetail(attackId)
-                findNavController().navigate(AttacksListFragmentDirections.actionNavAttacksToAttacksDetailFragment(id))
+        val swipeRefreshLayout = binding.attacksRefreshLayout
+        swipeRefreshLayout.setOnRefreshListener {
+            if (attacksViewModel.isLoading.value == false) {
+                attacksViewModel.loadAllAttacks()
+                swipeRefreshLayout.isRefreshing = false
+            } else {
+                swipeRefreshLayout.isRefreshing = false
             }
-        )
-        binding.rvAttackList.adapter = adapter
-        showSkeleton()
+        }
 
+        attacksViewModel.pokeTypeNames.observe(viewLifecycleOwner) { typeNames ->
+            setupListAdapter(typeNames)
+        }
 
+        attacksViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) showSkeleton() else skeleton?.showOriginal()
+        }
 
         createFilterChips(binding.chipGroupFilter)
         createSecondFilterGroup(binding.chipGroupTypeFilter)
 
         attacksViewModel.filteredAttackList.observe(viewLifecycleOwner) {
             adapter.submitList(it)
-            onDataLoaded()
         }
 
         attacksViewModel.selectedAttackFilter.observe(viewLifecycleOwner) {
@@ -95,19 +105,32 @@ class AttacksListFragment : Fragment() {
         }
     }
 
-    private fun onDataLoaded() {
-        // hides the skeleton and shows the loaded data
-        skeleton.showOriginal()
+    private fun setupListAdapter(typeNames: List<PokemonTypeName>) {
+        adapter = AttacksAdapter(
+            pokemonTypeNames = typeNames,
+            showExpandButton = true,
+            showPosition = true,
+            onAttackClicked = { attackId ->
+                attacksViewModel.loadSingleAttackDetail(attackId)
+                findNavController().navigate(
+                    AttacksListFragmentDirections.actionNavAttacksToAttacksDetailFragment(
+                        id
+                    )
+                )
+            }
+        )
+        binding.rvAttackList.setHasFixedSize(true)
+        binding.rvAttackList.adapter = adapter
     }
 
     override fun onPause() {
         super.onPause()
-        layOutManagerState = binding.rvAttackList.layoutManager?.onSaveInstanceState()
+        layoutManagerState = binding.rvAttackList.layoutManager?.onSaveInstanceState()
     }
 
     override fun onResume() {
         super.onResume()
-        layOutManagerState?.let {
+        layoutManagerState?.let {
             binding.rvAttackList.layoutManager?.onRestoreInstanceState(it)
         }
     }
@@ -131,7 +154,7 @@ class AttacksListFragment : Fragment() {
                 }
                 chipGroup.addView(chip)
             }
-            chipGroup.isSingleSelection = true // multiple filters can be enabled
+            chipGroup.isSingleSelection = true
         }
     }
 
@@ -183,9 +206,9 @@ class AttacksListFragment : Fragment() {
         skeleton = binding.rvAttackList.applySkeleton(
             R.layout.item_skeleton,
             itemCount = 9,
-            config = SkeletonConf.darkMode
+            config = SkeletonConf.whiteMode
         )
-        skeleton.showSkeleton()
+        skeleton?.showSkeleton()
 
     }
 }
