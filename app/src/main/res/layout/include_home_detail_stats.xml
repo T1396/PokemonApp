@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="12dp">
+
+    <!-- HP -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clHp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/clAtk"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvHpName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_hp_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvHpVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/hpBar" />
+
+        <TextView
+            android:id="@+id/tvHpVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/hpBar"
+            app:layout_constraintStart_toEndOf="@id/tvHpName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/hpBar" />
+
+        <ProgressBar
+            android:id="@+id/hpBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvHpVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvHpName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Attack -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clAtk"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toBottomOf="@id/clHp"
+        app:layout_constraintBottom_toTopOf="@+id/clDef"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvAtkName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_atk_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvAtkVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/atkBar" />
+
+        <TextView
+            android:id="@+id/tvAtkVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/atkBar"
+            app:layout_constraintStart_toEndOf="@id/tvAtkName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/atkBar" />
+
+        <ProgressBar
+            android:id="@+id/atkBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvAtkVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvAtkName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Defense -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clDef"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toBottomOf="@id/clAtk"
+        app:layout_constraintBottom_toTopOf="@+id/clSpAtk"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvDefName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_def_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvDefVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/defBar" />
+
+        <TextView
+            android:id="@+id/tvDefVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/defBar"
+            app:layout_constraintStart_toEndOf="@id/tvDefName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/defBar" />
+
+        <ProgressBar
+            android:id="@+id/defBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvDefVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvDefName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Special Attack -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clSpAtk"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toBottomOf="@id/clDef"
+        app:layout_constraintBottom_toTopOf="@+id/clSpDef"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvSpAtkName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_spAtk_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvSpAtkVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/spAtkBar" />
+
+        <TextView
+            android:id="@+id/tvSpAtkVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/spAtkBar"
+            app:layout_constraintStart_toEndOf="@id/tvSpAtkName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/spAtkBar" />
+
+        <ProgressBar
+            android:id="@+id/spAtkBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvSpAtkVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvSpAtkName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Special Defense -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clSpDef"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toBottomOf="@id/clSpAtk"
+        app:layout_constraintBottom_toTopOf="@+id/clInit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvSpDefName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_spDef_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvSpDefVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/spDefBar" />
+
+        <TextView
+            android:id="@+id/tvSpDefVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/spDefBar"
+            app:layout_constraintStart_toEndOf="@id/tvSpDefName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/spDefBar" />
+
+        <ProgressBar
+            android:id="@+id/spDefBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvSpDefVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvSpDefName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Speed -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clInit"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintHeight_percent="0.166"
+        app:layout_constraintTop_toBottomOf="@id/clSpDef"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvInitName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/base_value_name_spDef_short"
+            android:gravity="end"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            app:layout_constraintEnd_toStartOf="@+id/tvInitVal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/initBar" />
+
+        <TextView
+            android:id="@+id/tvInitVal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/initBar"
+            app:layout_constraintStart_toEndOf="@id/tvInitName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/initBar" />
+
+        <ProgressBar
+            android:id="@+id/initBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="255"
+            android:paddingStart="4dp"
+            android:paddingEnd="2dp"
+            android:progressTint="?android:attr/colorActivatedHighlight"
+            android:scaleY="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvInitVal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvInitName" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

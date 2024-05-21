@@ -23,6 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            app:boxStrokeWidth="2dp"
             android:layout_marginEnd="16dp"
             android:textColorHint="?attr/colorOnPrimary"
             android:theme="@style/ThemeOverlay.AppTheme.TextInputEditText.Outlined"
@@ -80,18 +81,32 @@
         </HorizontalScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvAbilities"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/abilities_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:clipToPadding="false"
-        android:paddingTop="8dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/topBarAbility"
-        tools:listitem="@layout/item_list_abilities" />
+        app:layout_constraintTop_toBottomOf="@+id/topBarAbility">
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAbilities"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/topBarAbility"
+            tools:listitem="@layout/item_list_abilities" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

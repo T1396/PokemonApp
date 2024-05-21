@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/tvAbilit"
+        android:id="@+id/tvAbilityNameSheet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -16,27 +17,38 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvEffectLong"
+
+    <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="300dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
-        android:text=" asddlasdlkalsödklasödklöaskdlök  dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk   dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
-        android:gravity="center_horizontal|center_vertical"
-        app:layout_constraintBottom_toTopOf="@+id/tvIndicatorNr"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvAbilit" />
+        app:layout_constraintTop_toBottomOf="@+id/tvAbilityNameSheet">
+
+        <TextView
+            android:id="@+id/tvAbilityEffectText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal|center_vertical"
+            android:scrollbars="vertical"
+            android:minLines="8"
+            android:maxLines="8"
+            android:text="asddlasdlkalsödklasödklöaskdlök dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk dkalsödkl öa dlökl asdkök dklöakd löakdslö aksdölak dlöaksdlöksa lödkaslödkalödkaslö dk" />
+    </ScrollView>
 
     <TextView
         android:id="@+id/tvIndicatorNr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView2" />
 </androidx.constraintlayout.widget.ConstraintLayout>
