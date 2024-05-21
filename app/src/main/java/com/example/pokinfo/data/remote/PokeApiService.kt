@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit
 private const val BASE_URL = "https://pokeapi.co/api/v2/"
 //private const val BASE_URL = BuildConfig.localApiUrl
 private const val LOCAL_GRAPH_URL = BuildConfig.localGraphqlUrl
+private const val graphQLUrl = "https://beta.pokeapi.co/graphql/v1beta"
 
 interface PokeApiService {
 
@@ -118,7 +119,7 @@ private val okHttpClient = OkHttpClient.Builder()
     .build()
 
 private val apolloClient = ApolloClient.Builder()
-    .serverUrl(LOCAL_GRAPH_URL)
+    .serverUrl(graphQLUrl)
     //.httpEngine(OkHttpEngine)
     .okHttpClient(okHttpClient)
     .addHttpHeader("x-hasura-admin-secret", "pokemon")
