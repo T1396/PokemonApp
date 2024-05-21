@@ -15,7 +15,7 @@
         android:layout_marginTop="32dp"
         android:orientation="horizontal"
         app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.5">
@@ -49,7 +49,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:gravity="center_horizontal|center_vertical"
-                android:textSize="13sp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -71,54 +71,43 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="4dp"
-            app:cardBackgroundColor="#8BAB42"
             app:cardCornerRadius="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/cvTypeTwo"
+            app:layout_constraintEnd_toStartOf="@id/cvTypeTwo"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center_vertical|center_horizontal"
+                android:orientation="horizontal"
                 android:padding="8dp">
 
                 <ImageView
                     android:id="@+id/ivTypePokemon1"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_width="14sp"
+                    android:layout_height="14sp"
                     android:adjustViewBounds="true"
                     android:contentDescription="@string/the_elemental_type_icon_of_the_pokemon_type"
-                    android:scaleType="centerCrop"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tvTypePokemon1"
-                    app:layout_constraintHeight_percent="0.6"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.2" />
+                    android:scaleType="centerCrop" />
 
                 <TextView
                     android:id="@+id/tvTypePokemon1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
                     android:ellipsize="end"
+                    android:gravity="center_vertical"
                     android:maxLines="1"
                     android:shadowColor="#000000"
                     android:shadowDx="1"
                     android:shadowDy="1"
                     android:shadowRadius="2"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/ivTypePokemon1"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:textSize="12sp" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -127,56 +116,43 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginStart="4dp"
-            android:paddingStart="4dp"
-            app:cardBackgroundColor="#8D5959"
             app:cardCornerRadius="5dp"
-            app:cardUseCompatPadding="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/cvTypeOne"
+            app:layout_constraintStart_toEndOf="@id/cvTypeOne"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:gravity="center_vertical|center_horizontal"
+                android:orientation="horizontal"
                 android:padding="8dp">
 
                 <ImageView
                     android:id="@+id/ivTypePokemon2"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_width="14sp"
+                    android:layout_height="14sp"
                     android:adjustViewBounds="true"
-                    android:contentDescription="@string/indicate_if_special_physical_or_status_attack"
-                    android:scaleType="centerCrop"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tvTypePokemon2"
-                    app:layout_constraintHeight_percent="0.6"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.2" />
+                    android:contentDescription="@string/the_elemental_type_icon_of_the_pokemon_type"
+                    android:scaleType="centerCrop" />
 
                 <TextView
                     android:id="@+id/tvTypePokemon2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
                     android:ellipsize="end"
+                    android:gravity="center_vertical"
                     android:maxLines="1"
                     android:shadowColor="#000000"
                     android:shadowDx="1"
                     android:shadowDy="1"
                     android:shadowRadius="2"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/ivTypePokemon2"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:textSize="12sp" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -294,7 +270,6 @@
                 android:id="@+id/evolutionArrows"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/cardViewHighlighted"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -617,6 +592,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:overScrollMode="never"
+                android:scrollbars="none"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
