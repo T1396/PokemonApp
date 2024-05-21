@@ -2,10 +2,12 @@ package com.example.pokinfo.viewModels
 
 import android.app.Application
 import android.support.annotation.StringRes
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.pokeinfo.data.graphModel.PokeListQuery
 import com.example.pokeinfo.data.graphModel.PokemonDetail1Query
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.detail.AbilityEffectText
@@ -33,9 +35,13 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-class PokeViewModel(application: Application, private val sharedViewModel: SharedViewModel) : AndroidViewModel(application) {
+class PokeViewModel(application: Application, private val sharedViewModel: SharedViewModel) :
+    AndroidViewModel(application) {
 
     private val repository = RepositoryProvider.provideRepository(application)
 
@@ -51,15 +57,19 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     var pokemonTypeNames: List<PokemonTypeName> = emptyList()
         private set
 
+    private var _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
+
     init {
         loadGenericData()
     }
 
-    private fun loadGenericData() {
+    private fun loadGenericData(callback: (() -> Unit)? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             versionNames = repository.getVersionNames(languageId)
             languageNames = repository.getLanguageNames()
             pokemonTypeNames = repository.getPokemonTypeNames(languageId)
+            callback?.invoke()
         }
     }
 
@@ -67,30 +77,89 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         return languageId
     }
 
+
     /** Gets some important Data, List of all Pokemon, Language Names and Type Details
      * should be loaded just for the first time a user starts the app */
     fun initializeDataForApp() {
+
+        fun showSnackBarWithRetryAction() {
+            sharedViewModel.postMessage(R.string.error_fetching_data) {
+                initializeDataForApp()
+            }
+            _isLoading.postValue(false)
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.postValue(true)
             sharedViewModel.postMessage(R.string.fetching_data)
 
-            val data = repository.loadAllPokemonsWithSprites(languageId) ?: return@launch
+            // wait once all data has been loaded
+            val loadResults = listOf(
+                async { loadTypeDetails() },
+                async { loadLanguageAndVersionNames() },
+                async { repository.loadAllPokemonsWithSprites(languageId) },
+            ).awaitAll()
 
-            val mappingJob = async{
-                val dataMapper = PokemonListMapper()
-                dataMapper.mapData(data, languageId)
+
+
+            if (loadResults.any { it == null }) {
+                showSnackBarWithRetryAction()
+                return@launch
             }
-            val typeDetails = async { loadTypeDetails() }
-            val languageNames = async { loadLanguageAndVersionNames() }
-            typeDetails.await()
-            languageNames.await()
-            val pokemonList = mappingJob.await()
-            // once all of them finished insert the list into database
-            val isDone = repository.insertAllPokemon(pokemonList)
-            if (isDone) {
-                isInitialized = true // will be saved into shared Prefs through property delegation
+
+            loadGenericData()
+
+            val pokemonList = PokemonListMapper()
+                .mapData(loadResults[2] as PokeListQuery.Data, languageId)
+
+            repository.insertAllPokemon(pokemonList).also { success ->
+                isInitialized = success
+                _isLoading.postValue(false)
+                if (!success) showSnackBarWithRetryAction()
+            }
+        }
+    }
+
+    /** Gets some important Data, List of all Pokemon, Language Names and Type Details
+     * should be loaded just for the first time a user starts the app */
+    fun dadsa() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.postValue(true)
+            sharedViewModel.postMessage(R.string.fetching_data)
+
+            val data = repository.loadAllPokemonsWithSprites(languageId)
+            if (data == null) {
+                sharedViewModel.postMessage(R.string.error_fetching_data) {
+                    initializeDataForApp()
+                }
+                _isLoading.postValue(false)
             } else {
-                // when something failed while inserting pokemon to database
-                sharedViewModel.postMessage(R.string.error_fetching_data)
+                val mappingJob = async {
+                    val dataMapper = PokemonListMapper()
+                    dataMapper.mapData(data, languageId)
+                }
+                val typeDetails = async { loadTypeDetails() }
+                val languageNames = async { loadLanguageAndVersionNames() }
+                typeDetails.await()
+                languageNames.await()
+                val pokemonList = mappingJob.await()
+                loadGenericData {
+                    // once all of them finished insert the list into database
+                    viewModelScope.launch(Dispatchers.IO) {
+                        val isDone = repository.insertAllPokemon(pokemonList)
+                        if (isDone) {
+                            isInitialized =
+                                true // will be saved into shared Prefs through property delegation
+
+                        } else {
+                            // when something failed while inserting pokemon to database
+                            sharedViewModel.postMessage(R.string.error_fetching_data) {
+                                initializeDataForApp()
+                            }
+                        }
+                        _isLoading.postValue(false)
+                    }
+                }
             }
         }
     }
@@ -123,7 +192,6 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
             callback(list)
         }
     }
-
 
 
     /** Gets Language and Version names together */
@@ -200,7 +268,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         sortAndFilterPokemon()
     }
 
-    fun getSearchInputPokemonList(): String{
+    fun getSearchInputPokemonList(): String {
         return _searchInputPokemonList.value.orEmpty()
     }
 
@@ -228,22 +296,29 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         val initialList = _pokemonList.value.orEmpty() // every pokemon
 
         val filteredList = initialList.filter { it.name.contains(searchInput, true) }
-        val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(PokemonSortFilter.WEIGHT, PokemonSortFilterState.INACTIVE)
+        val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(
+            PokemonSortFilter.WEIGHT,
+            PokemonSortFilterState.INACTIVE
+        )
 
         val sortedFilteredList = sortList(filteredList, sortFilter, filterState)
         _sortedFilteredPokemonList.value = sortedFilteredList
     }
 
-    private fun sortList(list: List<PokemonForList>, sortFilter: PokemonSortFilter, filterState: PokemonSortFilterState)
-    : List<PokemonForList> {
-        val comparator = when(sortFilter) {
-            PokemonSortFilter.WEIGHT -> compareBy<PokemonForList> {it.weight}
-            PokemonSortFilter.HEIGHT -> compareBy {it.height}
-            PokemonSortFilter.NAME -> compareBy {it.name}
-            PokemonSortFilter.STATS -> compareBy {it.baseStats.sumOf { stat -> stat.statValue }}
+    private fun sortList(
+        list: List<PokemonForList>,
+        sortFilter: PokemonSortFilter,
+        filterState: PokemonSortFilterState
+    )
+            : List<PokemonForList> {
+        val comparator = when (sortFilter) {
+            PokemonSortFilter.WEIGHT -> compareBy<PokemonForList> { it.weight }
+            PokemonSortFilter.HEIGHT -> compareBy { it.height }
+            PokemonSortFilter.NAME -> compareBy { it.name }
+            PokemonSortFilter.STATS -> compareBy { it.baseStats.sumOf { stat -> stat.statValue } }
         }
 
-        return when(filterState) {
+        return when (filterState) {
             PokemonSortFilterState.ASCENDING -> list.sortedWith(comparator)
             PokemonSortFilterState.DESCENDING -> list.sortedWith(comparator.reversed())
             else -> list
@@ -257,7 +332,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     val clickedPokemon: LiveData<UIState<PokemonData>>
         get() = _clickedPokemon
 
-    private fun pokemonAlreadyLoaded(pokemonId: Int) : Boolean {
+    private fun pokemonAlreadyLoaded(pokemonId: Int): Boolean {
         return when (val currentState = _clickedPokemon.value) {
             is UIState.Success -> currentState.data.pokemon.id == pokemonId
             else -> false
@@ -272,7 +347,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
      */
     fun getSinglePokemonData(
         pokemonId: Int,
-        @StringRes errorMessageRes: Int,
+        @StringRes errorMessageRes: Int = R.string.failed_load_single_pokemon_data,
         optionalCallback: (() -> Unit)? = null,
     ) {
         if (pokemonAlreadyLoaded(pokemonId)) {
@@ -291,7 +366,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
                 }
 
             } else { // already loaded from api, just post data from DB
-                val data = repository.getPokemonDataFromDatabase(pokemonId, languageId, errorMessageRes)
+                val data =
+                    repository.getPokemonDataFromDatabase(pokemonId, languageId, errorMessageRes)
                 viewModelScope.launch(Dispatchers.Main) {
                     _clickedPokemon.value = data
                     optionalCallback?.invoke()
@@ -301,11 +377,58 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         }
     }
 
+    fun fetchEveryPokemonData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            sharedViewModel.postMessage("Started fetching EVERY POKEMON")
+            var startId = 1
+            val totalPokemons = 1025
+
+            while (startId <= totalPokemons) {
+                try {
+                    val success = suspendCoroutine { continuation ->
+                        loadPokemonDataFromApiAndSave(
+                            startId,
+                            R.string.failed_load_single_pokemon_data,
+                            false
+                        ) { isSuccess ->
+                            continuation.resume(isSuccess)
+                        }
+                    }
+                    if (success) {
+                        startId++
+                        if (startId % 20 == 0) {
+                            sharedViewModel.postMessage("Loaded $startId Pokemon")
+                            System.gc()
+                        }
+                    } else {
+                        startId++
+                        Log.d("PokeViewModel", "Failed to load and save pokemon $startId")
+                    }
+                } catch (e: Exception) {
+                    Log.e("PokeViewModel", "Error loading pokemon $startId", e)
+                }
+            }
+
+            sharedViewModel.postMessage("Finished fetching EVERY POKEMON")
+            Log.d("PokeViewModel", "Finished getting data for every pokemon")
+        }
+    }
+
     private fun loadPokemonDataFromApiAndSave(
         pokemonId: Int,
         errorMessageRes: Int,
-        optionalCallback: (() -> Unit)? = null,
+        postValue: Boolean = true,
+        optionalCallback: ((Boolean) -> Unit)? = null,
     ) {
+        fun failure() {
+            sharedViewModel.postMessage(errorMessageRes) {
+                getSinglePokemonData(pokemonId, errorMessageRes)
+            }
+            val errorException = Exception("Failed to load Pokemon Data...")
+            _clickedPokemon.postValue(UIState.Error(errorException, errorMessageRes))
+            optionalCallback?.invoke(false)
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.loadSinglePokemonData(pokemonId, languageId)
             if (data?.data1 != null && data.data2 != null && data.data3 != null) {
@@ -313,15 +436,23 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
                 mapper.savePokemonDetailsIntoDatabase(data, languageId) { isSuccess ->
                     if (isSuccess) {
                         viewModelScope.launch(Dispatchers.IO) {
-                            val pokemonData = repository.getPokemonDataFromDatabase(pokemonId, languageId, errorMessageRes)
-                            viewModelScope.launch (Dispatchers.Main){
-                                _clickedPokemon.value = pokemonData
-                                optionalCallback?.invoke()
+                            val pokemonData = repository.getPokemonDataFromDatabase(
+                                pokemonId,
+                                languageId,
+                                errorMessageRes
+                            )
+                            viewModelScope.launch(Dispatchers.Main) {
+                                if (postValue) _clickedPokemon.value = pokemonData
+                                optionalCallback?.invoke(true)
                             }
                         }
-                    } else sharedViewModel.postMessage(errorMessageRes)
+                    } else {
+                        failure()
+                    }
                 }
-            } else sharedViewModel.postMessage(errorMessageRes)
+            } else {
+                failure()
+            }
         }
     }
 
@@ -334,7 +465,12 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
      */
     fun getFilteredAttacks(generationId: Int): List<AttacksData> {
         val (moveData, moveNames, versionGroupDetails) = when (val pkData = _clickedPokemon.value) {
-            is UIState.Success -> Triple(pkData.data.moves, pkData.data.moveNames, pkData.data.versionGroupDetails)
+            is UIState.Success -> Triple(
+                pkData.data.moves,
+                pkData.data.moveNames,
+                pkData.data.versionGroupDetails
+            )
+
             else -> return emptyList()
         }
         val versionId = getFirstVersionOfGeneration(generationId)
@@ -366,7 +502,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
     /** Takes the spriteListJson and extracts sprites for each source  */
     fun extractSpritesWithCategories(onLoadFinished: ((Map<String, List<Pair<String, String>>>) -> Unit)) {
-        val sprites = when(val pkData = _clickedPokemon.value) {
+        val sprites = when (val pkData = _clickedPokemon.value) {
             is UIState.Success -> pkData.data.pokemon.sprites
             else -> return
         }
@@ -438,7 +574,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
      * @return the filtered list
      */
     fun filterPokedexInfo(languageId: Int = this.languageId): List<PokemonDexEntries> {
-        val pokedexInfo = when(val pkData = _clickedPokemon.value) {
+        val pokedexInfo = when (val pkData = _clickedPokemon.value) {
             is UIState.Success -> pkData.data.pokedexEntries
             else -> return emptyList()
         }
@@ -471,12 +607,14 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
             val textLong = if (abilityEffectTexts.isEmpty()) "No Data found" else {
                 abilityEffectTexts.find { it?.abilityId == ability.id }?.effectTextLong // ?. is necessary
             }
+            val isHidden = abilityIds.find { it.abilityId == ability.id }?.isHidden ?: false
             val textShort =
                 data.abilityFlavorTexts.lastOrNull { it.abilityId == ability.id }?.effectTextShort
             val name =
                 abilityNames.find { it.abilityId == ability.id && it.languageId == languageId }?.name
             AbilityEffectText(
                 abilityId = ability.id,
+                isHidden = isHidden,
                 name = name ?: "Error",
                 textLong = textLong ?: "Error",
                 textShort = textShort ?: "Error",
@@ -493,7 +631,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         evolutionDetails: List<PkEvolutionDetails>
     ): Int? {
         // Get parent species ID, if any.
-        val parentSpecies = evolutionDetails.find { it.speciesId == speciesId }?.evolvesFromSpeciesId
+        val parentSpecies =
+            evolutionDetails.find { it.speciesId == speciesId }?.evolvesFromSpeciesId
         // Return current species if no parent, else recurse to find root.
         return if (parentSpecies == null) {
             speciesId
@@ -509,7 +648,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         pokemonList: List<PokemonForList> = _pokemonList.value ?: emptyList()
     ): List<EvolutionStage> {
         // Find the root species ID, return empty if not found.
-        val rootSpeciesId = findRootPokemon(clickedSpeciesId, evolutionDetails) ?: return emptyList()
+        val rootSpeciesId =
+            findRootPokemon(clickedSpeciesId, evolutionDetails) ?: return emptyList()
         // Find the Pokemon object by root species ID, return empty if not found.
         val rootPokemon = pokemonList.find { it.speciesId == rootSpeciesId } ?: return emptyList()
         // Construct the full evolutionary tree.
@@ -523,7 +663,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         pokemonList: List<PokemonForList> = _pokemonList.value ?: emptyList(),
         rootSpeciesId: Int?,
     ): List<EvolutionStage> {
-        if (rootSpeciesId ==  null) return emptyList()
+        if (rootSpeciesId == null) return emptyList()
         // Filter for current evolutionary stages.
         val currentStages = evolutionDetails.filter { it.evolvesFromSpeciesId == rootSpeciesId }
 
@@ -539,7 +679,21 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         return evolutionTree
     }
 
+    /** Gets all Pokemon which have specific ability the user is inspecting */
+    fun getPokemonListWhoHaveAbility(
+        ids: List<Long>,
+        onLoadFinished: (List<PokemonForList>) -> Unit
+    ) {
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val list = repository.getPokemonListFromIdList(ids.map { it.toInt() })
+            onLoadFinished(list)
+        }
+    }
+
     //endregion
+
+
 }
 
 

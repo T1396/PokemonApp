@@ -6,8 +6,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.pokeinfo.data.graphModel.AttackDetailsQuery
+import com.example.pokeinfo.data.graphModel.AttacksQuery
+import com.example.pokinfo.R
 import com.example.pokinfo.data.RepositoryProvider
-import com.example.pokinfo.data.mapper.AttackMapper
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
@@ -19,7 +20,7 @@ import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AttacksViewModel(application: Application) : AndroidViewModel(application) {
+class AttacksViewModel(application: Application, private val sharedViewModel: SharedViewModel) : AndroidViewModel(application) {
     /** Variables **/
     private val repository = RepositoryProvider.provideRepository(application)
 
@@ -35,15 +36,17 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
     var pokemonTypeNames: List<PokemonTypeName> = emptyList()
         private set
 
-    init {
-        loadGenericData()
-    }
+    private val _pokeTypeNames = MutableLiveData<List<PokemonTypeName>>()
+    val pokeTypeNames: LiveData<List<PokemonTypeName>> get() = _pokeTypeNames
 
-    private fun loadGenericData() {
+
+    fun loadGenericData() {
         viewModelScope.launch(Dispatchers.IO) {
             versionNames = repository.getVersionNames(languageId)
             languageNames = repository.getLanguageNames()
-            pokemonTypeNames = repository.getPokemonTypeNames(languageId)
+            val pokeTypeNames = repository.getPokemonTypeNames(languageId)
+            _pokeTypeNames.postValue(pokeTypeNames)
+            loadAllAttacks()
         }
     }
     //region Attacks Fragment
@@ -59,17 +62,20 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
         get() = _selectedAttackTypeFilter
 
     // filtered Attacks Live-Data
-    private val _filteredAttackList = MutableLiveData<List<AttacksData>>()
-    val filteredAttackList: LiveData<List<AttacksData>> = _filteredAttackList
+    private val _filteredAttackList = MutableLiveData<List<AttacksData>?>()
+    val filteredAttackList: LiveData<List<AttacksData>?> = _filteredAttackList
 
     // search input
     private val _searchInputAttacks = MutableLiveData("")
 
-    private val _allAttacksList = MutableLiveData<List<AttacksData>>()
+    private val _allAttacksList = MutableLiveData<List<AttacksData>?>()
 
     private val _clickedAttack = MutableLiveData<AttackDetailsQuery.Data?>()
     val clickedAttack: LiveData<AttackDetailsQuery.Data?>
         get() = _clickedAttack
+
+    private var _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
     fun getLangId(): Int {
         return languageId
@@ -124,22 +130,55 @@ class AttacksViewModel(application: Application) : AndroidViewModel(application)
     /** Gets all Pokemon who learns the move the user is inspecting */
     fun getPokemonListWhoLearnMove(ids: List<Int>, onLoadFinished: (List<PokemonForList>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val list = repository.getPokemonWhoLearnSpecificAttack(ids)
+            val list = repository.getPokemonListFromIdList(ids)
             onLoadFinished(list)
         }
     }
 
     /** Calls repository function to make an api call for all pokemon moves */
-    fun loadAllAttacks(languageId: Int) {
+    fun loadAllAttacks() {
         if (!isDataLoaded) {
-            viewModelScope.launch {
+            _isLoading.postValue(true)
+
+            viewModelScope.launch(Dispatchers.IO) {
                 val moveData = repository.loadAllMoves(languageId)
-                val mappedData = AttackMapper(languageId).mapData(moveData) //
-                _allAttacksList.postValue(mappedData)
-                _filteredAttackList.postValue(mappedData)
-                isDataLoaded = true
+
+                if (moveData == null) {
+                    sharedViewModel.postMessage(R.string.failed_to_load_attacks) {
+                        // retry action for the posted snackbar is this function
+                        loadAllAttacks()
+                    }
+                    _allAttacksList.postValue(null)
+                    _filteredAttackList.postValue(null)
+                    _isLoading.postValue(false)
+                } else {
+                    val attackList = mapToAttackList(moveData.moves)
+                    _allAttacksList.postValue(attackList)
+                    _filteredAttackList.postValue(attackList)
+                    _isLoading.postValue(false)
+                    isDataLoaded = true
+                }
+
             }
         }
+    }
+
+    private fun mapToAttackList(rawAttacksList: List<AttacksQuery.Move>): List<AttacksData> {
+        val list = rawAttacksList.map { move ->
+            val defaultName = move.name
+            AttacksData(
+                attackId = move.id,
+                name = move.names.find { it.language_id == languageId }?.name ?: defaultName,
+                accuracy = move.accuracy ?: 100,
+                generationId = move.generation_id ?: 1,
+                moveDamageClassId = move.move_damage_class_id ?: 1,
+                typeId = move.type_id ?: 10001,
+                power = move.power ?: 0,
+                pp = move.pp ?: 0,
+                effectText = move.pokemon_v2_moveeffect?.pokemon_v2_moveeffecteffecttexts?.firstOrNull()?.short_effect ?: "No effect Text found..."
+            )
+        }
+        return list
     }
 
     /** Calls repository function to make an api call for a specific Move */

@@ -8,6 +8,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
 
+data class SnackbarMessageWithAction(
+    val messageResId: Int? = null,
+    val message: String? = null,
+    val action: (() -> Unit)? = null
+)
+
 class SharedViewModel: ViewModel() {
     private val _snackBarSender = MutableLiveData<String>()
     val snackbarSender: LiveData<String>
@@ -16,6 +22,17 @@ class SharedViewModel: ViewModel() {
     private val _snackbarResSender = MutableLiveData<Int>()
     val snackbarResSender: LiveData<Int>
         get() = _snackbarResSender
+
+    private val _snackBarResWithAction = MutableLiveData<SnackbarMessageWithAction>()
+    val snackBarResWithAction: LiveData<SnackbarMessageWithAction> get() = _snackBarResWithAction
+
+    fun postMessage(messageRes: Int, action: (() -> Unit)? = null) {
+        _snackBarResWithAction.postValue(SnackbarMessageWithAction(messageResId = messageRes, action = action))
+    }
+
+    fun postMessage(message: String, action: (() -> Unit)? = null) {
+        _snackBarResWithAction.postValue(SnackbarMessageWithAction(message = message, action = action))
+    }
 
     fun postMessage(message: String) {
         _snackBarSender.postValue(message)
