@@ -7,9 +7,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.PagerSnapHelper
 import com.example.pokinfo.R
-import com.example.pokinfo.adapter.abilities.AbilityDetailAdapter
+import com.example.pokinfo.adapter.home.PokeListAdapter
+import com.example.pokinfo.adapter.home.detail.AbilityEffectText
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.databinding.FragmentAbilitiesDetailBinding
 import com.example.pokinfo.ui.misc.dialogs.openPokemonListDialog
 import com.example.pokinfo.viewModels.AbilityViewModel
@@ -27,8 +28,7 @@ class AbilitiesDetailFragment : Fragment() {
         ViewModelFactory(requireActivity().application, sharedViewModel)
     }
     private val abilityViewModel: AbilityViewModel by activityViewModels()
-    private var snapHelperAbility: PagerSnapHelper? = null
-    private lateinit var adapter: AbilityDetailAdapter
+    private lateinit var adapter: PokeListAdapter
     private var languageId = 9
 
 
@@ -50,24 +50,34 @@ class AbilitiesDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        createAdapter()
         val typeNames = pokeViewModel.pokemonTypeNames
 
         abilityViewModel.abilityDetail.observe(viewLifecycleOwner) {
             abilityViewModel.prepareAbilityDetails()
+        }
 
+        abilityViewModel.abilityEffectTexts.observe(viewLifecycleOwner) { abilityDetails ->
+            val ability = abilityDetails.firstOrNull()
+            setupPokemonListRv(typeNames, ability)
+            ability?.let {
+                binding.tvAbilityName.text = it.name
+                binding.details.tvEffectLongText.text = it.textLong
+                binding.details.tvAbilityEffectText.text = it.textShort
+            }
+        }
+    }
 
-            val abilityName = abilityViewModel.getAbilityName()
-            binding.tvAbilityName.text = abilityName
-
-
-            abilityViewModel.getPokemonListWhoLearnMove { pokemonList ->
-
-                binding.btnShowPokemonWithAbility.setOnClickListener {
-                    // shows dialog with list of all pokemon who learns the ability
+    private fun setupPokemonListRv(
+        typeNames: List<PokemonTypeName>,
+        ability: AbilityEffectText?
+    ) {
+        abilityViewModel.getPokemonListWhoHaveAbility { pokemonList ->
+            adapter = PokeListAdapter(
+                typeNames = typeNames,
+                onItemClicked = { id ->
                     openPokemonListDialog(
                         listOfPokemon = pokemonList,
-                        title = getString(R.string.every_pokemon_with_ability, abilityName),
+                        title = getString(R.string.every_pokemon_with_ability, ability?.name),
                         typeNames = typeNames,
                     ) { pokemonId ->
                         // another dialog to ask user if he surely wants to navigate
@@ -82,21 +92,8 @@ class AbilitiesDetailFragment : Fragment() {
                         )
                     }
                 }
-            }
-
-
-            abilityViewModel.abilityEffectTexts.observe(viewLifecycleOwner) { abilityDetails ->
-                adapter.submitList(abilityDetails)
-            }
-        }
-    }
-
-    private fun createAdapter() {
-        adapter = AbilityDetailAdapter()
-        binding.rvAbility.adapter = adapter
-        if (snapHelperAbility == null) {
-            snapHelperAbility = PagerSnapHelper()
-            snapHelperAbility?.attachToRecyclerView(binding.rvAbility)
+            )
+            adapter.submitList(pokemonList)
         }
     }
 }

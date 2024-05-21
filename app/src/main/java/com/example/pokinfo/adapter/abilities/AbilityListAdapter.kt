@@ -11,7 +11,11 @@ import com.example.pokinfo.databinding.ItemListAbilitiesBinding
 class AbilityListAdapter(private val onItemClicked: (Int) -> Unit) :
     RecyclerView.Adapter<AbilityListAdapter.ItemViewHolder>() {
     private var dataset: List<AbilityInfo> = emptyList()
-
+    data class AbilityInfo(
+        val abilityId: Int,
+        val name: String,
+        val generationNr: Int
+    )
     @SuppressLint("NotifyDataSetChanged")
     fun submitList(list: List<AbilityInfo>, callback: (() -> Unit)? = null) {
         dataset = list
@@ -49,10 +53,6 @@ class AbilityListAdapter(private val onItemClicked: (Int) -> Unit) :
 
 }
 
-data class AbilityInfo(
-    val abilityId: Int,
-    val name: String,
-    val generationNr: Int
-)
+
 
 

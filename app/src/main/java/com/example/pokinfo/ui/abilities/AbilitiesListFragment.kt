@@ -17,6 +17,8 @@ import com.example.pokinfo.databinding.FragmentAbilitiesListBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.ui.misc.SkeletonConf
 import com.example.pokinfo.viewModels.AbilityViewModel
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.faltenreich.skeletonlayout.Skeleton
 import com.faltenreich.skeletonlayout.applySkeleton
 import com.google.android.material.chip.Chip
@@ -27,7 +29,10 @@ class AbilitiesListFragment : Fragment() {
 
     private var _binding: FragmentAbilitiesListBinding? = null
     private val binding get() = _binding!!
-    private val abilityViewModel: AbilityViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val abilityViewModel: AbilityViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
+    }
     private lateinit var adapter: AbilityListAdapter
     private lateinit var skeleton: Skeleton
     private var isFilterBarExpanded = false
@@ -50,6 +55,17 @@ class AbilitiesListFragment : Fragment() {
 
         abilityViewModel.getAllAbilities()
 
+        val swipeRefreshLayout = binding.abilitiesRefreshLayout
+        swipeRefreshLayout.setOnRefreshListener {
+            if (abilityViewModel.isLoading.value == false) {
+                abilityViewModel.getAllAbilities()
+                swipeRefreshLayout.isRefreshing = false
+            } else {
+                swipeRefreshLayout.isRefreshing = false
+            }
+
+        }
+
         adapter = AbilityListAdapter { abilityId ->
             // on Ability clicked load details and navigate
             abilityViewModel.getAbilityDetail(abilityId)
@@ -60,7 +76,10 @@ class AbilitiesListFragment : Fragment() {
             )
         }
         binding.rvAbilities.adapter = adapter
-        showSkeleton()
+
+        abilityViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) showSkeleton() else skeleton.showOriginal()
+        }
         createFilterChips(binding.chipGroupFilter)
 
         binding.tietSearchAbility.addTextChangedListener { text ->
@@ -68,8 +87,9 @@ class AbilitiesListFragment : Fragment() {
         }
 
         abilityViewModel.filteredAbilityList.observe(viewLifecycleOwner) { filteredList ->
-            adapter.submitList(filteredList)
-            onDataLoaded()
+            if (filteredList != null) {
+                adapter.submitList(filteredList)
+            }
         }
 
 
@@ -80,12 +100,6 @@ class AbilitiesListFragment : Fragment() {
         }
 
     }
-
-    private fun onDataLoaded() {
-        // hides the skeleton and shows the loaded data
-        skeleton.showOriginal()
-    }
-
 
     private fun createFilterChips(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) { // only create filter chips if no chips are there (if navigated back for example)
@@ -115,7 +129,7 @@ class AbilitiesListFragment : Fragment() {
         skeleton = binding.rvAbilities.applySkeleton(
             R.layout.item_skeleton,
             itemCount = 9,
-            config = SkeletonConf.darkMode
+            config = SkeletonConf.whiteMode
         )
         skeleton.showSkeleton()
     }

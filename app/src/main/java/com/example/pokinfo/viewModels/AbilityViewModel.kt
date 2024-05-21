@@ -7,19 +7,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.pokeinfo.data.graphModel.AbilityDetailQuery
 import com.example.pokeinfo.data.graphModel.AllAbilitiesQuery
-import com.example.pokinfo.adapter.abilities.AbilityInfo
+import com.example.pokinfo.R
+import com.example.pokinfo.adapter.abilities.AbilityListAdapter
 import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.data.RepositoryProvider
-import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.enums.AbilityFilter
-import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.PokemonForList
+import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.util.sharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AbilityViewModel(application: Application) : AndroidViewModel(application) {
+class AbilityViewModel(application: Application, private val sharedViewModel: SharedViewModel) :
+    AndroidViewModel(application) {
     private val repository = RepositoryProvider.provideRepository(application)
 
     private var languageId by application.sharedPreferences("languageId", 9)
@@ -45,16 +47,19 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private val _allAbilities = MutableLiveData<List<AbilityInfo>>()
-    private val abilityMapper: (AllAbilitiesQuery.Data?) -> List<AbilityInfo> = { response ->
+    private val _allAbilities = MutableLiveData<List<AbilityListAdapter.AbilityInfo>?>()
+    private val abilityMapper: (AllAbilitiesQuery.Data?) -> List<AbilityListAdapter.AbilityInfo> = { response ->
         response?.response?.data?.map { ability ->
-            AbilityInfo(
+            AbilityListAdapter.AbilityInfo(
                 abilityId = ability.id,
                 name = ability.names.firstOrNull()?.name ?: "No Name found",
                 generationNr = ability.generation_id ?: 1,
             )
         } ?: emptyList()
     }
+
+    private var _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
 
     private var _abilityDetails = MutableLiveData<AbilityDetailQuery.Data?>()
@@ -68,7 +73,8 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
                 val effectTextLangId = effectText.language_id
                 AbilityEffectText(
                     abilityId = effectText.ability_id ?: -1,
-                    name = detail.names.nodes.find { it.language_id == effectTextLangId }?.name ?: "No name found",
+                    name = detail.names.nodes.find { it.language_id == effectTextLangId }?.name
+                        ?: "No name found",
                     languageId = effectTextLangId ?: -1,
                     textLong = effectText.effect,
                     textShort = effectText.short_effect,
@@ -93,8 +99,8 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
     private val selectedAbilityFilter: LiveData<AbilityFilter?>
         get() = _selectedAbilityFilter
 
-    private val _filteredAbilityList = MutableLiveData<List<AbilityInfo>>()
-    val filteredAbilityList: LiveData<List<AbilityInfo>>
+    private val _filteredAbilityList = MutableLiveData<List<AbilityListAdapter.AbilityInfo>?>()
+    val filteredAbilityList: LiveData<List<AbilityListAdapter.AbilityInfo>?>
         get() = _filteredAbilityList
 
     private val _searchInputAbility = MutableLiveData("")
@@ -106,12 +112,26 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getAllAbilities() {
+        _isLoading.value = true
+
         viewModelScope.launch(Dispatchers.IO) {
             val abilitiesList = repository.loadAllAbilities(languageId)
 
-            viewModelScope.launch(Dispatchers.Main) {
-                _allAbilities.value = abilityMapper.invoke(abilitiesList)
-                _filteredAbilityList.value = _allAbilities.value
+            if (abilitiesList == null) {
+                sharedViewModel.postMessage(R.string.failed_to_load_abilities) {
+                    // pass this function as lambda to make a retry function
+                    getAllAbilities()
+
+                }
+                _allAbilities.postValue(null)
+                _filteredAbilityList.postValue(null)
+                _isLoading.postValue(false)
+            } else {
+                viewModelScope.launch(Dispatchers.Main) {
+                    _allAbilities.value = abilityMapper.invoke(abilitiesList)
+                    _filteredAbilityList.value = _allAbilities.value
+                    _isLoading.value = false
+                }
             }
         }
     }
@@ -124,12 +144,12 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** Gets all Pokemon who learns the move the user is inspecting */
-    fun getPokemonListWhoLearnMove(onLoadFinished: (List<PokemonForList>) -> Unit) {
+    fun getPokemonListWhoHaveAbility(onLoadFinished: (List<PokemonForList>) -> Unit) {
         val ids = _abilityDetails.value?.data?.firstOrNull()?.pokemonList?.mapNotNull {
             it.pokemon_id
         } ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            val list = repository.getPokemonWhoLearnSpecificAttack(ids)
+            val list = repository.getPokemonListFromIdList(ids)
             onLoadFinished(list)
         }
     }
