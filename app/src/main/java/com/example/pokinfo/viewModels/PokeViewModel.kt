@@ -62,6 +62,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
     init {
         loadGenericData()
+        // not needed because using asset database
+        //initializeDataForApp()
     }
 
     private fun loadGenericData(callback: (() -> Unit)? = null) {
@@ -81,7 +83,10 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     /** Gets some important Data, List of all Pokemon, Language Names and Type Details
      * should be loaded just for the first time a user starts the app */
     fun initializeDataForApp() {
-
+        if (isInitialized) {
+            loadGenericData()
+            return
+        }
         fun showSnackBarWithRetryAction() {
             sharedViewModel.postMessage(R.string.error_fetching_data) {
                 initializeDataForApp()
@@ -95,8 +100,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
             // wait once all data has been loaded
             val loadResults = listOf(
-                async { loadTypeDetails() },
-                async { loadLanguageAndVersionNames() },
+                async { loadTypeDetails() }, // load pokemon types from api
+                async { loadLanguageAndVersionNames() }, // load all available language and versionnames
                 async { repository.loadAllPokemonsWithSprites(languageId) },
             ).awaitAll()
 
@@ -107,57 +112,15 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
                 return@launch
             }
 
-            loadGenericData()
+            loadGenericData {
+                viewModelScope.launch {
+                    val pokemonList = PokemonListMapper()
+                        .mapData(loadResults[2] as PokeListQuery.Data, languageId)
 
-            val pokemonList = PokemonListMapper()
-                .mapData(loadResults[2] as PokeListQuery.Data, languageId)
-
-            repository.insertAllPokemon(pokemonList).also { success ->
-                isInitialized = success
-                _isLoading.postValue(false)
-                if (!success) showSnackBarWithRetryAction()
-            }
-        }
-    }
-
-    /** Gets some important Data, List of all Pokemon, Language Names and Type Details
-     * should be loaded just for the first time a user starts the app */
-    fun dadsa() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.postValue(true)
-            sharedViewModel.postMessage(R.string.fetching_data)
-
-            val data = repository.loadAllPokemonsWithSprites(languageId)
-            if (data == null) {
-                sharedViewModel.postMessage(R.string.error_fetching_data) {
-                    initializeDataForApp()
-                }
-                _isLoading.postValue(false)
-            } else {
-                val mappingJob = async {
-                    val dataMapper = PokemonListMapper()
-                    dataMapper.mapData(data, languageId)
-                }
-                val typeDetails = async { loadTypeDetails() }
-                val languageNames = async { loadLanguageAndVersionNames() }
-                typeDetails.await()
-                languageNames.await()
-                val pokemonList = mappingJob.await()
-                loadGenericData {
-                    // once all of them finished insert the list into database
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val isDone = repository.insertAllPokemon(pokemonList)
-                        if (isDone) {
-                            isInitialized =
-                                true // will be saved into shared Prefs through property delegation
-
-                        } else {
-                            // when something failed while inserting pokemon to database
-                            sharedViewModel.postMessage(R.string.error_fetching_data) {
-                                initializeDataForApp()
-                            }
-                        }
+                    repository.insertAllPokemon(pokemonList).also { success ->
+                        isInitialized = success
                         _isLoading.postValue(false)
+                        if (!success) showSnackBarWithRetryAction()
                     }
                 }
             }
@@ -180,10 +143,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     //region functions to load commonly used things like type names language names version names
 
     /** Gets details about every type (water, fire, ...) and loads it into database*/
-    private fun loadTypeDetails() {
-        viewModelScope.launch {
-            repository.loadTypeDetails()
-        }
+    private suspend fun loadTypeDetails() {
+        repository.loadTypeDetails()
     }
 
     fun getPokemonImagesWithNames(pokemonId: Int, callback: (List<Pair<Int, String>>) -> Unit) {
@@ -221,6 +182,12 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     private fun getFirstVersionOfGeneration(genNr: Int): Int? {
         return versionGroupMap.entries.find { entry ->
             entry.value == genNr
+        }?.key?.first
+    }
+
+    private fun getLastVersionOfGeneration(generationId: Int): Int? {
+        return versionGroupMap.entries.findLast { entry ->
+            entry.value == generationId
         }?.key?.first
     }
 
@@ -380,8 +347,8 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
     fun fetchEveryPokemonData() {
         viewModelScope.launch(Dispatchers.IO) {
             sharedViewModel.postMessage("Started fetching EVERY POKEMON")
-            var startId = 1
-            val totalPokemons = 1025
+            var startId = 10001
+            val totalPokemons = 10277
 
             while (startId <= totalPokemons) {
                 try {
@@ -473,7 +440,14 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
             else -> return emptyList()
         }
-        val versionId = getFirstVersionOfGeneration(generationId)
+
+        var versionId = getFirstVersionOfGeneration(generationId) ?: -1
+        val lastPossibleVersion = getLastVersionOfGeneration(generationId) ?: -1
+
+
+        while (versionGroupDetails.none { it.versionGroupId == versionId } && versionId < lastPossibleVersion) {
+            versionId ++
+        }
 
         // move Data in the specific gen
         val moveDetailsGenFiltered =
