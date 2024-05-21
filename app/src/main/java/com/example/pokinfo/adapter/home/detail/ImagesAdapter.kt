@@ -1,6 +1,5 @@
 package com.example.pokinfo.adapter.home.detail
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.PictureDrawable
 import android.os.Build.VERSION.SDK_INT
@@ -8,12 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.ImageLoader
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.load
 import com.caverock.androidsvg.SVG
+import com.example.pokinfo.data.util.ImagesDiffCallback
 import com.example.pokinfo.databinding.ItemListPictureBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,19 +23,14 @@ import kotlinx.coroutines.withContext
 import java.net.URL
 
 class ImagesAdapter(private val lifecycleScope: CoroutineScope) :
-    RecyclerView.Adapter<ImagesAdapter.ItemViewHolder>() {
-    private var dataset: List<Pair<String, String>> = emptyList()
-    private var gameVersionName: String = ""
+    ListAdapter<Pair<String, String>, ImagesAdapter.ItemViewHolder>(ImagesDiffCallback()) {
+    private var categoryName: String = ""
     private lateinit var imageLoader: ImageLoader
 
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<Pair<String, String>>, name: String) {
-        dataset = list
-        gameVersionName = name
-        notifyDataSetChanged()
+    fun setCategoryName(name: String) {
+        categoryName = name
     }
-
     inner class ItemViewHolder(val binding: ItemListPictureBinding) :
         RecyclerView.ViewHolder(binding.root)
 
@@ -62,18 +58,18 @@ class ImagesAdapter(private val lifecycleScope: CoroutineScope) :
 
     override fun getItemCount(): Int {
         // Return half the size because we are displaying two items per row
-        return (dataset.size + 1) / 2
+        return (currentList.size + 1) / 2
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        val leftItem = dataset[position * 2]
+        val leftItem = currentList[position * 2]
         var rightItem: Pair<String, String>? = null
-        if (position * 2 + 1 < dataset.size) {
-            rightItem = dataset[position * 2 + 1]
+        if (position * 2 + 1 < currentList.size) {
+            rightItem = currentList[position * 2 + 1]
         }
-        holder.binding.tvGameVersion.text = gameVersionName
+        holder.binding.tvGameVersion.text = categoryName
         holder.binding.tvTypeOfViewLeft.text = leftItem.first
-        if (gameVersionName == "Dream World") {
+        if (categoryName == "Dream World") {
             loadAndPostSvgDrawables(leftItem, holder, rightItem)
         } else {
             holder.binding.ivLeft.load(leftItem.second, imageLoader)
@@ -85,9 +81,9 @@ class ImagesAdapter(private val lifecycleScope: CoroutineScope) :
         rightItem: Pair<String, String>?,
         holder: ItemViewHolder
     ) {
-        rightItem?.let { rightItem ->
-            holder.binding.ivRight.load(rightItem.second, imageLoader)
-            showRightSlot(holder, rightItem)
+        rightItem?.let { item ->
+            holder.binding.ivRight.load(item.second, imageLoader)
+            showRightSlot(holder, item)
         } ?: kotlin.run {
             adjustLayoutForSingleImage(binding = holder.binding)
         }

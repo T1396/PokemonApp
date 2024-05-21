@@ -3,26 +3,20 @@ package com.example.pokinfo.adapter.abilities
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityInfo
+import com.example.pokinfo.data.util.AbilityDiffCallback
 import com.example.pokinfo.databinding.ItemListAbilitiesBinding
 
 
 class AbilityListAdapter(private val onItemClicked: (Int) -> Unit) :
-    RecyclerView.Adapter<AbilityListAdapter.ItemViewHolder>() {
-    private var dataset: List<AbilityInfo> = emptyList()
+    ListAdapter<AbilityListAdapter.AbilityInfo, AbilityListAdapter.ItemViewHolder>(AbilityDiffCallback()) {
     data class AbilityInfo(
         val abilityId: Int,
         val name: String,
         val generationNr: Int
     )
-    @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<AbilityInfo>, callback: (() -> Unit)? = null) {
-        dataset = list
-        notifyDataSetChanged()
-        callback?.invoke()
-    }
-
     inner class ItemViewHolder(val binding: ItemListAbilitiesBinding) :
         RecyclerView.ViewHolder(binding.root)
 
@@ -33,11 +27,11 @@ class AbilityListAdapter(private val onItemClicked: (Int) -> Unit) :
     }
 
     override fun getItemCount(): Int {
-        return dataset.size
+        return currentList.size
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        val item = dataset[position]
+        val item = currentList[position]
         holder.binding.tvAbilityName.text = item.name
         holder.binding.tvGen.text = item.generationNr.toString()
         val nr = position+1

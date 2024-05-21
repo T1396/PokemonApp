@@ -1,30 +1,22 @@
 package com.example.pokinfo.adapter.teamAndTeambuilder
 
-import android.annotation.SuppressLint
 import android.icu.text.SimpleDateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
+import com.example.pokinfo.data.util.TeamDiffCallback
 import com.example.pokinfo.databinding.ItemListPokemonteamBinding
 import java.util.Locale
 
 
 class PokemonTeamAdapter(private val onItemLongClicked: (PokemonTeam) -> Unit) :
-    RecyclerView.Adapter<PokemonTeamAdapter.ItemViewHolder>() {
-    private var dataset: List<PokemonTeam> = emptyList()
-
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<PokemonTeam>, callback: (() -> Unit)? = null) {
-        dataset = list
-        notifyDataSetChanged()
-        callback?.invoke()
-    }
+    ListAdapter<PokemonTeam, PokemonTeamAdapter.ItemViewHolder>(TeamDiffCallback()) {
 
     inner class ItemViewHolder(val binding: ItemListPokemonteamBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -36,11 +28,11 @@ class PokemonTeamAdapter(private val onItemLongClicked: (PokemonTeam) -> Unit) :
     }
 
     override fun getItemCount(): Int {
-        return dataset.size
+        return currentList.size
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        val team = dataset[position]
+        val team = currentList[position]
         val list = getImageTextViewPairList(holder.binding)
         val pokemonList = team.pokemons
 

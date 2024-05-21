@@ -10,6 +10,7 @@ import com.example.pokinfo.R
 import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.firebase.AttacksData
+import com.example.pokinfo.data.util.AttacksDiffCallback
 import com.example.pokinfo.databinding.ItemListAttacksBinding
 
 class AttacksAdapter(
@@ -20,7 +21,7 @@ class AttacksAdapter(
     private val selectAttackEnabled: Boolean = false,
     private val onAttackClicked: ((Int) -> Unit)? = null,
 ) :
-    ListAdapter<AttacksData, AttacksAdapter.ItemViewHolder>(com.example.pokinfo.data.util.DiffUtil()) {
+    ListAdapter<AttacksData, AttacksAdapter.ItemViewHolder>(AttacksDiffCallback()) {
     // only used if callback function is not null
 
     private var selectedAttacks: MutableList<AttacksData> = mutableListOf()

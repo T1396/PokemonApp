@@ -1,35 +1,26 @@
 package com.example.pokinfo.adapter.teamAndTeambuilder
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.data.maps.typeColorMap
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
+import com.example.pokinfo.data.util.PokemonDiffCallback
 import com.example.pokinfo.databinding.ItemListPokemonlistBinding
 
 
 class AllPokemonAdapter(
     private val pokemonTypeNames: List<PokemonTypeName>,
     private val onItemClicked: (PokemonForList) -> Unit
-) :
-    RecyclerView.Adapter<AllPokemonAdapter.ItemViewHolder>() {
-    private var dataset: List<PokemonForList> = emptyList()
-
-    @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<PokemonForList>) {
-        dataset = list
-        notifyDataSetChanged()
-    }
-
-
+) : ListAdapter<PokemonForList, AllPokemonAdapter.ItemViewHolder>(PokemonDiffCallback()) {
 
     inner class ItemViewHolder(val binding: ItemListPokemonlistBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -41,7 +32,7 @@ class AllPokemonAdapter(
     }
 
     override fun getItemCount(): Int {
-        return dataset.size
+        return currentList.size
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
@@ -54,7 +45,7 @@ class AllPokemonAdapter(
             5 to binding.tvSpDefVal,
             6 to binding.tvInitVal
         )
-        val item = dataset[position]
+        val item = currentList[position]
         var isExpanded = false
 
 
