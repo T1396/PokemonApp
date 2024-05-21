@@ -35,6 +35,7 @@ import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
 import com.example.pokinfo.data.models.database.pokemon.DamageRelation
 import com.example.pokinfo.data.models.database.pokemon.GameIndex
 import com.example.pokinfo.data.models.database.pokemon.MoveWithType
+import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonType
 import com.example.pokinfo.data.models.database.pokemon.PokemonWithThisType
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
@@ -69,9 +70,10 @@ import com.example.pokinfo.data.models.database.pokemon.VersionNames
         PkMoveMachines::class,
         PkForms::class,
         PkEvolutionChain::class,
-        PkEvolutionDetails::class
+        PkEvolutionDetails::class,
+        PokemonAbilitiesList::class
     ],
-    version = 40
+    version = 43
 )
 @TypeConverters(
     StringListConverter::class,
@@ -87,19 +89,36 @@ abstract class PokeDatabase : RoomDatabase() {
     abstract val pokeTypeDao: PokemonTypeDao
 
     companion object {
-        private lateinit var dbInstance: PokeDatabase
+        private var dbInstance: PokeDatabase? = null
 
+        //        fun getDatabase(context: Context): PokeDatabase {
+//            return dbInstance ?: synchronized(this) {
+//                val instance = Room.databaseBuilder(
+//                    context.applicationContext,
+//                    PokeDatabase::class.java,
+//                    "poke_database.db"
+//                )
+//                    .fallbackToDestructiveMigration()
+//                    .build()
+//                dbInstance = instance
+//                instance
+//            }
+//        }
         fun getDatabase(context: Context): PokeDatabase {
-            synchronized(this) {
-                if (!this::dbInstance.isInitialized) {
-                    dbInstance = Room.databaseBuilder(
-                        context.applicationContext,
-                        PokeDatabase::class.java,
-                        "poke_database"
-                    ).fallbackToDestructiveMigration().build()
-                }
-                return dbInstance
+            return dbInstance ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    PokeDatabase::class.java,
+                    "poke_database"
+                )
+                    .fallbackToDestructiveMigration()
+                    .createFromAsset("poke_database.db")
+                    .build()
+                dbInstance = instance
+                instance
             }
         }
     }
+
+
 }
