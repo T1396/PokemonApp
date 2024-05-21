@@ -88,7 +88,9 @@ class AbilitiesListFragment : Fragment() {
 
         abilityViewModel.filteredAbilityList.observe(viewLifecycleOwner) { filteredList ->
             if (filteredList != null) {
-                adapter.submitList(filteredList)
+                adapter.submitList(filteredList) {
+                    binding.rvAbilities.scrollToPosition(0)
+                }
             }
         }
 
