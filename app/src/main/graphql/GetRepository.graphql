@@ -207,6 +207,20 @@ query PokemonDetail3($speciesId: Int!, $languageId: Int!) {
     }
 }
 
+query PokemonWithAbilityQuery($nr: Int!) {
+    pokemon_v2_pokemonability_aggregate(where: {ability_id: {_eq: $nr}}) {
+        nodes {
+            pokemon_v2_pokemon {
+                name
+                id
+            }
+            ability_id
+            pokemon_v2_ability {
+                name
+            }
+        }
+    }
+}
 
 
 query PokemonDetail2($nr: Int!, $languageId: Int!) {
@@ -244,6 +258,10 @@ query PokemonDetail2($nr: Int!, $languageId: Int!) {
             id
             ability_id
             slot
+            pokemon_v2_pokemon {
+                id
+                name
+            }
             ability: pokemon_v2_ability {
                 id
                 name
