@@ -62,6 +62,8 @@ class TeamsFragment : Fragment() {
                     adapter.submitList(teams.sortedByDescending { it.timestamp.seconds })
                     binding.rvTeams.visibility = View.VISIBLE
                     binding.tvNoTeams.visibility = View.GONE
+                } else {
+                    binding.tvNoTeams.visibility = View.VISIBLE
                 }
             }
         }
