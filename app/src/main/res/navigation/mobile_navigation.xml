@@ -14,7 +14,7 @@
     <fragment
         android:id="@+id/nav_teams"
         android:name="com.example.pokinfo.ui.teambuilder.TeamsFragment"
-        android:label="@string/menu_teambuilder"
+        android:label="@string/menu_teams"
         tools:layout="@layout/fragment_teams" >
         <action
             android:id="@+id/action_nav_teambuilder_to_teamBuild"
@@ -105,7 +105,7 @@
     <fragment
         android:id="@+id/nav_teambuilder"
         android:name="com.example.pokinfo.ui.teambuilder.TeamBuilderFragment"
-        android:label="TeamBuild" >
+        android:label="Team Builder" >
         <action
             android:id="@+id/action_teamBuild_to_fullScreenDialogFragment"
             app:destination="@id/fullScreenAttacksFragment" />
