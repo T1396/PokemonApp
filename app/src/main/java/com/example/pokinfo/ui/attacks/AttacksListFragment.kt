@@ -106,7 +106,6 @@ class AttacksListFragment : Fragment() {
     private fun setupListAdapter(typeNames: List<PokemonTypeName>) {
         adapter = AttacksAdapter(
             pokemonTypeNames = typeNames,
-            showExpandButton = true,
             showPosition = true,
             onAttackClicked = { attackId ->
                 attacksViewModel.loadSingleAttackDetail(attackId)
