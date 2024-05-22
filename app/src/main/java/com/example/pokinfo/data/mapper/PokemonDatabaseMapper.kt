@@ -106,7 +106,7 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 specieNames = b
             }
 
-            val formList = mapFormInfo(formInfo, speciesInfo?.id ?: -1)
+            val formList = mapFormInfo(formInfo, allSpeciesInfo?.id ?: -1)
             val pokedexData = part2.pokemon.firstOrNull()?.specy
             val pokedexEntries = getPokedexTexts(pokedexData)
 
@@ -251,11 +251,10 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                 synchronized(alreadyAddedMoveIdSet) {
                     if (!alreadyAddedMoveIdSet.contains(moveId)) {
 
-                        val moveExistsInDB = allExistingMoves.any { it.id.toInt() == moveId }
+                        val moveExistsInDB = if (allExistingMoves.isEmpty()) false else allExistingMoves.any { it.id.toInt() == moveId }
 
                         if (!moveExistsInDB) {
                             alreadyAddedMoveIdSet.add(moveId)
-
 
                             val dbMove = PkMove(
                                 id = moveId?.toLong() ?: -1,

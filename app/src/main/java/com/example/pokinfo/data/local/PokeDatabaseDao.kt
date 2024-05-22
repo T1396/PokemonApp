@@ -6,28 +6,28 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.example.pokinfo.data.models.database.pokemon.PokemonForList
-import com.example.pokinfo.data.models.database.pokemon.MoveInformation
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
+import com.example.pokinfo.data.models.database.pokemon.MoveInformation
+import com.example.pokinfo.data.models.database.pokemon.PkAbilitiesToJoin
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityEffectText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityFlavorText
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityInfo
 import com.example.pokinfo.data.models.database.pokemon.PkAbilityName
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
+import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
+import com.example.pokinfo.data.models.database.pokemon.PkForms
 import com.example.pokinfo.data.models.database.pokemon.PkMove
+import com.example.pokinfo.data.models.database.pokemon.PkMoveMachines
 import com.example.pokinfo.data.models.database.pokemon.PkMoveNames
+import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
 import com.example.pokinfo.data.models.database.pokemon.PkMoves
 import com.example.pokinfo.data.models.database.pokemon.PkNames
 import com.example.pokinfo.data.models.database.pokemon.PkSpecieInfo
 import com.example.pokinfo.data.models.database.pokemon.Pokemon
-import com.example.pokinfo.data.models.database.pokemon.PkAbilitiesToJoin
-import com.example.pokinfo.data.models.database.pokemon.PkForms
-import com.example.pokinfo.data.models.database.pokemon.PkMoveMachines
-import com.example.pokinfo.data.models.database.pokemon.PkMoveVersionGroupDetail
+import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
-import com.example.pokinfo.data.models.database.pokemon.PkEvolutionChain
-import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
-import com.example.pokinfo.data.models.database.pokemon.PokemonAbilitiesList
+import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonInsertStatus
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
 
@@ -44,7 +44,6 @@ interface PokeDatabaseDao {
         insertFormInfos(pokemonData.formData)
         insertPokedexEntries(pokemonData.pokedexEntries)
         insertPokemonMoves(pokemonData.pokemonMoves)
-
         insertMoveNames(pokemonData.moveNames)
         insertVersionDetail(pokemonData.versionGroupDetails)
         insertSpecyNames(pokemonData.specyNames)
