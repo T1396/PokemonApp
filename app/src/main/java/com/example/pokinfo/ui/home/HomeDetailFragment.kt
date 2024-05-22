@@ -318,6 +318,7 @@ class HomeDetailFragment : Fragment() {
                     showConfirmationDialog(
                         onConfirm = {
                             pokeViewModel.getSinglePokemonData(pokemonId)
+                            fillImagePager(pokemonId)
                             bottomSheetDialog.dismiss()
                         }
                     )
@@ -336,8 +337,6 @@ class HomeDetailFragment : Fragment() {
                 val screenHeight = displayMetrics.heightPixels
                 behavior.peekHeight = (screenHeight / 2)
                 behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
-
-
             }
         }
 

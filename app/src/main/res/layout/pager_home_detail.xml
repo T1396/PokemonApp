@@ -8,13 +8,13 @@
         android:id="@+id/ivPokemonPager"
         android:layout_width="0dp"
         android:layout_height="200dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="4dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/main_picture_of_a_pokemon"
         android:scaleType="fitCenter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvPokemonNamePager"
         app:srcCompat="@drawable/pokemon_235" />
 
     <TextView
