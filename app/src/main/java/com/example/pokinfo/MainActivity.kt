@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
                     supportActionBar?.show()
                     fab.visibility = View.VISIBLE
                     restoreDrawerNavigation(navView)
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabAddIconRes))
                 }
 
