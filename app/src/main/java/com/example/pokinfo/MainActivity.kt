@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_teams_and_builder, R.id.nav_attacks, R.id.nav_abilities,
+                R.id.nav_home, R.id.nav_teams, R.id.nav_attacks, R.id.nav_abilities,
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -96,16 +96,26 @@ class MainActivity : AppCompatActivity() {
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabSaveIconRes))
                 }
 
-                R.id.nav_teams_and_builder -> {
+                R.id.nav_teams -> {
                     supportActionBar?.show()
                     fab.visibility = View.VISIBLE
                     restoreDrawerNavigation(navView)
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabAddIconRes))
                 }
 
-                else -> {
+                R.id.fullScreenAttacksFragment -> {
+                    restoreDrawerNavigation(navView)
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                }
+
+                R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities -> {
                     supportActionBar?.show()
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+                }
+
+                else -> {
+                    supportActionBar?.show()
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                     fab.visibility = View.GONE
                 }
             }
@@ -183,7 +193,7 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 if (viewModel.user.value != null) {
                     when (navController.currentDestination?.id) {
-                        R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities, R.id.nav_teams_and_builder -> finish()
+                        R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities, R.id.nav_teams -> finish()
                         else -> navController.navigateUp()
                     }
                 }

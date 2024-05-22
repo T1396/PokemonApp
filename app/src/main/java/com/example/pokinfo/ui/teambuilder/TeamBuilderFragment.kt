@@ -697,7 +697,9 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
 
     /** Dialog to update or create a copy of a team when save-team button is clicked */
     private fun showUpdateTeamDialog() {
-        UpdateTeamDialogFragment().show(childFragmentManager, "UpdateTeamDialog")
+        if (isAdded) {
+            UpdateTeamDialogFragment().show(childFragmentManager, "UpdateTeamDialog")
+        }
     }
 
     private fun showDeletePokemonDialog(index: Int) {
