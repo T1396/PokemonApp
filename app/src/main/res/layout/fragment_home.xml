@@ -30,7 +30,7 @@
             app:boxStrokeColor="@color/text_input_layout_stroke"
             app:boxStrokeWidth="2dp"
             app:cursorColor="?attr/colorOnPrimary"
-            app:endIconDrawable="@drawable/baseline_sort_24"
+            app:endIconDrawable="@drawable/baseline_filter_list_alt_24"
             app:endIconMode="custom"
             app:endIconTint="?attr/colorOnPrimary"
             app:hintTextColor="?attr/colorOnPrimary"
