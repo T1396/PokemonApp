@@ -35,7 +35,6 @@ data class PkMoves(
         )
     ],
     indices = [Index(value = ["typeId"])]
-
 )
 data class PkMove(
     @PrimaryKey val id: Long,
