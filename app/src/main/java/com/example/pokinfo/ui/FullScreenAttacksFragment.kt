@@ -83,7 +83,7 @@ class FullScreenAttacksFragment : Fragment() {
             val typeNames = pokeViewModel.pokemonTypeNames
 
             if (!isSelectionMode) {
-                attacksAdapter = AttacksAdapter(typeNames, true, showLevel = true, showPosition = false)
+                attacksAdapter = AttacksAdapter(typeNames, showLevel = true, showPosition = false)
                 // not needed in selection mode
                 setChipsForEachGenAndListener(
                     chipGroup,
@@ -93,7 +93,7 @@ class FullScreenAttacksFragment : Fragment() {
             } else {
                 selectedAttackList = teamsViewModel.teamBuilderSelectedAttacks.value ?: emptyList()
                 attacksAdapter =
-                    AttacksAdapter(typeNames, true, showLevel = false, selectAttackEnabled = true) { selectedAttacks ->
+                    AttacksAdapter(typeNames, showLevel = false, selectAttackEnabled = true) { selectedAttacks ->
                         updateAttacksSelectedCount(selectedAttacks)
                     }
                 val attacksList = teamsViewModel.getAttacksFromNewestVersion()
