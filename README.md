@@ -47,9 +47,11 @@ GraphQL is a interface to make it easier to understand how the Data of the Pokem
 My Project also used ApolloClient to use this interface to retrieve data with a query to just request exactly the Data needed to display.
 In the Screenshot there is a lightweight Query to show how the Details for a single Ability is fetched.
 
+All queries can be found under app/src/main/graphql. Due to rate limitations some queries are overfilled
+
 ### Integration with Firebase
 
-Pok-Info integrates with Firebase to offer a seamless and scalable backend solution. This includes user authentication, data storage, and real-time database interactions. Firebase's robust platform supports the app's data-intensive features while ensuring user data is handled securely and efficiently.
+Pok-Info integrates with Firebase to offer a seamless and scalable backend solution. This includes user authentication, data storage, and real-time database interactions. Firebase's robust platform supports the app's data-intensive features.
 
 ## Contribution and Feedback
 
@@ -57,4 +59,5 @@ As an educational project, Poke-Info welcomes contributions and feedback from th
 
 ## How to use the App yourself
 
-To make this app work, you need to create your own Firebase Project (you need a google account for that)
+
+
