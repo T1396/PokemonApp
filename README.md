@@ -1,5 +1,10 @@
 # Poke-Info: A Journey into Pokémon and Android Development
 
+Here is a download link for the apk if you just want to test what the app would look alike.
+https://drive.google.com/file/d/1-3i2khSg2HMv9KKWOX0xlXmHrhK0deul/view?usp=drive_link
+
+In this release build the database is prefilled so there are way less api calls, only Pokemon Attacks and Abilities are getting fetched.
+
 Welcome to Poke-Info! This app was created as a personal project for self-education in mobile development and a deeper understanding of the Pokémon universe. The primary goal here is learning and exploration, not commercial gain. All data used within the app respects copyright and fair use policies. As this Project is a 1-Man-Project it contains propably a lot of unusual things that might be confusing. 
 
 # Alternative Version in Compose available ( not even quite finished, in work )
@@ -42,9 +47,11 @@ GraphQL is a interface to make it easier to understand how the Data of the Pokem
 My Project also used ApolloClient to use this interface to retrieve data with a query to just request exactly the Data needed to display.
 In the Screenshot there is a lightweight Query to show how the Details for a single Ability is fetched.
 
+All queries can be found under app/src/main/graphql. Due to rate limitations some queries are overfilled
+
 ### Integration with Firebase
 
-Pok-Info integrates with Firebase to offer a seamless and scalable backend solution. This includes user authentication, data storage, and real-time database interactions. Firebase's robust platform supports the app's data-intensive features while ensuring user data is handled securely and efficiently.
+Pok-Info integrates with Firebase to offer a seamless and scalable backend solution. This includes user authentication, data storage, and real-time database interactions. Firebase's robust platform supports the app's data-intensive features.
 
 ## Contribution and Feedback
 
@@ -52,4 +59,5 @@ As an educational project, Poke-Info welcomes contributions and feedback from th
 
 ## How to use the App yourself
 
-To make this app work, you need to create your own Firebase Project (you need a google account for that)
+
+
