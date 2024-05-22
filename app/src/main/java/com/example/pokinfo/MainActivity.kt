@@ -106,10 +106,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.fullScreenAttacksFragment -> {
                     restoreDrawerNavigation(navView)
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                    fab.visibility = View.GONE
                 }
 
                 R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities -> {
                     supportActionBar?.show()
+                    fab.visibility = View.GONE
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                 }
 
