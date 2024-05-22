@@ -1,0 +1,44 @@
+query AllAbilities($languageId: Int!) {
+    response: pokemon_v2_ability_aggregate(where: {is_main_series: {_eq: true}}) {
+        data: nodes {
+            names: pokemon_v2_abilitynames(where: {language_id: {_eq: $languageId}}) {
+                name
+            }
+            generation_id
+            id
+            is_main_series
+            name
+        }
+    }
+}
+
+
+query AbilityDetail($abilityId: Int!) {
+    data: pokemon_v2_ability(where: {id: {_eq: $abilityId}}) {
+        name
+        flavorTexts: pokemon_v2_abilityflavortexts {
+            version_group_id
+            flavor_text
+            language_id
+            ability_id
+        }
+        effectTexts: pokemon_v2_abilityeffecttexts {
+            effect
+            short_effect
+            language_id
+            ability_id
+        }
+        names: pokemon_v2_abilitynames_aggregate {
+            nodes {
+                name
+                language_id
+            }
+        }
+        pokemonList: pokemon_v2_pokemonabilities {
+            pokemon_id
+            pokemon_v2_pokemon {
+                name
+            }
+        }
+    }
+}

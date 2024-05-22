@@ -1,0 +1,18 @@
+query LanguageAndVersionNames($languageId: Int!) {
+    languageNames: pokemon_v2_languagename(where: {local_language_id: {_eq: $languageId}}) {
+        pokemonV2LanguageByLocalLanguageId {
+            name
+            id
+        }
+        name
+        local_language_id
+        language_id
+        id
+    }
+    pokemon_v2_versionname(where: {language_id: {_eq: $languageId}}) {
+        id
+        version_id
+        name
+        language_id
+    }
+}

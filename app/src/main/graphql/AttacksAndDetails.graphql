@@ -1,0 +1,70 @@
+query AttacksQuery($languageId: Int!) {
+    moves: pokemon_v2_move {
+        names: pokemon_v2_movenames(where: {language_id: {_in: [$languageId, 9]}}) {
+            language_id
+            name
+        }
+        name
+        move_damage_class_id
+        accuracy
+        type_id
+        id
+        generation_id
+        move_target_id
+        power
+        move_effect_id
+        move_effect_chance
+        priority
+        pp
+        pokemon_v2_moveeffect {
+            pokemon_v2_moveeffecteffecttexts(where: {language_id: {_eq: $languageId}}) {
+                short_effect
+                effect
+            }
+        }
+        machines: pokemon_v2_machines {
+            machine_number
+            version_group_id
+            versionGroup: pokemon_v2_versiongroup {
+                generation_id
+            }
+        }
+    }
+}
+
+query AttackDetails($moveId: Int!, $languageId: Int!) {
+    move: pokemon_v2_move(where: {id: {_eq: $moveId}}) {
+        type_id
+        power
+        pp
+        accuracy
+        generation_id
+        priority
+        move_target_id
+        move_damage_class_id
+        name
+        names: pokemon_v2_movenames(where: {language_id: {_in: [$languageId, 9]}}) {
+            language_id
+            name
+        }
+        texts: pokemon_v2_moveflavortexts {
+            flavor_text
+            language_id
+            version_group_id
+            move_id
+            id
+        }
+    }
+    pokemonList: pokemon_v2_pokemon(where: {pokemon_v2_pokemonmoves: {move_id: {_eq: $moveId}}}) {
+        pokemon_species_id
+        order
+        name
+        id
+    }
+}
+
+
+
+
+
+
