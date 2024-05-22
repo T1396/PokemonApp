@@ -8,7 +8,7 @@
     <string name="menu_login">Log In</string>
     <string name="menu_register">Register</string>
     <string name="menu_teambuilder" translatable="false">TeamBuilder</string>
-    <string name="menu_home" translatable="false">Start</string>
+    <string name="menu_home" translatable="false">Home</string>
     <string name="menu_home_detail" translatable="false">Details</string>
     <string name="menu_attacks">Attacks</string>
     <string name="menu_abilities">Abilities</string>

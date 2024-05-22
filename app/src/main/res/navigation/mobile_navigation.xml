@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_login" />
 
     <fragment
-        android:id="@+id/nav_teams_and_builder"
+        android:id="@+id/nav_teams"
         android:name="com.example.pokinfo.ui.teambuilder.TeamsFragment"
         android:label="@string/menu_teambuilder"
         tools:layout="@layout/fragment_teams" >
@@ -45,7 +45,7 @@
             app:argType="integer" />
         <action
             android:id="@+id/action_nav_home_detail_to_fullScreenDialogFragment"
-            app:destination="@id/fullScreenDialogFragment" />
+            app:destination="@id/fullScreenAttacksFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_attacks"
@@ -94,7 +94,7 @@
             app:destination="@id/nav_home_detail" />
     </fragment>
     <fragment
-        android:id="@+id/fullScreenDialogFragment"
+        android:id="@+id/fullScreenAttacksFragment"
         android:name="com.example.pokinfo.ui.FullScreenAttacksFragment"
         android:label="@string/show_attacks_placeholder" >
         <argument
@@ -108,7 +108,7 @@
         android:label="TeamBuild" >
         <action
             android:id="@+id/action_teamBuild_to_fullScreenDialogFragment"
-            app:destination="@id/fullScreenDialogFragment" />
+            app:destination="@id/fullScreenAttacksFragment" />
         <argument
             android:name="pokemonTeam"
             app:argType="com.example.pokinfo.data.models.firebase.PokemonTeam"

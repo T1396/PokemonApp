@@ -142,8 +142,8 @@ class PokemonDatabaseMapper(private val repository: Repository) {
                         val pokemonIds =
                             data?.nodes?.map { it.pokemon_v2_pokemon?.id?.toLong() } ?: emptyList()
                         val abilityId = ability.ability_id
-                        val ac = PokemonAbilitiesList(abilityId, pokemonIds.filterNotNull())
-                        ac
+                        val pokemonAbilitiesList = PokemonAbilitiesList(abilityId, pokemonIds.filterNotNull())
+                        pokemonAbilitiesList
                     } else {
                         null
                     }
