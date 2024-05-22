@@ -82,7 +82,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
     /** Gets some important Data, List of all Pokemon, Language Names and Type Details
      * should be loaded just for the first time a user starts the app */
-    fun initializeDataForApp() {
+    private fun initializeDataForApp() {
         if (isInitialized) {
             loadGenericData()
             return
@@ -348,7 +348,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         viewModelScope.launch(Dispatchers.IO) {
             sharedViewModel.postMessage("Started fetching EVERY POKEMON")
             var startId = 10001
-            val totalPokemons = 10277
+            val totalPokemons =  10277
 
             while (startId <= totalPokemons) {
                 try {

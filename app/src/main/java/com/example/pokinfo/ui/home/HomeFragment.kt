@@ -55,7 +55,11 @@ class HomeFragment : Fragment() {
 
         val swipeRefreshLayout = binding.homeRefreshLayout
 
+        binding.homeRefreshLayout.setOnClickListener {
+            swipeRefreshLayout.isRefreshing = false
+        }
 
+        //pokeViewModel.fetchEveryPokemonData()
 /*        binding.homeRefreshLayout.setOnRefreshListener {
             val isInitialized by requireContext().sharedPreferences("isInitialized", false)
             if (!isInitialized) pokeViewModel.initializeDataForApp()
