@@ -2,6 +2,8 @@ package com.example.pokinfo
 
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -12,6 +14,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
@@ -39,14 +42,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: FirebaseViewModel
     private lateinit var sharedViewModel: SharedViewModel
 
-
-    private var isInitialized by sharedPreferences("isInitialized", false)
     private val fabSaveIconRes = R.drawable.baseline_save_as_24
     private val fabAddIconRes = R.drawable.baseline_add_24
+    private var isSplashScreenDisplayed = true
 
+    private fun initializeSplashAnimationEnd() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            isSplashScreenDisplayed = false
+        }, 1200)  //
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initializeSplashAnimationEnd()
+        installSplashScreen().setKeepOnScreenCondition {
+            isSplashScreenDisplayed
+        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
