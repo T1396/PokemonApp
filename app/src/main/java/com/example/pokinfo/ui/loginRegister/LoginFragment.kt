@@ -5,15 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentLoginBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.auth.api.identity.SignInClient
 
 
 interface ContextProvider {
@@ -28,8 +26,6 @@ class LoginFragment : Fragment(), ContextProvider {
     // onDestroyView.
     private val binding get() = _binding!!
     private val viewModel: FirebaseViewModel by activityViewModels()
-    private val webClientId = BuildConfig.webClientId
-    private lateinit var googleSignInClient: SignInClient
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +39,15 @@ class LoginFragment : Fragment(), ContextProvider {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        googleSignInClient = Identity.getSignInClient(requireActivity())
+        val emailEditText = binding.tietMail
+        val passwordEditText = binding.tietPassword
+        fun validateInputs() {
+            val isEmailValid = emailEditText.text.toString().trim().isNotEmpty()
+            val isPasswordValid = passwordEditText.text.toString().trim().isNotEmpty()
+            binding.btnLogin.isEnabled = isEmailValid && isPasswordValid
+        }
+
+
 
         binding.btnLogin.setOnClickListener {
             viewModel.login(
@@ -52,11 +56,18 @@ class LoginFragment : Fragment(), ContextProvider {
             )
         }
 
+        listOf(emailEditText, passwordEditText).forEach {
+            it.addTextChangedListener {
+                validateInputs()
+            }
+        }
+
+
         binding.btnGoogleLogin.setOnClickListener {
             viewModel.setUpGoogleSignIn(this, true)
         }
 
-        binding.tvRegister.setOnClickListener {
+        binding.btnGoToRegister.setOnClickListener {
             findNavController().navigate(R.id.nav_register)
         }
     }

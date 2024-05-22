@@ -24,7 +24,6 @@ class RegisterFragment : Fragment(), ContextProvider {
     // onDestroyView.
     private val binding get() = _binding!!
     private val viewModel : FirebaseViewModel by activityViewModels()
-    private val webClientId = BuildConfig.webClientId
 
 
     override fun onCreateView(
@@ -66,7 +65,7 @@ class RegisterFragment : Fragment(), ContextProvider {
             )
         }
 
-        binding.tvLogin.setOnClickListener {
+        binding.btnGoToLogin.setOnClickListener {
             findNavController().navigate(R.id.nav_login)
         }
 
