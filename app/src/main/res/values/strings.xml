@@ -7,8 +7,8 @@
 
     <string name="menu_login">Log In</string>
     <string name="menu_register">Register</string>
-    <string name="menu_teambuilder" translatable="false">TeamBuilder</string>
-    <string name="menu_home" translatable="false">Home</string>
+    <string name="menu_teams" translatable="false">Pokemon Teams</string>
+    <string name="menu_home" translatable="false">Pokemon Details</string>
     <string name="menu_home_detail" translatable="false">Details</string>
     <string name="menu_attacks">Attacks</string>
     <string name="menu_abilities">Abilities</string>
@@ -210,11 +210,28 @@
     <string name="show_pokemon_with_this_ability">Show Pokemon with this ability</string>
 
 
-    <string name="credential_error">There was an unexpected error with google sign… try again</string>
-    <string name="google_error">There was an unexpected error with the google services…</string>
+
     <string name="button_to_change_text_of_game_version">Button to change Text of Game Version</string>
     <string name="right_picture_of_pokemon_images_cardview">Right Picture of Pokemon Images CardView</string>
     <string name="left_picture_of_pokemon_images_cardview">Left Picture of Pokemon Images CardView</string>
 
     <string name="retry">Retry</string>
+    <string name="back_to_login">Back to login</string>
+    <string name="register_new_account">Register new account</string>
+
+
+    <!-- Firebase, Authentication, Error Messaged for Google Sign -->
+    <string name="credential_error">There was an unexpected error with google sign… try again</string>
+    <string name="google_error">There was an unexpected error with the google services…</string>
+
+    <string name="error_invalid_email">The email address is badly formatted.</string>
+    <string name="error_wrong_password">The password is incorrect. Please try again.</string>
+    <string name="error_user_not_found">There is no user corresponding to this email address.</string>
+    <string name="error_invalid_password_length">The password must be at least 6 characters long.</string>
+    <string name="error_user_disabled">This user account has been disabled.</string>
+    <string name="error_too_many_requests">Too many requests. Please try again later.</string>
+    <string name="error_network_request_failed">Network error. Please check your internet connection and try again.</string>
+    <string name="wrong_login_details">The entered password is not correct</string>
+    <string name="error_auth_failed">Authentication failed: An unexpected error occurred. Please try again.</string>
+
 </resources>
