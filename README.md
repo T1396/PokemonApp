@@ -1,5 +1,10 @@
 # Poke-Info: A Journey into Pokémon and Android Development
 
+Here is a download link for the apk if you just want to test what the app would look alike.
+https://drive.google.com/file/d/1-3i2khSg2HMv9KKWOX0xlXmHrhK0deul/view?usp=drive_link
+
+In this release build the database is prefilled so there are way less api calls, only Pokemon Attacks and Abilities are getting fetched.
+
 Welcome to Poke-Info! This app was created as a personal project for self-education in mobile development and a deeper understanding of the Pokémon universe. The primary goal here is learning and exploration, not commercial gain. All data used within the app respects copyright and fair use policies. As this Project is a 1-Man-Project it contains propably a lot of unusual things that might be confusing. 
 
 # Alternative Version in Compose available ( not even quite finished, in work )
