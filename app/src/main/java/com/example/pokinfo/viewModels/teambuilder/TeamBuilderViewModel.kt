@@ -39,12 +39,10 @@ class TeamBuilderViewModel(
         get() = _clickedPokemon
 
 
-
     var versionNames: List<VersionNames> = emptyList()
         private set
     var languageNames: List<LanguageNames> = emptyList()
         private set
-
     var pokemonTypeNames: List<PokemonTypeName> = emptyList()
         private set
 
@@ -60,10 +58,10 @@ class TeamBuilderViewModel(
     }
 
     /**
-     * Gets Data of a single Pokemon ( probably when clicked ) from the database or per apicall
+     * Gets Data of a single Pokemon ( probably when clicked ) from the database or per api call
      *
      * @param pokemonId id of the pokemon which was clicked
-     * @param errorMessageRes String Ressource that holds the error message for failure
+     * @param errorMessageRes String Resource that holds the error message for failure
      */
     fun getSinglePokemonData(
         pokemonId: Int,
@@ -100,8 +98,18 @@ class TeamBuilderViewModel(
     private fun loadPokemonDataFromApiAndSave(
         pokemonId: Int,
         errorMessageRes: Int,
-        optionalCallback: (() -> Unit)? = null,
+        postValue: Boolean = true,
+        optionalCallback: ((Boolean) -> Unit)? = null,
     ) {
+        fun failure() {
+            sharedViewModel.postMessage(errorMessageRes) {
+                getSinglePokemonData(pokemonId, errorMessageRes)
+            }
+            val errorException = Exception("Failed to load Pokemon Data...")
+            _clickedPokemon.postValue(UIState.Error(errorException, errorMessageRes))
+            optionalCallback?.invoke(false)
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
             val data = repository.loadSinglePokemonData(pokemonId, languageId)
             if (data?.data1 != null && data.data2 != null && data.data3 != null) {
@@ -115,13 +123,17 @@ class TeamBuilderViewModel(
                                 errorMessageRes
                             )
                             viewModelScope.launch(Dispatchers.Main) {
-                                _clickedPokemon.value = pokemonData
-                                optionalCallback?.invoke()
+                                if (postValue) _clickedPokemon.value = pokemonData
+                                optionalCallback?.invoke(true)
                             }
                         }
-                    } else sharedViewModel.postMessage(errorMessageRes)
+                    } else {
+                        failure()
+                    }
                 }
-            } else sharedViewModel.postMessage(errorMessageRes)
+            } else {
+                failure()
+            }
         }
     }
 
@@ -134,7 +146,7 @@ class TeamBuilderViewModel(
     }
 
 
-    //region teambuilder // teamsfragment
+    //region team builder // teams fragment
 
     private val _pokemonTeam = MutableLiveData(PokemonTeam())
     val pokemonTeam: LiveData<PokemonTeam?>
@@ -192,7 +204,7 @@ class TeamBuilderViewModel(
         val teamPokemon = team?.pokemons?.toMutableList()
         teamPokemon?.forEachIndexed { index, pokemon ->
             if (pokemon?.pokemonId == 0) teamPokemon[index] = null
-            // if there is a pokemon with id 0 its a placeholder we dont want to get
+            // if there is a pokemon with id 0 its a placeholder we don t want to get
         }
         if (teamPokemon != null) {
             team.pokemons = teamPokemon
@@ -200,10 +212,6 @@ class TeamBuilderViewModel(
         return team
     }
 
-    fun getNameFromTeamPokemon(index: Int): String {
-        val team = _pokemonTeam.value?.pokemons
-        return team?.get(index)?.pokemonInfos?.name ?: ""
-    }
 
     /** Gets the first empty slot of the actual pokemon team,
      *  first empty slot will either have a null value or a empty object (pokemonId = 0) */
@@ -256,11 +264,11 @@ class TeamBuilderViewModel(
 
     /** Returns translated name of a pokemon */
     fun getTranslatedName(): String {
-        val specyNames = when (val pkData = _clickedPokemon.value) {
+        val specieNames = when (val pkData = _clickedPokemon.value) {
             is UIState.Success -> pkData.data.specyNames
             else -> return "Error"
         }
-        val name = specyNames.find { it.languageId == this.languageId }?.name
+        val name = specieNames.find { it.languageId == this.languageId }?.name
         return name ?: ""
     }
 
@@ -293,7 +301,7 @@ class TeamBuilderViewModel(
      * Maps the abilities of a pokemon to dataclasses to use in recyclerView
      * sorts them also in slot order
      */
-    fun mapAbilitiesDetail(): List<AbilityEffectText> {
+    private fun mapAbilitiesDetail(): List<AbilityEffectText> {
         val data = when (val pkData = _clickedPokemon.value) {
             is UIState.Success -> pkData.data
             else -> return emptyList()
@@ -303,7 +311,7 @@ class TeamBuilderViewModel(
         val abilityData = data.abilityInfoList.map { ability ->
             val abilityEffectTexts = data.abilityEffectTexts
             val textLong = if (abilityEffectTexts.isEmpty()) "No Data found" else {
-                abilityEffectTexts.find { it?.abilityId == ability.id }?.effectTextLong // ?. is neccessary
+                abilityEffectTexts.find { it?.abilityId == ability.id }?.effectTextLong // ?. is necessary
             }
             val textShort =
                 data.abilityFlavorTexts.lastOrNull { it.abilityId == ability.id }?.effectTextShort
@@ -321,7 +329,7 @@ class TeamBuilderViewModel(
         return abilityData.sortedBy { it.slot }
     }
 
-    fun resetChosenAttacks() {
+    private fun resetChosenAttacks() {
         _teamBuilderSelectedAttacks.postValue(emptyList())
     }
 
@@ -373,7 +381,7 @@ class TeamBuilderViewModel(
         return amountOfPokemon >= 6
     }
 
-    /** Gets the chosen values (level, iv, ev etc) in the teambuilder fragment to update the values in the team-live data,*/
+    /** Gets the chosen values (level, iv, ev etc) in the team builder fragment to update the values in the team-live data,*/
     fun updatePokemonValuesInTeam(
         createNewSlot: Boolean,
         showSaveMessage: Boolean,
@@ -415,7 +423,7 @@ class TeamBuilderViewModel(
         }
     }
 
-    /** Gets a list of all Attacks a Pokeon can learn in the newest Version they are included
+    /** Gets a list of all Attacks a Pokemon can learn in the newest Version they are included
      * @return the filtered list
      */
     fun getAttacksFromNewestVersion(): List<AttacksData> {

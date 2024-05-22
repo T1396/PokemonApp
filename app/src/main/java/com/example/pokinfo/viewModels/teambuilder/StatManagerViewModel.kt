@@ -134,6 +134,8 @@ class StatManagerViewModel : ViewModel() {
         var newStatValue = value.coerceIn(0, maxEvsPerStat)
         val oldValue = currentEvs[stat] ?: 0
 
+        if (newStatValue == oldValue) return
+
         val totalAssigned = currentEvs.values.sum() - oldValue
         var totalAfterUpdate = totalAssigned + newStatValue
 

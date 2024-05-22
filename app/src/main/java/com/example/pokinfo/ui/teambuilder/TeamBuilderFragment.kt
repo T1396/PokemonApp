@@ -3,6 +3,9 @@ package com.example.pokinfo.ui.teambuilder
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -39,6 +42,7 @@ import com.example.pokinfo.ui.teambuilder.dialogs.SaveDataDialogFragment
 import com.example.pokinfo.ui.teambuilder.dialogs.UpdateTeamDialogFragment
 import com.example.pokinfo.ui.teambuilder.extensions.TeamBuilderMapCreater
 import com.example.pokinfo.ui.teambuilder.extensions.TeamBuilderMaps
+import com.example.pokinfo.ui.teambuilder.extensions.ivRangeFilter
 import com.example.pokinfo.ui.teambuilder.extensions.overrideNavigationLogic
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
@@ -132,10 +136,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
                 }
                 return@post
             }
-
             val oneItemHeight = (recyclerView.getChildAt(0)?.measuredHeight) ?: 0
-
-
             val totalHeight = (oneItemHeight * totalItemCount.coerceAtMost(maxItems)) +
                     (6 * dpToPx(recyclerView.context, (totalItemCount).coerceAtMost(maxItems)))
 
@@ -230,12 +231,15 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         }
 
         statViewModel.level.observe(viewLifecycleOwner) { level ->
-            binding.tilPokemonLevel.editText?.setText(level.toString())
+            val editText = binding.tilPokemonLevel.editText ?: return@observe
+            editText.setText(level.toString())
+            editText.setSelection(editText.text.length)
         }
-
         binding.tilPokemonLevel.editText?.addTextChangedListener {
-            val level = it.toString().toIntOrNull() ?: 100
-            statViewModel.updateLevel(level)
+            val levelStr = it.toString()
+            if (levelStr.isNotEmpty()) {
+                statViewModel.updateLevel(levelStr.toIntOrNull() ?: 100)
+            }
         }
 
         statViewModel.remainingEvs.observe(viewLifecycleOwner) { remainingEvs ->
@@ -246,8 +250,9 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
 
         tvEditTextMapIV.forEach { (stat, tvEditTextPair) ->
             val editText = tvEditTextPair.second
-            editText?.addTextChangedListener {
-                val newValue = it.toString().toIntOrNull() ?: 31
+            editText?.filters = arrayOf(ivRangeFilter)
+            editText?.addTextChangedListener { text ->
+                val newValue = text.toString().toIntOrNull() ?: 0
                 statViewModel.updateIvStat(stat, newValue)
             }
         }
@@ -281,8 +286,8 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     private fun setEvEditTextAndSliderListener() {
         evEditAndSliderMap.forEach { (stat, editTextAndSlider) ->
             val (editText, slider) = editTextAndSlider
-            editText?.addTextChangedListener {
-                val newValue = it.toString().toIntOrNull() ?: 0
+            editText?.addTextChangedListener { text ->
+                val newValue = text.toString().toIntOrNull() ?: 0
                 statViewModel.updateEvStat(stat, newValue)
             }
             slider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
@@ -326,6 +331,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             val (_, editText) = tvEditTextMapIV[stat] ?: return@forEach
             if (editText?.text.toString().toIntOrNull() != value) {
                 editText?.setText(value.toString())
+                editText?.setSelection(editText.text?.length ?: 0)
             }
         }
     }
@@ -334,7 +340,10 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         stats.forEach { (stat, value) ->
             val (editText, slider) = evEditAndSliderMap[stat] ?: return@forEach
             if (editText?.text.toString().toIntOrNull() != value) {
-                editText?.setText(value.toString())
+                editText?.setText(if (value == 0) "" else value.toString())
+                editText?.setSelection(editText.text?.length ?: 0)
+            }
+            if (slider.value != value.toFloat()) {
                 slider.value = value.toFloat()
             }
         }
