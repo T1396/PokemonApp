@@ -13,9 +13,12 @@ import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.util.AttacksDiffCallback
 import com.example.pokinfo.databinding.ItemListAttacksBinding
 
+/** Adapter to display pokemon attacks
+ *  Depending on the constructor parameter the adapter can 
+ *  offer a selection mode for this attacks which is used in the Team Builder Fragment
+ * */
 class AttacksAdapter(
     private val pokemonTypeNames: List<PokemonTypeName>,
-    private val showExpandButton: Boolean,
     private val showLevel: Boolean = true,
     private val showPosition: Boolean = true,
     private val selectAttackEnabled: Boolean = false,
@@ -49,49 +52,31 @@ class AttacksAdapter(
         val isSelected = selectedAttacks.contains(attack)
         holder.binding.clItem.isSelected = isSelected
 
-
-        // if callBackFunction is given in to adapter create selection behavior
+        /** on click listener */
         if (selectAttackEnabled) {
-            holder.binding.clItem.setOnClickListener {
-                if (isSelected) {
-                    selectedAttacks.remove(attack)
-                    holder.binding.clItem.isSelected = false
-                } else if (selectedAttacks.size < 4) {
-                    selectedAttacks.add(attack)
-                    holder.binding.clItem.isSelected = true
-                }
-                notifyItemChanged(position)
-                onAttackClicked?.invoke(selectedAttacks.size)
-            }
+            // 
+            setSelectAttacksClickListener(holder, isSelected, attack, position)
         } else {
             holder.binding.clItem.setOnClickListener {
-                onAttackClicked?.invoke(attack.attackId)
+                onAttackClicked?.invoke(attack.attackId) // for navigating to an attack the user clicked
             }
         }
 
-        if (showExpandButton) {
-            val isExpanded = isAttackExpanded(attack)
-            holder.binding.ibExpand.visibility = View.VISIBLE
-            holder.binding.tvEffectText.visibility = if (isExpanded) View.VISIBLE else View.GONE
-            holder.binding.tvEffectText.text = attack.effectText
-            holder.binding.ibExpand.setOnClickListener {
-                toggleAttackExpansion(attack)
-                notifyItemChanged(position)
-            }
-        } else {
-            holder.binding.tvLevelLearnedAt.visibility = View.VISIBLE
-            holder.binding.ibExpand.visibility = View.GONE
+        /** expand functionality */
+        val isExpanded = isAttackExpanded(attack)
+        holder.binding.tvEffectText.visibility = if (isExpanded) View.VISIBLE else View.GONE
+        holder.binding.tvEffectText.text = attack.effectText
+        holder.binding.ibExpand.setOnClickListener {
+            toggleAttackExpansion(attack)
+            notifyItemChanged(position)
         }
+
         holder.binding.tvLevelLearnedAt.visibility = if (showLevel) View.VISIBLE else View.GONE
-
-
-
         holder.binding.tvLevelLearnedAt.text = if (!showPosition) {
             if (attack.levelLearned > 0) attack.levelLearned.toString() else "-"
         } else {
             (position + 1).toString()
         }
-
         holder.binding.tvAtkName.text = attack.name
         holder.binding.tvPower.text = if (attack.power > 0) attack.power.toString() else "-"
         holder.binding.tvAccuracy.text = if (attack.accuracy == null) "-" else {
@@ -107,16 +92,38 @@ class AttacksAdapter(
         val color = ContextCompat.getColor(holder.itemView.context, colorRes)
         holder.binding.cvAtkType.setCardBackgroundColor(color)
 
-        val id = when (attack.moveDamageClassId) {
+        val drawableRes = when (attack.moveDamageClassId) {
             1 -> R.drawable.pokemon_status_atk_icon
             2 -> R.drawable.pokemon_atk_icon
             else -> R.drawable.pokemon_sp_atk_icon
         }
-        val drawable = ContextCompat.getDrawable(holder.itemView.context, id)
+        val drawable = ContextCompat.getDrawable(holder.itemView.context, drawableRes)
         holder.binding.ivTypeAttack.setImageDrawable(drawable)
 
         val typeName = pokemonTypeNames.find { it.typeId == attack.typeId }?.name ?: "???"
         holder.binding.tvAttackType.text = typeName
+    }
+
+    /** Set click listener functionality for every item */
+    private fun setSelectAttacksClickListener(
+        holder: ItemViewHolder,
+        isSelected: Boolean,
+        attack: AttacksData,
+        position: Int
+    ) {
+        holder.binding.clItem.setOnClickListener {
+            if (isSelected) {
+                selectedAttacks.remove(attack)
+                // updates the stroke of the background
+                holder.binding.clItem.isSelected = false
+            } else if (selectedAttacks.size < 4) {
+                selectedAttacks.add(attack)
+                // updates the stroke of the background
+                holder.binding.clItem.isSelected = true
+            }
+            notifyItemChanged(position)
+            onAttackClicked?.invoke(selectedAttacks.size)
+        }
     }
 
     private fun isAttackExpanded(attack: AttacksData): Boolean {
