@@ -1,10 +1,10 @@
-package com.example.pokinfo.ui.teambuilder.dialogs
+package com.example.pokinfo.ui.teamBuilder.dialogs
 
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
+import android.widget.CheckBox
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import com.example.pokinfo.R
@@ -13,7 +13,7 @@ import com.google.android.material.textfield.TextInputLayout
 
 class EnterTeamNameDialogFragment : DialogFragment() {
     interface EnterTeamNameListener {
-        fun onTeamNameEntered(name: String)
+        fun onTeamNameEntered(name: String, isPublic: Boolean)
     }
 
     private var listener: EnterTeamNameListener? = null
@@ -25,6 +25,7 @@ class EnterTeamNameDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val view = layoutInflater.inflate(R.layout.popup_create_team_dialog, null)
         val inputLayout = view.findViewById<TextInputLayout>(R.id.tilTeamName)
+        val checkBox = view.findViewById<CheckBox>(R.id.cbPublic)
 
         return MaterialAlertDialogBuilder(requireContext())
             .setView(view)
@@ -44,7 +45,8 @@ class EnterTeamNameDialogFragment : DialogFragment() {
 
                     posButton.setOnClickListener {
                         val teamName = inputLayout.editText?.text.toString().trim()
-                        listener?.onTeamNameEntered(teamName)
+                        val isPublic = checkBox.isChecked
+                        listener?.onTeamNameEntered(teamName, isPublic)
                         dismiss()
                     }
                 }

@@ -1,4 +1,4 @@
-package com.example.pokinfo.ui.teambuilder.dialogs
+package com.example.pokinfo.ui.teamBuilder.dialogs
 
 import android.app.Dialog
 import android.content.Context

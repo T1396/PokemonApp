@@ -99,6 +99,8 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="enter_ability_name">Choose the Ability</string>
     <string name="seems_like_you_have_no_saved_teams_want_to_create_one">Seems like you have no saved Teams, want to create one?</string>
+    <string name="no_shared_teams">There are no teams other people shared with you…</string>
+    <string name="no_public_teams">There are no public teams right now, you might publish one yourself</string>
     <string name="basic_pokemon" translatable="false">Pokemon</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
@@ -151,6 +153,7 @@
     <string name="open_the_filter_menu">Open the filter Menu</string>
     <string name="filter" translatable="false">Filter</string>
     <string name="delete">Delete</string>
+    <string name="remove_access">Remove access</string>
     <string name="share_this_team">Share this Team</string>
     <string name="edit">Edit</string>
     <string name="evs_and_ivs_initial">Evs and Ivs ( 508 left) </string>
@@ -168,6 +171,9 @@
     <string name="need_to_save_first_pokemon">You need to save at least 1 pokemon on the bottom Button</string>
     <string name="sucessfully_saved_pokemon">Saved Pokemon!</string>
     <string name="delete_team_confirmation">Do you really want to delete this Team?</string>
+    <string name="remove_access_confirmation">Do you really want to remove your access to %s\'s Team?</string>
+    <string name="copy_team_confirmation">Do you want to make a own copy of that Team?</string>
+    <string name="remove_access_text">This action cannot be undone. The owner of the team must give you access again. </string>
     <string name="delete_pokemon_title">Delete %s </string>
     <string name="delete_pokemon_confirmation">Are you sure you want to remove %s from your Team?</string>
     <string name="team_deleted">Team successfully deleted</string>
@@ -184,6 +190,7 @@
     <string name="dialog_text_update_team">Are you sure you want to update this team? All old values will be lost</string>
     <string name="yes_update">Update</string>
     <string name="make_a_copy">Create a copy of the team</string>
+    <string name="copy_edit">Copy and save the team</string>
     <string name="navigate_dialog_title">Are you sure you want to navigate to that Pokemon?</string>
     <string name="every_pokemon_with_ability">Every Pokemon with the Ability \'%s\'</string>
     <string name="navigate">Yes</string>
@@ -220,6 +227,10 @@
     <string name="register_new_account">Register new account</string>
 
 
+    <string name="unexpected_error">Something went wrong…</string>
+    <string name="error">Error!</string>
+
+
     <!-- Firebase, Authentication, Error Messaged for Google Sign -->
     <string name="credential_error">There was an unexpected error with google sign… try again</string>
     <string name="google_error">There was an unexpected error with the google services…</string>
@@ -233,5 +244,6 @@
     <string name="error_network_request_failed">Network error. Please check your internet connection and try again.</string>
     <string name="wrong_login_details">The entered password is not correct</string>
     <string name="error_auth_failed">Authentication failed: An unexpected error occurred. Please try again.</string>
+    <string name="publish">Publish</string>
 
 </resources>
