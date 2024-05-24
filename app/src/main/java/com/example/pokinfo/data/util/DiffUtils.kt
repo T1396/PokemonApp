@@ -3,6 +3,7 @@ package com.example.pokinfo.data.util
 import android.annotation.SuppressLint
 import androidx.recyclerview.widget.DiffUtil
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
+import com.example.pokinfo.data.models.PublicProfile
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.models.firebase.PokemonTeam
@@ -55,5 +56,11 @@ class ImagesDiffCallback: BaseDiffCallback<Pair<String, String>>() {
 class TeamDiffCallback: BaseDiffCallback<PokemonTeam>() {
     override fun areContentsTheSame(oldItem: PokemonTeam, newItem: PokemonTeam): Boolean {
         return oldItem.id == newItem.id
+    }
+}
+
+class UserDiffCallback: BaseDiffCallback<PublicProfile>() {
+    override fun areContentsTheSame(oldItem: PublicProfile, newItem: PublicProfile): Boolean {
+        return oldItem.username == newItem.username
     }
 }
