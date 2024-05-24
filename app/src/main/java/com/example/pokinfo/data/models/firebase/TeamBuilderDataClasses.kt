@@ -9,6 +9,9 @@ import kotlinx.parcelize.Parcelize
 data class PokemonTeam(
     var id: String = "",
     var name: String = "",
+    var ownerId: String = "",
+    var sharedWith: List<String> = emptyList(),
+    var isPublic: Boolean = false,
     var pokemons: List<TeamPokemon?> = List(6) { null },
     val timestamp: Timestamp = Timestamp(0, 0)
 ) : Parcelable {
@@ -16,6 +19,9 @@ data class PokemonTeam(
         return hashMapOf(
             "Name" to name,
             "id" to id,
+            "isPublic" to isPublic,
+            "ownerId" to ownerId,
+            "sharedWith" to sharedWith,
             "Pokemon 1" to pokemons[0],
             "Pokemon 2" to pokemons[1],
             "Pokemon 3" to pokemons[2],
@@ -34,15 +40,18 @@ data class PokemonTeam(
                 return null
             }
             val name = map["Name"] as? String ?: ""
+            val ownerId = map["ownerId"] as? String ?: ""
             val pokemons = List(6) { index ->
                 (map["Pokemon ${index + 1}"] as? Map<String, Any?>)?.let {
                     TeamPokemon.fromMap(it)
                 }
             }
+            val isPublic = map["isPublic"] as? Boolean ?: false
+            val sharedWith = map["sharedWith"] as? List<String> ?: emptyList()
             val timestamp = ((map["Creation Date"] as? Timestamp)?.let {
                 Timestamp(it.seconds, it.nanoseconds)
             } ?: Timestamp(0, 0))
-            return PokemonTeam(documentId, name, pokemons, timestamp)
+            return PokemonTeam(documentId, name, ownerId, sharedWith, isPublic, pokemons, timestamp)
         }
     }
 }
