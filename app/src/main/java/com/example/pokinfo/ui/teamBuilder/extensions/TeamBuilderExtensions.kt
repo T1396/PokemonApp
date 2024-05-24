@@ -1,9 +1,9 @@
-package com.example.pokinfo.ui.teambuilder.extensions
+package com.example.pokinfo.ui.teamBuilder.extensions
 
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pokinfo.R
-import com.example.pokinfo.ui.teambuilder.TeamBuilderFragment
+import com.example.pokinfo.ui.teamBuilder.TeamBuilderFragment
 import com.google.android.material.appbar.MaterialToolbar
 
 fun TeamBuilderFragment.overrideNavigationLogic() {

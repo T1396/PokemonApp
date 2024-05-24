@@ -1,4 +1,4 @@
-package com.example.pokinfo.ui.teambuilder.extensions
+package com.example.pokinfo.ui.teamBuilder.extensions
 
 import android.widget.EditText
 import android.widget.ImageView

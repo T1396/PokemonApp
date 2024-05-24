@@ -1,11 +1,8 @@
-package com.example.pokinfo.ui.teambuilder
+package com.example.pokinfo.ui.teamBuilder
 
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -36,14 +33,14 @@ import com.example.pokinfo.data.models.firebase.TeamPokemon
 import com.example.pokinfo.data.models.fragmentDataclasses.TeamBuilderData
 import com.example.pokinfo.data.util.ImageAltLoader.loadAnyImage
 import com.example.pokinfo.databinding.FragmentTeamBuilderBinding
-import com.example.pokinfo.ui.teambuilder.dialogs.DeletePokemonDialogFragment
-import com.example.pokinfo.ui.teambuilder.dialogs.EnterTeamNameDialogFragment
-import com.example.pokinfo.ui.teambuilder.dialogs.SaveDataDialogFragment
-import com.example.pokinfo.ui.teambuilder.dialogs.UpdateTeamDialogFragment
-import com.example.pokinfo.ui.teambuilder.extensions.TeamBuilderMapCreater
-import com.example.pokinfo.ui.teambuilder.extensions.TeamBuilderMaps
-import com.example.pokinfo.ui.teambuilder.extensions.ivRangeFilter
-import com.example.pokinfo.ui.teambuilder.extensions.overrideNavigationLogic
+import com.example.pokinfo.ui.teamBuilder.dialogs.DeletePokemonDialogFragment
+import com.example.pokinfo.ui.teamBuilder.dialogs.EnterTeamNameDialogFragment
+import com.example.pokinfo.ui.teamBuilder.dialogs.SaveDataDialogFragment
+import com.example.pokinfo.ui.teamBuilder.dialogs.UpdateTeamDialogFragment
+import com.example.pokinfo.ui.teamBuilder.extensions.TeamBuilderMapCreater
+import com.example.pokinfo.ui.teamBuilder.extensions.TeamBuilderMaps
+import com.example.pokinfo.ui.teamBuilder.extensions.ivRangeFilter
+import com.example.pokinfo.ui.teamBuilder.extensions.overrideNavigationLogic
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.example.pokinfo.viewModels.factory.ViewModelFactory
@@ -61,7 +58,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     //region variables
     private lateinit var binding: FragmentTeamBuilderBinding
     private val sharedViewModel: SharedViewModel by activityViewModels()
-    private val pokeViewModel: TeamBuilderViewModel by activityViewModels {
+    private val teamViewModel: TeamBuilderViewModel by activityViewModels {
         ViewModelFactory(requireActivity().application, sharedViewModel)
     }
     private val statViewModel: StatManagerViewModel by activityViewModels()
@@ -155,20 +152,20 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val typeNames = pokeViewModel.pokemonTypeNames
+        val typeNames = teamViewModel.pokemonTypeNames
 
         if (args.pokemonTeam != null) {
             // inserts team into live-data to display it with a observer
-            pokeViewModel.insertTeam(pokemonTeam = args.pokemonTeam ?: PokemonTeam())
+            teamViewModel.insertTeam(pokemonTeam = args.pokemonTeam ?: PokemonTeam())
             isEditTeamMode = true
         }
 
-        pokeViewModel.pokemonTeam.observe(viewLifecycleOwner) { team ->
+        teamViewModel.pokemonTeam.observe(viewLifecycleOwner) { team ->
             displayPokemonTeam(team)
         }
 
         // display search results in a recyclerview
-        pokeViewModel.filteredListTeamBuilder.observe(viewLifecycleOwner) {
+        teamViewModel.filteredListTeamBuilder.observe(viewLifecycleOwner) {
             pokeListAdapter?.let { pokeListAdapter ->
                 pokeListAdapter.submitList(it) {
                     adjustRecyclerViewHeight(binding.rvPokeList, 5)
@@ -180,16 +177,16 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
 
         binding.tilPokemonName.editText?.addTextChangedListener { text ->
             if (!ignoreTextChanges) {
-                pokeViewModel.filterPokemonList(text.toString())
+                teamViewModel.filterPokemonList(text.toString())
             }
         }
 
         // create an adapter to let the user choose from all pokemon
-        pokeViewModel.everyPokemon.observe(viewLifecycleOwner) {
+        teamViewModel.everyPokemon.observe(viewLifecycleOwner) {
             setupPokemonRecyclerView(typeNames)
         }
 
-        pokeViewModel.pokemonAbilities.observe(viewLifecycleOwner) { abilityList ->
+        teamViewModel.pokemonAbilities.observe(viewLifecycleOwner) { abilityList ->
             updateAbilitySpinner(abilityList)
         }
 
@@ -202,7 +199,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
                     id: Long
                 ) {
                     if (view != null && isSpinnerInitialized) {
-                        pokeViewModel.setSelectedAbility(abilityList[position].abilityId)
+                        teamViewModel.setSelectedAbility(abilityList[position].abilityId)
                     }
                 }
                 override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -212,7 +209,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             saveChangesAndOpenAttacksFragment()
         }
 
-        pokeViewModel.teamBuilderSelectedAttacks.observe(viewLifecycleOwner) {
+        teamViewModel.teamBuilderSelectedAttacks.observe(viewLifecycleOwner) {
             displaySelectedAttacks(it)
         }
 
@@ -411,12 +408,12 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         isPokemonSelected = true
         binding.tilPokemonName.editText?.setText("")
         binding.rvPokeList.visibility = View.GONE
-        pokeViewModel.getSinglePokemonData(
+        teamViewModel.getSinglePokemonData(
             pokemon.id,
             R.string.failed_load_single_pokemon_data
         ) {
             // insert to team when loaded
-            pokeViewModel.insertPokemonToTeam()
+            teamViewModel.insertPokemonToTeam()
             fabSavePokemon?.isEnabled = true
         }
     }
@@ -447,7 +444,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             createNewSlot = true,
             showSaveMessage = true
         ) // save chosen pokemon with details
-        if (pokeViewModel.isTeamFull()) {
+        if (teamViewModel.isTeamFull()) {
             fabSavePokemon?.isEnabled = false
             highlightSelectedPokemonSlot(teamIndex = -1)
         }
@@ -455,7 +452,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         statViewModel.reset() // resets the evs ivs level base values
         binding.abilitySpinner.adapter = null
         isPokemonSelected = false
-        pokeViewModel.setSelectedAttacks(emptyList())
+        teamViewModel.setSelectedAttacks(emptyList())
         isAtLeast1PokemonInTeam = true
     }
 
@@ -472,7 +469,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             gender = gender,
             level = statViewModel.level.value ?: 100
         )
-        pokeViewModel.updatePokemonValuesInTeam(
+        teamViewModel.updatePokemonValuesInTeam(
             createNewSlot = createNewSlot,
             showSaveMessage = showSaveMessage,
             pokemonDataFromUser = pokemonData,
@@ -491,13 +488,13 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         ignoreTextChanges = false
 
         displaySlotOnIndex(
-            pokeViewModel.teamIndex,
+            teamViewModel.teamIndex,
             pkData
         ) // displays the card with image (slot 1-6)
 
         val attacks =
             listOf(pkData?.attackOne, pkData?.attackTwo, pkData?.attackThree, pkData?.attackFour)
-        pokeViewModel.setSelectedAttacks(attacks.filterNotNull()) // observer will display attacks
+        teamViewModel.setSelectedAttacks(attacks.filterNotNull()) // observer will display attacks
 
         pkData?.evList?.let { statViewModel.insertEvs(it) }
         pkData?.ivList?.let { statViewModel.insertIvs(it) }
@@ -561,7 +558,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
 
     /** Loads the Data or resets it whether the clicked Slot is empty or not and selects the card and highlights it*/
     private fun loadAndDisplaySelectedPokemon() {
-        val pokemonToDisplay = pokeViewModel.getPokemonOnTeamIndex()
+        val pokemonToDisplay = teamViewModel.getPokemonOnTeamIndex()
         // new "empty" pokemon
         if (pokemonToDisplay == null || pokemonToDisplay.pokemonId == 0) {
             isPokemonSelected = false
@@ -570,7 +567,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             displayPokemonDetails(pokemonToDisplay)
         } else {
             // will load the details of a pokemon (attacks abilities ...)
-            pokeViewModel.getSinglePokemonData(
+            teamViewModel.getSinglePokemonData(
                 pokemonToDisplay.pokemonId,
                 R.string.failed_load_single_pokemon_data
             ) {
@@ -604,7 +601,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
             if (currentTime - lastClickTime >= 700) { // only 1 click every 700ms
                 lastClickTime = currentTime
                 fabSavePokemon?.isEnabled = true
-                pokeViewModel.setNewTeamIndex(index)
+                teamViewModel.setNewTeamIndex(index)
                 loadAndDisplaySelectedPokemon()
             }
         }
@@ -616,7 +613,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     }
 
     /** Highlights the latest clicked/chosen Pokemon Slot */
-    private fun highlightSelectedPokemonSlot(teamIndex: Int = pokeViewModel.teamIndex) {
+    private fun highlightSelectedPokemonSlot(teamIndex: Int = teamViewModel.teamIndex) {
         val cardViewList = cvIvPair.map { it.first }
         cardViewList.forEachIndexed { index, cardView ->
             if (index == teamIndex) {
@@ -643,7 +640,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
         team?.pokemons?.forEachIndexed { index, teamPokemon ->
             if (teamPokemon != null) {
                 displaySlotOnIndex(index, teamPokemon) // shows image of every team pokemon
-                if (index == pokeViewModel.teamIndex) {
+                if (index == teamViewModel.teamIndex) {
                     loadAndDisplaySelectedPokemon()
                 }
             } else {
@@ -688,7 +685,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
 
     fun showUnsavedChangesDialog() {
         // just show reminder dialogs if there are any data
-        if (pokeViewModel.pokemonTeam.value?.pokemons?.any { it != null } == true) {
+        if (teamViewModel.pokemonTeam.value?.pokemons?.any { it != null } == true) {
             if (!isEditTeamMode) {
                 showSaveDataDialog()
             } else {
@@ -723,7 +720,7 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     }
 
     override fun onUpdate() {
-        val team = pokeViewModel.getPokemonTeam()
+        val team = teamViewModel.getPokemonTeam()
         if (team != null) {
             val success = firebaseViewModel.updateTeam(team)
             if (success) findNavController().navigateUp()
@@ -739,15 +736,17 @@ class TeamBuilderFragment : Fragment(), SaveDataDialogFragment.SaveDataListener,
     }
 
     override fun onDeleteConfirmed(index: Int) {
-        pokeViewModel.deletePokemonFromTeam(index)
+        teamViewModel.deletePokemonFromTeam(index)
     }
 
-    override fun onTeamNameEntered(name: String) {
-        val team = pokeViewModel.getPokemonTeam()
+    override fun onTeamNameEntered(name: String, isPublic: Boolean) {
+        val team = teamViewModel.getPokemonTeam()
         if (team != null) {
             team.name = name
+            team.isPublic = isPublic
             firebaseViewModel.insertTeamToFireStore(team) { success ->
                 if (success) findNavController().navigateUp()
+                else sharedViewModel.postMessage(R.string.failed_to_insert_team)
             }
         } else {
             sharedViewModel.postMessage(R.string.failed_to_insert_team)
