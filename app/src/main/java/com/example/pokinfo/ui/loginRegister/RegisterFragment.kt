@@ -60,6 +60,7 @@ class RegisterFragment : Fragment(), ContextProvider {
 
         binding.btnRegister.setOnClickListener {
             viewModel.register(
+                binding.tilUserName.editText?.text.toString(),
                 binding.tilEmail.editText?.text.toString(),
                 binding.tilPassword.editText?.text.toString(),
             )
