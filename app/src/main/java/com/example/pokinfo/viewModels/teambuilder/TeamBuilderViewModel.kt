@@ -154,9 +154,10 @@ class TeamBuilderViewModel(
 
     /** When new team is created */
     fun resetTeamData() {
+        _clickedPokemon.postValue(UIState.Loading)
         _pokemonTeam.postValue(PokemonTeam())
         _selectedAbility.postValue(-1)
-        resetChosenAttacks()
+        _teamBuilderSelectedAttacks.postValue(emptyList())
         teamIndex = 0
     }
 
@@ -329,9 +330,6 @@ class TeamBuilderViewModel(
         return abilityData.sortedBy { it.slot }
     }
 
-    private fun resetChosenAttacks() {
-        _teamBuilderSelectedAttacks.postValue(emptyList())
-    }
 
     /** Mapping function to map the details from _clickedPokemon to a PokemonData object for teamBuilder Fragment */
     private fun mapPokemonDataToTeamPokemon(
@@ -340,34 +338,38 @@ class TeamBuilderViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val images =
-                repository.getPokemonImages(newPokemon?.pokemon?.id ?: -1) ?: Triple("", "", "")
+                repository.getPokemonImages(newPokemon?.pokemon?.id ?: -1)
+            if (newPokemon == null || images == null) {
+                sharedViewModel.postMessage(R.string.error_while_adding_pokemon)
+                return@launch
+            }
 
             val pokemonName =
-                newPokemon?.specyNames?.find { it.languageId == this@TeamBuilderViewModel.languageId }?.name
+                newPokemon.specyNames.find { it.languageId == languageId }?.name
 
             val pokemonForList = PokemonForList(
-                id = newPokemon?.pokemon?.id ?: -1,
+                id = newPokemon.pokemon.id,
                 name = pokemonName ?: "Error",
-                weight = newPokemon?.pokemon?.weight ?: -1,
-                height = newPokemon?.pokemon?.height ?: -1,
+                weight = newPokemon.pokemon.weight,
+                height = newPokemon.pokemon.height,
                 imageUrl = images.first,
                 altImageUrl = images.second,
                 officialImageUrl = images.third,
-                baseStats = newPokemon?.pokemon?.pkStatInfos?.map {
+                baseStats = newPokemon.pokemon.pkStatInfos.map {
                     StatValues(
                         statValue = it.baseStat,
                         statId = it.statId
                     )
-                } ?: emptyList(),
-                typeId1 = newPokemon?.pokemon?.primaryType?.typeId ?: 10001,
-                typeId2 = newPokemon?.pokemon?.secondaryType?.typeId
+                },
+                typeId1 = newPokemon.pokemon.primaryType.typeId,
+                typeId2 = newPokemon.pokemon.secondaryType?.typeId
             )
 
             val teamPok = TeamPokemon(
-                pokemonId = newPokemon?.pokemon?.id ?: -1,
+                pokemonId = newPokemon.pokemon.id,
                 pokemonInfos = pokemonForList,
                 level = 100,
-                gender = if (newPokemon?.specyData?.genderRate == -1) -1 else 0
+                gender = if (newPokemon.specyData?.genderRate == -1) -1 else 0
             )
             callback(teamPok)
         }

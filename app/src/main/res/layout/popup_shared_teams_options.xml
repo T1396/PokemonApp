@@ -8,7 +8,7 @@
     android:showDividers="middle">
 
     <TextView
-        android:id="@+id/editText"
+        android:id="@+id/tvCopy"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="4dp"
@@ -18,12 +18,12 @@
         android:gravity="center_vertical"
         android:minHeight="48dp"
         android:padding="10dp"
-        android:text="@string/edit"
-        app:drawableStartCompat="@drawable/baseline_edit_24"
+        android:text="@string/copy_edit"
+        app:drawableStartCompat="@drawable/baseline_file_copy_24"
         app:drawableTint="?attr/colorOnBackground" />
 
     <TextView
-        android:id="@+id/deleteText"
+        android:id="@+id/tvRemoveAccess"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="4dp"
@@ -33,23 +33,11 @@
         android:gravity="center_vertical"
         android:minHeight="48dp"
         android:padding="10dp"
-        android:text="@string/delete"
+        android:text="@string/remove_access"
         android:textColor="?attr/actionModeSplitBackground"
         android:textStyle="bold"
-        app:drawableStartCompat="@drawable/ic_delete_24" />
+        app:drawableStartCompat="@drawable/baseline_remove_circle_24"
+        app:drawableTint="?attr/colorError" />
 
-    <TextView
-        android:id="@+id/shareText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:clickable="true"
-        android:drawablePadding="10dp"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:minHeight="48dp"
-        android:padding="10dp"
-        android:text="@string/share_this_team"
-        app:drawableStartCompat="@drawable/baseline_share_24"
-        app:drawableTint="?attr/colorOnBackground" />
+
 </LinearLayout>

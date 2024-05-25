@@ -36,4 +36,14 @@
             android:hint="@string/name" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/cbPublic"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/publish"
+        app:layout_constraintEnd_toEndOf="@+id/tilTeamName"
+        app:layout_constraintStart_toStartOf="@+id/tilTeamName"
+        app:layout_constraintTop_toBottomOf="@+id/tilTeamName" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
