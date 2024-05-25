@@ -15,8 +15,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.pokinfo.BuildConfig
 import com.example.pokinfo.R
 import com.example.pokinfo.data.models.Profile
+import com.example.pokinfo.data.models.PublicProfile
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.ui.loginRegister.ContextProvider
+import com.example.pokinfo.ui.teams.TeamType
 import com.google.android.gms.tasks.Task
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -26,9 +28,10 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -37,8 +40,8 @@ import kotlinx.coroutines.launch
 private const val TAG = "FirebaseViewModel"
 
 class FirebaseViewModel(
-    private val application: Application,
-    private val sharedViewModel: SharedViewModel
+    application: Application,
+    private val sharedViewModel: SharedViewModel,
 ) : AndroidViewModel(application) {
 
     private var auth = Firebase.auth
@@ -52,8 +55,26 @@ class FirebaseViewModel(
     private lateinit var profileRef: DocumentReference
     private val webClientId = BuildConfig.webClientId
 
+    private var _allProfiles = MutableLiveData<List<PublicProfile>>()
+    val allProfiles: LiveData<List<PublicProfile>> get() = _allProfiles
+
+    private val _selectedTab = MutableLiveData(TeamType.MY_TEAMS)
+    val selectedTab: LiveData<TeamType> get() = _selectedTab
+
+
+    private val _selectedUserIds = MutableLiveData<List<String>>()
+    val selectedUserIds: LiveData<List<String>> get() = _selectedUserIds
+
+    fun updateSelectedUserIds(userIds: List<String>) {
+        _selectedUserIds.value = userIds
+    }
+
+    fun setTeamDisplayMode(type: TeamType) {
+        _selectedTab.value = type
+    }
 
     init {
+        _selectedUserIds.value = emptyList()
         setupUserEnv()
     }
 
@@ -66,6 +87,8 @@ class FirebaseViewModel(
         _user.value = auth.currentUser
         auth.currentUser?.let { firebaseUser ->
             profileRef = fireStore.collection("userData").document(firebaseUser.uid)
+            listenForPokemonTeams()
+            listenForPublicTeams()
         }
     }
 
@@ -76,7 +99,10 @@ class FirebaseViewModel(
                 if (task.isSuccessful) {
                     val isNewUser = task.result?.additionalUserInfo?.isNewUser == true
                     setupUserEnv()
-                    if (isNewUser) updateProfile()
+                    val user = auth.currentUser ?: return@addOnCompleteListener
+                    if (isNewUser) {
+                        createProfileDocument(user.displayName, user.email)
+                    }
                 } else {
                     sharedViewModel.postMessage(task.exception?.message ?: "Google sign in error")
                     Log.d("FirebaseAuthGoogle", task.exception?.message.toString())
@@ -158,12 +184,12 @@ class FirebaseViewModel(
         }
     }
 
-    // E-Mail-Validierungsfunktion
+
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    // Passwortvalidierungsfunktion
+
     private fun isValidPassword(password: String): Boolean {
         return password.length >= 6
     }
@@ -174,12 +200,25 @@ class FirebaseViewModel(
         setupUserEnv()
     }
 
-    fun register(email: String, password: String) {
+    fun register(userName: String, email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
             if (it.isSuccessful) {
                 // user created
                 setupUserEnv()
-                updateProfile()
+                val user = auth.currentUser ?: return@addOnCompleteListener
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(userName)
+                    .build()
+
+                user.updateProfile(profileUpdates).addOnCompleteListener { updateTask ->
+                    if (updateTask.isSuccessful) {
+                        Log.d(TAG, "User profile updated")
+                        createProfileDocument(userName, email)
+                    } else {
+                        Log.e(TAG, "Error updating user profile", updateTask.exception)
+                    }
+                }
+                createProfileDocument(userName, email)
             } else {
                 showErrorMessageForUser(it)
             }
@@ -188,7 +227,6 @@ class FirebaseViewModel(
 
     private fun showErrorMessageForUser(it: Task<AuthResult>) {
         val errorCode = (it.exception as? FirebaseAuthException)?.errorCode
-        Log.d("errorCode", errorCode.toString())
         val errorMessage = getErrorMessage(errorCode)
         sharedViewModel.postMessage(errorMessage)
     }
@@ -207,27 +245,55 @@ class FirebaseViewModel(
         return errorMessage
     }
 
-    private fun updateProfile() {
+    private fun createProfileDocument(userName: String?, email: String?) {
         val currentUser = auth.currentUser
-        if (currentUser != null) {
-            profileRef.set(
-                Profile(
-                    currentUser.displayName ?: "",
-                    currentUser.email ?: "",
-                    Timestamp.now(),
-                )
-            )
-        }
+        val currentUserId = currentUser?.uid ?: return
+        val userData = Profile(
+            username = userName ?: "Anonymous",
+            emailAddress = email ?: "email error",
+            registrationDate = Timestamp.now(),
+            profilePicture = currentUser.photoUrl?.toString() ?: ""
+        )
+        profileRef.set(userData)
+
+        val publicProfileData = mapOf(
+            "userId" to currentUserId,
+            "username" to userData.username,
+            "profilePicture" to userData.profilePicture
+        )
+
+        val publicProfilesRef = fireStore.collection("publicUserProfiles").document(currentUser.uid)
+
+        publicProfilesRef.set(publicProfileData)
+            .addOnSuccessListener {
+                Log.d(TAG, "Public profile updated successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error updating public profile", e)
+                sharedViewModel.postMessage(R.string.error_user_not_found)
+            }
     }
 
     fun uploadProfilePicture(uri: Uri, onComplete: (Uri?) -> Unit) {
         val imageRef = storage.reference.child("images/${auth.currentUser?.uid}/profilePicture")
-        imageRef.putFile(uri).addOnCompleteListener {
+        imageRef.putFile(uri).addOnCompleteListener { it ->
             if (it.isSuccessful) {
                 imageRef.downloadUrl.addOnCompleteListener { finalImageUrl ->
                     profileRef.update("profilePicture", finalImageUrl.result.toString())
                     onComplete(finalImageUrl.result)
+                    val currentUserId = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    val publicUserCollection =
+                        fireStore.collection("publicUserProfiles").document(currentUserId)
+                    publicUserCollection.update("profilePicture", finalImageUrl.result.toString())
+                        .addOnSuccessListener {
+                            Log.d(TAG, "Updated public user data in firestore")
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.e(TAG, "Failed to update public user data in firestore", exception)
+                        }
                 }
+
+
             } else {
                 Log.d(
                     TAG,
@@ -255,45 +321,103 @@ class FirebaseViewModel(
 
 //region PokemonTeams
 
-    private val _pokemonTeams = MutableLiveData<List<PokemonTeam>>()
-    val pokemonTeams: LiveData<List<PokemonTeam>>
-        get() = _pokemonTeams
+    private val _ownPokemonTeams = MutableLiveData<List<PokemonTeam>>()
+    val ownPokemonTeams: LiveData<List<PokemonTeam>>
+        get() = _ownPokemonTeams
 
-    private var teamsListenerRegistration: ListenerRegistration? = null
+    private val _sharedPokemonTeams = MutableLiveData<List<PokemonTeam>>()
+    val sharedPokemonTeams: LiveData<List<PokemonTeam>> get() = _sharedPokemonTeams
 
-    fun stopListeningForTeams() {
-        teamsListenerRegistration?.remove()
+    private val _publicPokemonTeams = MutableLiveData<List<PokemonTeam>>()
+    val publicPokemonTeams: LiveData<List<PokemonTeam>> get() = _publicPokemonTeams
+
+
+    private fun listenForPublicTeams() {
+        val currentUserId = auth.currentUser?.uid ?: return
+        fireStore.collection("pokemonTeams")
+            .whereEqualTo("isPublic", true)
+            .whereNotEqualTo("ownerId", currentUserId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("ListenError", "Listen for public teams failed.", e)
+                    _publicPokemonTeams.postValue(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val publicTeams = snapshot.documents.mapNotNull { doc ->
+                        PokemonTeam.fromMap(doc.data as Map<String, Any?>, doc.id)
+                    }
+                    _publicPokemonTeams.postValue(publicTeams)
+                } else {
+                    _publicPokemonTeams.postValue(emptyList())
+                }
+            }
     }
 
-    fun listenForTeamsInFireStore(onPostValue: () -> Unit) {
-        val allTeamsList = mutableListOf<PokemonTeam>()
-        val teamsRef = profileRef.collection("createdTeams")
-
-        teamsListenerRegistration = teamsRef.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                Log.w(TAG, "Listen for pokemon Teams failed", error)
-                sharedViewModel.postMessage("An error occurred while fetching pokemon teams")
-                return@addSnapshotListener
-            }
-
-            allTeamsList.clear()
-            snapshot?.forEach { document ->
-                val teamData = document.data
-                val teamMapped = PokemonTeam.fromMap(teamData, document.id)
-                if (teamMapped?.pokemons?.any { it != null } == true) allTeamsList.add(teamMapped)
-            }
-
-            _pokemonTeams.value = allTeamsList
-            onPostValue()
+    private fun listenForPokemonTeams() {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            sharedViewModel.postMessage("User not logged in")
+            return
         }
+
+        // Listener für eigene Teams
+        fireStore.collection("pokemonTeams")
+            .whereEqualTo("ownerId", userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("ListenError", "Listen failed.", e)
+                    _ownPokemonTeams.postValue(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val ownTeams = snapshot.documents.mapNotNull { doc ->
+                        PokemonTeam.fromMap(doc.data as Map<String, Any?>, doc.id)
+                    }
+                    _ownPokemonTeams.postValue(ownTeams)
+                } else {
+                    _ownPokemonTeams.postValue(emptyList())
+                }
+            }
+
+        // Listener für geteilte Teams
+        fireStore.collection("pokemonTeams")
+            .whereArrayContains("sharedWith", userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("ListenError", "Listen failed.", e)
+                    _sharedPokemonTeams.postValue(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val sharedTeams = snapshot.documents.mapNotNull { doc ->
+                        PokemonTeam.fromMap(doc.data as Map<String, Any?>, doc.id)
+                    }
+                    _sharedPokemonTeams.postValue(sharedTeams)
+                } else {
+                    _sharedPokemonTeams.postValue(emptyList())
+                }
+            }
     }
+
 
 
     fun insertTeamToFireStore(pokemonTeam: PokemonTeam, callback: (Boolean) -> Unit) {
-        val documentRef = profileRef.collection("createdTeams").document()
-        pokemonTeam.id = documentRef.id
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            sharedViewModel.postMessage("Error, you are not signed in")
+            return
+        }
+
+        val teamsRef = fireStore.collection("pokemonTeams").document()
+        pokemonTeam.id = teamsRef.id
+        pokemonTeam.ownerId = userId
+        pokemonTeam.sharedWith = emptyList() // if this function is used to copy a team that is shared for someone to remove the accessList of the copied team
         val teamForFireStore = pokemonTeam.toHashMap()
-        documentRef.set(teamForFireStore)
+        teamsRef.set(teamForFireStore)
             .addOnSuccessListener {
                 Log.d("MainViewModel", "Successfully saved team into fireStore")
                 callback(true)
@@ -309,7 +433,7 @@ class FirebaseViewModel(
     fun updateTeam(pokemonTeam: PokemonTeam): Boolean {
         return try {
             val teamDocumentReference =
-                profileRef.collection("createdTeams").document(pokemonTeam.id)
+                fireStore.collection("pokemonTeams").document(pokemonTeam.id)
             teamDocumentReference.update(pokemonTeam.toHashMap())
             sharedViewModel.postMessage(R.string.success_update)
             true
@@ -322,7 +446,8 @@ class FirebaseViewModel(
 
     fun deletePokemonTeam(pokemonTeam: PokemonTeam) {
         val teamId = pokemonTeam.id
-        val teamRef = profileRef.collection("createdTeams").document(teamId)
+
+        val teamRef = fireStore.collection("pokemonTeams").document(teamId)
         teamRef.delete().addOnSuccessListener {
             Log.d(TAG, "Team successfully deleted")
             sharedViewModel.postMessage(R.string.team_deleted)
@@ -330,6 +455,53 @@ class FirebaseViewModel(
             Log.w(TAG, "Error deleting team", it)
             sharedViewModel.postMessage(R.string.team_deleted_error)
         }
+    }
+
+    fun getUsersToShareTeamsWith() {
+        //val sharedWithIds = pokemonTeam.accessList
+        val allProfiles = mutableListOf<PublicProfile>()
+        val currentUserName = auth.currentUser?.displayName
+        fireStore.collection("publicUserProfiles")
+            .get().addOnSuccessListener { snapShot ->
+                if (!snapShot.isEmpty) {
+                    snapShot.documents.forEach { document ->
+                        val profile = PublicProfile.fromMap(document.data ?: emptyMap())
+                        if (profile != null && /*!sharedWithIds.contains(document.id) &&*/ profile.username != currentUserName) {
+                            allProfiles.add(profile)
+                        }
+                    }
+                    _allProfiles.postValue(allProfiles)
+                }
+            }
+    }
+
+    fun grantAccessToOtherUser(pokemonTeam: PokemonTeam, userIds: List<String>) {
+        val docRef = fireStore.collection("pokemonTeams").document(pokemonTeam.id)
+
+        docRef.update("sharedWith", FieldValue.arrayUnion(*userIds.toTypedArray()))
+            .addOnSuccessListener {
+                Log.d(TAG, "User ID erfolgreich zur accessList hinzugefügt.")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Fehler beim Hinzufügen der User ID zur accessList", e)
+            }
+    }
+
+    fun removeAccessToPokemonTeam(pokemonTeam: PokemonTeam) {
+        val userId = auth.currentUser?.uid ?: return
+        val docRef = fireStore.collection("pokemonTeams").document(pokemonTeam.id)
+
+        docRef.update("sharedWith", FieldValue.arrayRemove(userId))
+            .addOnSuccessListener {
+                Log.d("DELETED ACCESS", "Successfully deleted access to other team")
+            }
+            .addOnFailureListener {
+                Log.d("Deletion of Access", "Failed to delete access to other team", it)
+            }
+    }
+
+    fun resetUserList() {
+        _allProfiles.postValue(emptyList())
     }
 
 //endregion
