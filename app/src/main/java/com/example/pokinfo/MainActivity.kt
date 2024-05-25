@@ -25,7 +25,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import coil.load
 import coil.transform.CircleCropTransformation
-import com.example.pokinfo.data.util.sharedPreferences
 import com.example.pokinfo.databinding.ActivityMainBinding
 import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
@@ -86,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_teams, R.id.nav_attacks, R.id.nav_abilities,
+                R.id.nav_home, R.id.nav_teams_host, R.id.nav_attacks, R.id.nav_abilities,
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -107,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                     fab.setImageDrawable(ContextCompat.getDrawable(this, fabSaveIconRes))
                 }
 
-                R.id.nav_teams -> {
+                R.id.nav_teams_host -> {
                     supportActionBar?.show()
                     fab.visibility = View.VISIBLE
                     restoreDrawerNavigation(navView)
@@ -207,7 +206,7 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 if (viewModel.user.value != null) {
                     when (navController.currentDestination?.id) {
-                        R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities, R.id.nav_teams -> finish()
+                        R.id.nav_home, R.id.nav_attacks, R.id.nav_abilities, R.id.nav_teams_host -> finish()
                         else -> navController.navigateUp()
                     }
                 }

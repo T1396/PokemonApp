@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
     android:longClickable="true"
-    app:cardBackgroundColor="?attr/colorSurfaceContainerHighest">
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
+    app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -114,12 +115,10 @@
 
                     <ImageView
                         android:id="@+id/ivPokemon2"
-                        android:layout_width="88dp"
+                        android:layout_width="0dp"
                         android:layout_height="60dp"
                         android:layout_weight="0.8"
                         android:padding="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/pokeball"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -166,8 +165,6 @@
                         android:layout_height="60dp"
                         android:layout_weight="0.8"
                         android:padding="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/pokeball"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -267,8 +264,6 @@
                         android:layout_height="60dp"
                         android:layout_weight="0.8"
                         android:padding="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/pokeball"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -299,8 +294,6 @@
                         android:layout_height="60dp"
                         android:layout_weight="0.8"
                         android:padding="8dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/pokeball"
                         app:layout_constraintEnd_toEndOf="parent"
