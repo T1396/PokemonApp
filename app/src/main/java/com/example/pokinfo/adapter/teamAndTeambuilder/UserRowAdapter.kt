@@ -1,6 +1,7 @@
 package com.example.pokinfo.adapter.teamAndTeambuilder
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,16 +11,19 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.example.pokinfo.R
-import com.example.pokinfo.data.models.PublicProfile
+import com.example.pokinfo.data.models.firebase.PublicProfile
 import com.example.pokinfo.data.util.UserDiffCallback
 import com.example.pokinfo.databinding.ItemListUserBinding
 
-class UserRowAdapter(private val onUserClicked: (List<String>) -> Unit): ListAdapter<PublicProfile, UserRowAdapter.ItemViewHolder>(UserDiffCallback()) {
+class UserRowAdapter(
+    alreadySharedWithIds: List<String>,
+    private val onUserClicked: (List<String>) -> Unit
+): ListAdapter<PublicProfile, UserRowAdapter.ItemViewHolder>(UserDiffCallback()) {
 
     inner class ItemViewHolder(val binding: ItemListUserBinding) :
         RecyclerView.ViewHolder(binding.root)
 
-    private val selectedUserIds: MutableList<String> = mutableListOf()
+    private val selectedUserIds: MutableList<String> = alreadySharedWithIds.toMutableList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserRowAdapter.ItemViewHolder {
         val binding = ItemListUserBinding
