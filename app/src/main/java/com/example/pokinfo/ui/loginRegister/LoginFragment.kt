@@ -11,7 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pokinfo.R
 import com.example.pokinfo.databinding.FragmentLoginBinding
-import com.example.pokinfo.viewModels.FirebaseViewModel
+import com.example.pokinfo.viewModels.AuthenticationViewModel
 
 
 interface ContextProvider {
@@ -25,7 +25,7 @@ class LoginFragment : Fragment(), ContextProvider {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-    private val viewModel: FirebaseViewModel by activityViewModels()
+    private val viewModel: AuthenticationViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
