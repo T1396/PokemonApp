@@ -9,51 +9,33 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.pokinfo.R
-import com.example.pokinfo.adapter.teamAndTeambuilder.PokemonTeamAdapter
-import com.example.pokinfo.data.models.firebase.PokemonTeam
-import com.example.pokinfo.databinding.FragmentTeamsBinding
 import com.example.pokinfo.databinding.FragmentTeamsHostBinding
-import com.example.pokinfo.viewModels.FirebaseViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
+import com.example.pokinfo.viewModels.teams.TeamsViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayoutMediator
 
 
-enum class TeamType{
-    MY_TEAMS,
-    SHARED_TEAMS,
-    PUBLIC_TEAMS;
+enum class TeamType(val tabNr: Int, val tabTextRes: Int, val noTeamsTextRes: Int){
+    MY_TEAMS(0, R.string.my_teams, R.string.seems_like_you_have_no_saved_teams_want_to_create_one),
+    SHARED_TEAMS(1, R.string.shared_teams, R.string.no_shared_teams),
+    PUBLIC_TEAMS(2, R.string.public_teams, R.string.no_public_teams);
 }
 
 
-fun updateRecyclerView(
-    teams: List<PokemonTeam>,
-    adapter: PokemonTeamAdapter,
-    binding: FragmentTeamsBinding
-) {
-    adapter.submitList(teams.sortedByDescending { it.timestamp.seconds })
-    if (teams.isNotEmpty()) {
-        binding.rvTeams.visibility = View.VISIBLE
-        binding.tvNoTeams.visibility = View.GONE
-    } else {
-        binding.rvTeams.visibility = View.GONE
-        binding.tvNoTeams.visibility = View.VISIBLE
-    }
-}
+
 
 class TeamsPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int = 3
 
     override fun createFragment(position: Int): Fragment {
-        val fragment = when(position) {
-            0 -> TeamsFragment().also { it.setTeamType(TeamType.MY_TEAMS) }
-            1 -> TeamsFragment().also { it.setTeamType(TeamType.SHARED_TEAMS) }
-            2 -> TeamsFragment().also { it.setTeamType(TeamType.PUBLIC_TEAMS) }
-            else -> throw IllegalStateException("Invalid position $position")
+        val frag = TeamsFragment()
+        frag.arguments = Bundle().apply {
+            putInt("position", position)
         }
-        return fragment
+        return frag
     }
 }
 
@@ -63,7 +45,7 @@ class TeamsHostFragment : Fragment() {
     private val teamBuildViewModel: TeamBuilderViewModel by activityViewModels {
         ViewModelFactory(requireActivity().application, sharedViewModel)
     }
-    private val fireBaseViewModel: FirebaseViewModel by activityViewModels {
+    private val teamsViewModel: TeamsViewModel by activityViewModels {
         ViewModelFactory(requireActivity().application, sharedViewModel)
     }
     private var fabAddTeam: FloatingActionButton? = null
@@ -83,21 +65,14 @@ class TeamsHostFragment : Fragment() {
         val adapter = TeamsPagerAdapter(this)
         binding.viewPager.adapter = adapter
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            tab.text = when (position) {
-                0 -> "My Teams"
-                1 -> "Shared for you"
-                2 -> "Public teams"
-                else -> ""
-            }
+            val teamType = TeamType.entries.find { it.tabNr == position } ?: TeamType.MY_TEAMS
+            tab.text = getString(teamType.tabTextRes)
         }.attach()
 
-
-        fireBaseViewModel.selectedTab.observe(viewLifecycleOwner) {
-            binding.viewPager.currentItem = when(it) {
-                TeamType.MY_TEAMS -> 0
-                TeamType.SHARED_TEAMS -> 1
-                TeamType.PUBLIC_TEAMS -> 2
-                null -> 0
+        teamsViewModel.selectedTab.observe(viewLifecycleOwner) { event ->
+            // ensures tab is not set again after layout changes or similar with event class
+            event.getContentIfNotHandled()?.let { teamType ->
+                binding.viewPager.currentItem = teamType.tabNr
             }
         }
 
@@ -106,6 +81,20 @@ class TeamsHostFragment : Fragment() {
             // delete old values if present
             teamBuildViewModel.resetTeamData()
             findNavController().navigate(TeamsHostFragmentDirections.actionNavTeamsHostToNavTeambuilder())
+        }
+    }
+
+    // save active tab
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("currentTab", binding.viewPager.currentItem)
+    }
+
+    // restore active tab
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        savedInstanceState?.getInt("currentTab")?.let {
+            binding.viewPager.currentItem = it
         }
     }
 }

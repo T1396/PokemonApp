@@ -4,23 +4,25 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
-import com.example.pokinfo.adapter.teamAndTeambuilder.PokemonTeamAdapter
-import com.example.pokinfo.adapter.teamAndTeambuilder.UserRowAdapter
+import com.example.pokinfo.adapter.decoration.VerticalSpaceItemDecoration
+import com.example.pokinfo.adapter.teamAndTeambuilder.TeamAdapterLarge
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.databinding.FragmentTeamsBinding
-import com.example.pokinfo.viewModels.FirebaseViewModel
+import com.example.pokinfo.databinding.PopupDialogOptionsBinding
+import com.example.pokinfo.databinding.PopupPublicTeamOptionsBinding
+import com.example.pokinfo.databinding.PopupSharedTeamsOptionsBinding
+import com.example.pokinfo.ui.teamBuilder.dialogs.EnterTeamNameDialogFragment
+import com.example.pokinfo.viewModels.SharedViewModel
+import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.pokinfo.viewModels.teams.TeamsViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-class TeamsFragment : Fragment() {
+class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListener {
     private var _binding: FragmentTeamsBinding? = null
     private var teamType: TeamType = TeamType.MY_TEAMS
 
@@ -28,13 +30,45 @@ class TeamsFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-    private val fireBaseViewModel: FirebaseViewModel by activityViewModels()
-    private val teamBuildViewModel: TeamBuilderViewModel by activityViewModels()
-
-
-    fun setTeamType(teamType: TeamType) {
-        this.teamType = teamType
+    private val teamsViewModel: TeamsViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val teamBuildViewModel: TeamBuilderViewModel by activityViewModels {
+        ViewModelFactory(requireActivity().application, sharedViewModel)
     }
+    private lateinit var adapter: TeamAdapterLarge
+    private var selectedTeamId: String = ""
+    override fun onResume() {
+        super.onResume()
+        when (teamType) {
+            TeamType.PUBLIC_TEAMS -> {
+                teamsViewModel.listenForLikedTeams()
+            }
+
+            else -> {}
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val teamTypePosition = arguments?.getInt("position")
+        teamType = when (teamTypePosition) {
+            1 -> TeamType.SHARED_TEAMS
+            2 -> TeamType.PUBLIC_TEAMS
+            else -> TeamType.MY_TEAMS
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        when (teamType) {
+            TeamType.PUBLIC_TEAMS -> {
+                teamsViewModel.stopListeningForLikedTeams()
+            }
+
+            else -> {}
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -47,62 +81,186 @@ class TeamsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val displayMode = teamType
-        val text = when (displayMode) {
-            TeamType.SHARED_TEAMS -> R.string.no_shared_teams
-            TeamType.PUBLIC_TEAMS -> R.string.no_public_teams
-            else -> R.string.error
-        }
-        binding.tvNoTeams.setText(text)
-        val adapter = PokemonTeamAdapter {
-            when (displayMode) {
-                TeamType.MY_TEAMS -> showOptionsForMyTeams(it)
-                TeamType.SHARED_TEAMS -> showTeamOptionsDialog(it)
-                TeamType.PUBLIC_TEAMS -> { }
+        teamsViewModel.fetchOwnTeams()
+
+        binding.tvNoTeams.setText(teamType.noTeamsTextRes)
+        adapter = TeamAdapterLarge(
+            teamType = teamType,
+            onItemLongClicked = ::showOptionsDependingOnMode,
+            onCreatorClicked = ::showCreatorSheet,
+            onLiked = teamsViewModel::incrementLikeCount,
+            onLikeRemove = teamsViewModel::decrementLikeCount
+        )
+
+        if (teamType == TeamType.PUBLIC_TEAMS) {
+            // fetch liked teams to display the liked ones in the public teams list
+            teamsViewModel.likedTeams.observe(viewLifecycleOwner) { likedTeams ->
+                adapter.setLikedTeams(likedTeams)
             }
         }
+
+
         binding.rvTeams.adapter = adapter
-        val teamLiveData = when (displayMode) {
-            TeamType.MY_TEAMS -> fireBaseViewModel.ownPokemonTeams
-            TeamType.SHARED_TEAMS -> fireBaseViewModel.sharedPokemonTeams
-            TeamType.PUBLIC_TEAMS -> fireBaseViewModel.publicPokemonTeams
+        binding.rvTeams.addItemDecoration(VerticalSpaceItemDecoration(requireContext(), 8))
+        val teamLiveData = when (teamType) {
+            TeamType.MY_TEAMS -> teamsViewModel.ownPokemonTeams
+            TeamType.SHARED_TEAMS -> teamsViewModel.sharedPokemonTeams
+            TeamType.PUBLIC_TEAMS -> teamsViewModel.publicPokemonTeams
         }
         teamLiveData.observe(viewLifecycleOwner) { teams ->
             updateRecyclerView(teams, adapter, binding)
         }
 
+        when (teamType) {
+            TeamType.MY_TEAMS -> {
+                binding.swipeRefresh.isEnabled = false
+            }
+
+            TeamType.SHARED_TEAMS -> {
+                binding.swipeRefresh.setOnRefreshListener {
+                    teamsViewModel.fetchSharedTeams()
+                }
+            }
+
+            TeamType.PUBLIC_TEAMS -> {
+                binding.swipeRefresh.setOnRefreshListener {
+                    teamsViewModel.fetchPublicPokemonTeams {
+                        binding.swipeRefresh.isRefreshing = false
+                    }
+                }
+            }
+        }
+
     }
 
+    private fun showOptionsDependingOnMode(
+        team: PokemonTeam,
+        displayMode: TeamType,
+    ) {
+        when (displayMode) {
+            TeamType.MY_TEAMS -> showOptionsForMyTeams(team)
+            TeamType.SHARED_TEAMS -> showOptionsForSharedTeams(team)
+            TeamType.PUBLIC_TEAMS -> showOptionsForPublicTeams(team)
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
+    private fun updateRecyclerView(
+        teams: List<PokemonTeam>,
+        adapter: TeamAdapterLarge,
+        binding: FragmentTeamsBinding,
+    ) {
+
+        adapter.submitList(teams) {
+            binding.rvTeams.post {
+                binding.rvTeams.smoothScrollToPosition(0)
+            }
+        }
+        if (teams.isNotEmpty()) {
+            binding.rvTeams.visibility = View.VISIBLE
+            binding.tvNoTeams.visibility = View.GONE
+        } else {
+            binding.rvTeams.visibility = View.GONE
+            binding.tvNoTeams.visibility = View.VISIBLE
+        }
+    }
+
     /**
      * Opens a dialog to ask the user what action to do with the clicked team
      */
-    private fun showTeamOptionsDialog(pokemonTeam: PokemonTeam) {
-        val layoutInflater = LayoutInflater.from(requireContext())
-        val view = layoutInflater.inflate(R.layout.popup_shared_teams_options, null)
+    private fun showOptionsForMyTeams(pokemonTeam: PokemonTeam) {
+        selectedTeamId = pokemonTeam.id
+        val binding = PopupDialogOptionsBinding.inflate(layoutInflater)
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setView(view)
+            .setView(binding.root)
             .show()
 
-        val copyTv = view.findViewById<TextView>(R.id.tvCopy)
-        val removeAccessTv = view.findViewById<TextView>(R.id.tvRemoveAccess)
+        binding.changeNameText.setOnClickListener {
+            showEnterTeamNameDialog(pokemonTeam.isPublic, pokemonTeam.id, pokemonTeam.name)
+            dialog.dismiss()
+        }
+        binding.editText.setOnClickListener {
+            openTeamBuilderWithPokemonTeam(pokemonTeam, true)
+            dialog.dismiss()
+        }
+        binding.deleteText.setOnClickListener {
+            showDeleteConfirmation(pokemonTeam)
+            dialog.dismiss()
+        }
+        binding.shareText.setOnClickListener {
+            showShareTeamDialog(pokemonTeam)
+            dialog.dismiss()
+        }
 
-        copyTv.setOnClickListener {
+    }
+
+    private fun showOptionsForPublicTeams(team: PokemonTeam) {
+        val binding = PopupPublicTeamOptionsBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(binding.root)
+            .show()
+
+        binding.tvShowAndEdit.setOnClickListener {
+            openTeamBuilderWithPokemonTeam(team, false)
+            dialog.dismiss()
+        }
+
+        binding.tvCopyAndSave.setOnClickListener {
+            showCopyTeamDialog(team)
+            dialog.dismiss()
+        }
+    }
+
+
+    /**
+     * Opens a dialog to ask the user what action to do with his long clicked team
+     */
+    private fun showOptionsForSharedTeams(pokemonTeam: PokemonTeam) {
+        val binding = PopupSharedTeamsOptionsBinding.inflate(layoutInflater)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(binding.root)
+            .show()
+
+        binding.tvCopy.setOnClickListener {
             showCopyTeamDialog(pokemonTeam)
             dialog.dismiss()
         }
-        removeAccessTv.setOnClickListener {
+        binding.tvRemoveAccess.setOnClickListener {
             showRemoveAccessDialog(pokemonTeam)
             dialog.dismiss()
         }
     }
 
+
+    private fun showCreatorSheet(creatorId: String) {
+        val fragment = CreatorSheetFragment().apply {
+            arguments = Bundle().apply {
+                putString("creatorId", creatorId)
+            }
+        }
+        fragment.show(parentFragmentManager, "creatorSheet")
+    }
+
+    /** Opens a sheet and lets the user choose different user to share his team with */
+    private fun showShareTeamDialog(pokemonTeam: PokemonTeam) {
+        val dialogFragment = ShareTeamDialogFragment.newInstance(pokemonTeam, teamType)
+        dialogFragment.show(parentFragmentManager, "shareTeamDialog")
+    }
+
+
+    /** Shows a dialog which asks the user to enter a name for the team, or to enter a new name for the team when updated */
+    private fun showEnterTeamNameDialog(isPublic: Boolean, teamId: String, name: String) {
+        EnterTeamNameDialogFragment.newInstance(isPublic, teamId, name)
+            .show(childFragmentManager, "EnterTeamNameDialog")
+    }
+
+    /** Creates a copy of the clicked team, inserts it to firestore and navigates to the my Teams tab */
     private fun showCopyTeamDialog(pokemonTeam: PokemonTeam) {
         MaterialAlertDialogBuilder(requireContext()).apply {
             setTitle(getString(R.string.copy_team_confirmation))
@@ -110,110 +268,67 @@ class TeamsFragment : Fragment() {
                 dialog.dismiss()
             }
             setPositiveButton(getString(R.string.copy_edit)) { dialog, _ ->
-                fireBaseViewModel.insertTeamToFireStore(pokemonTeam) {
-                    fireBaseViewModel.setTeamDisplayMode(TeamType.MY_TEAMS)
+                teamsViewModel.insertTeamCopyToFireStore(pokemonTeam) {
+                    teamsViewModel.fetchOwnTeams()
+                    // leads to tab switch
+                    teamsViewModel.setTeamDisplayMode(TeamType.MY_TEAMS)
                     dialog.dismiss()
                 }
             }
         }.show()
     }
 
+    /** Lets user remove a shared team from his list */
     private fun showRemoveAccessDialog(pokemonTeam: PokemonTeam) {
 
         MaterialAlertDialogBuilder(requireContext()).apply {
-            setTitle(getString(R.string.remove_access_confirmation))
+            setTitle(getString(R.string.remove_access_confirmation, pokemonTeam.creator))
             setMessage(getString(R.string.remove_access_text))
             setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
             setPositiveButton(getString(R.string.delete)) { dialog, _ ->
-                fireBaseViewModel.removeAccessToPokemonTeam(pokemonTeam)
+                teamsViewModel.removeAccessToPokemonTeam(pokemonTeam)
+                teamsViewModel.fetchSharedTeams()
                 dialog.dismiss()
             }
         }.show()
     }
 
-    /**
-     * Opens a dialog to ask the user what action to do with the clicked team
-     */
-    private fun showOptionsForMyTeams(pokemonTeam: PokemonTeam) {
-        val layoutInflater = LayoutInflater.from(requireContext())
-        val view = layoutInflater.inflate(R.layout.popup_dialog_options, null)
 
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setView(view)
-            .show()
-
-        val edit = view.findViewById<TextView>(R.id.editText)
-        val delete = view.findViewById<TextView>(R.id.deleteText)
-        val share = view.findViewById<TextView>(R.id.shareText)
-
-        edit.setOnClickListener {
-            teamBuildViewModel.setNewTeamIndex(0)
-            findNavController().navigate(TeamsHostFragmentDirections.actionNavTeamsHostToNavTeambuilder(pokemonTeam.copy()))
-            dialog.dismiss()
-        }
-        delete.setOnClickListener {
-            showDeleteConfirmation(pokemonTeam)
-            dialog.dismiss()
-        }
-        share.setOnClickListener {
-            showShareTeamDialog(pokemonTeam)
-            dialog.dismiss()
-        }
-
+    private fun openTeamBuilderWithPokemonTeam(
+        pokemonTeam: PokemonTeam,
+        editMode: Boolean,
+    ) {
+        teamBuildViewModel.setNewTeamIndex(0)
+        findNavController().navigate(
+            TeamsHostFragmentDirections.actionNavTeamsHostToNavTeambuilder(
+                pokemonTeam.copy(),
+                editMode
+            )
+        )
     }
 
-    private fun showShareTeamDialog(pokemonTeam: PokemonTeam) {
-        val bottomSheetDialog = BottomSheetDialog(requireContext())
-        fireBaseViewModel.getUsersToShareTeamsWith()
-        val view = layoutInflater.inflate(R.layout.popup_share_team, null)
-        val rvTeam = view.findViewById<RecyclerView>(R.id.rvTeam)
-        val rvUsers = view.findViewById<RecyclerView>(R.id.rvUsers)
-        val saveButton = view.findViewById<Button>(R.id.btnSave)
-        val cancelButton = view.findViewById<Button>(R.id.btnCancel)
-        val adapter = UserRowAdapter { userIds ->
-            fireBaseViewModel.updateSelectedUserIds(userIds)
-        }
-        val teamAdapter = PokemonTeamAdapter { }
-        rvUsers.adapter = adapter
-        rvTeam.adapter = teamAdapter
-
-        saveButton.setOnClickListener {
-            val ids = fireBaseViewModel.selectedUserIds.value ?: return@setOnClickListener
-            fireBaseViewModel.grantAccessToOtherUser(pokemonTeam, ids)
-            bottomSheetDialog.dismiss()
-            //fireBaseViewModel.updateSelectedUserIds(emptyList())
-        }
-
-        cancelButton.setOnClickListener {
-            bottomSheetDialog.dismiss()
-        }
-
-        teamAdapter.submitList(listOf(pokemonTeam))
-
-        fireBaseViewModel.allProfiles.observe(viewLifecycleOwner) {
-            adapter.submitList(it)
-        }
-
-        fireBaseViewModel.selectedUserIds.observe(viewLifecycleOwner) { selectedIds ->
-            saveButton.isEnabled = selectedIds.isNotEmpty()
-        }
-
-        bottomSheetDialog.setContentView(view)
-        bottomSheetDialog.show()
-    }
 
     private fun showDeleteConfirmation(pokemonTeam: PokemonTeam) {
         MaterialAlertDialogBuilder(requireContext()).apply {
             setTitle(getString(R.string.delete_team_confirmation))
+            setMessage(getString(R.string.delete_team_confirmation))
             setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }
             setPositiveButton(getString(R.string.delete)) { dialog, _ ->
-                fireBaseViewModel.deletePokemonTeam(pokemonTeam)
+                teamsViewModel.deletePokemonTeam(pokemonTeam)
+                teamsViewModel.fetchOwnTeams()
                 dialog.dismiss()
             }
         }.show()
     }
+
+    override fun onTeamNameEntered(name: String, isPublic: Boolean, teamId: String) {
+        teamsViewModel.updateTeamNameAndPublicity(name, isPublic, teamId)
+        teamsViewModel.fetchOwnTeams()
+    }
+
+
 }
