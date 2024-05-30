@@ -2,6 +2,7 @@ package com.example.pokinfo.data.models.firebase
 
 import android.os.Parcelable
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
+import com.example.pokinfo.ui.teams.TeamType
 import com.google.firebase.Timestamp
 import kotlinx.parcelize.Parcelize
 
@@ -11,9 +12,11 @@ data class PokemonTeam(
     var name: String = "",
     var ownerId: String = "",
     var sharedWith: List<String> = emptyList(),
+    var creator: String = "",
+    var likeCount: Int = 0,
     var isPublic: Boolean = false,
     var pokemons: List<TeamPokemon?> = List(6) { null },
-    val timestamp: Timestamp = Timestamp(0, 0)
+    val timestamp: Timestamp = Timestamp.now()
 ) : Parcelable {
     fun toHashMap(): Map<String, Any?> {
         return hashMapOf(
@@ -22,23 +25,26 @@ data class PokemonTeam(
             "isPublic" to isPublic,
             "ownerId" to ownerId,
             "sharedWith" to sharedWith,
+            "creator" to creator,
+            "likeCount" to likeCount,
             "Pokemon 1" to pokemons[0],
             "Pokemon 2" to pokemons[1],
             "Pokemon 3" to pokemons[2],
             "Pokemon 4" to pokemons[3],
             "Pokemon 5" to pokemons[4],
             "Pokemon 6" to pokemons[5],
-            "Creation Date" to Timestamp.now().toDate()
+            "Creation Date" to timestamp
         )
     }
 
     @Suppress("UNCHECKED_CAST")
     companion object {
         @JvmStatic
-        fun fromMap(map: Map<String, Any?>, documentId: String): PokemonTeam? {
-            if (map.isEmpty()) {
+        fun fromMap(map: Map<String, Any?>?): PokemonTeam? {
+            if (map.isNullOrEmpty()) {
                 return null
             }
+            val id = map["id"] as? String ?: ""
             val name = map["Name"] as? String ?: ""
             val ownerId = map["ownerId"] as? String ?: ""
             val pokemons = List(6) { index ->
@@ -46,12 +52,14 @@ data class PokemonTeam(
                     TeamPokemon.fromMap(it)
                 }
             }
+            val likeCount = (map["likeCount"] as? Number)?.toInt() ?: 0
             val isPublic = map["isPublic"] as? Boolean ?: false
             val sharedWith = map["sharedWith"] as? List<String> ?: emptyList()
+            val creator = map["creator"] as? String ?: ""
             val timestamp = ((map["Creation Date"] as? Timestamp)?.let {
                 Timestamp(it.seconds, it.nanoseconds)
             } ?: Timestamp(0, 0))
-            return PokemonTeam(documentId, name, ownerId, sharedWith, isPublic, pokemons, timestamp)
+            return PokemonTeam(id, name, ownerId, sharedWith, creator, likeCount, isPublic, pokemons, timestamp)
         }
     }
 }
@@ -70,6 +78,10 @@ data class TeamPokemon(
     var ivList: List<EvIvData> = emptyList(),
     var abilityId: Int = 0
 ) : Parcelable {
+
+    fun isSameToDisplay(other: TeamPokemon): Boolean {
+        return pokemonId == other.pokemonId
+    }
 
     @Suppress("UNCHECKED_CAST")
     companion object {
