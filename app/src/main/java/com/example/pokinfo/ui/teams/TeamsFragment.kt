@@ -249,7 +249,7 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
 
     /** Opens a sheet and lets the user choose different user to share his team with */
     private fun showShareTeamDialog(pokemonTeam: PokemonTeam) {
-        val dialogFragment = ShareTeamDialogFragment.newInstance(pokemonTeam, teamType)
+        val dialogFragment = ShareTeamSheet.newInstance(pokemonTeam, teamType)
         dialogFragment.show(parentFragmentManager, "shareTeamDialog")
     }
 
