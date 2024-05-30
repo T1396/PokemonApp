@@ -114,5 +114,9 @@
             app:argType="com.example.pokinfo.data.models.firebase.PokemonTeam"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="editMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 </navigation>
