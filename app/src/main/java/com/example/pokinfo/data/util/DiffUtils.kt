@@ -3,10 +3,11 @@ package com.example.pokinfo.data.util
 import android.annotation.SuppressLint
 import androidx.recyclerview.widget.DiffUtil
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
-import com.example.pokinfo.data.models.PublicProfile
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.models.firebase.PokemonTeam
+import com.example.pokinfo.data.models.firebase.PublicProfile
+import com.example.pokinfo.data.models.firebase.TeamPokemon
 
 abstract class BaseDiffCallback<T : Any>: DiffUtil.ItemCallback<T>() {
     override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
@@ -54,13 +55,26 @@ class ImagesDiffCallback: BaseDiffCallback<Pair<String, String>>() {
 }
 
 class TeamDiffCallback: BaseDiffCallback<PokemonTeam>() {
-    override fun areContentsTheSame(oldItem: PokemonTeam, newItem: PokemonTeam): Boolean {
+
+    override fun areItemsTheSame(oldItem: PokemonTeam, newItem: PokemonTeam): Boolean {
         return oldItem.id == newItem.id
+    }
+    override fun areContentsTheSame(oldItem: PokemonTeam, newItem: PokemonTeam): Boolean {
+        return oldItem.id == newItem.id && oldItem.name == newItem.name && arePokemonsTheSame(oldItem.pokemons, newItem.pokemons)
+    }
+
+    private fun arePokemonsTheSame(old: List<TeamPokemon?>, new: List<TeamPokemon?>): Boolean {
+        if (old.size != new.size) return false
+
+        old.zip(new).forEach { (oldPokemon, newPokemon ) ->
+            if (oldPokemon?.pokemonId != newPokemon?.pokemonId) return false
+        }
+        return true
     }
 }
 
 class UserDiffCallback: BaseDiffCallback<PublicProfile>() {
     override fun areContentsTheSame(oldItem: PublicProfile, newItem: PublicProfile): Boolean {
-        return oldItem.username == newItem.username
+        return oldItem.username == newItem.username && oldItem.userId == newItem.userId
     }
 }

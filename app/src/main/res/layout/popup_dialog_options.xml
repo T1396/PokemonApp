@@ -8,6 +8,21 @@
     android:showDividers="middle">
 
     <TextView
+        android:id="@+id/changeNameText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="4dp"
+        android:clickable="true"
+        android:drawablePadding="10dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="48dp"
+        android:padding="10dp"
+        android:text="@string/change_teamname"
+        app:drawableStartCompat="@drawable/baseline_edit_document_24"
+        app:drawableTint="?attr/colorOnBackground" />
+
+    <TextView
         android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

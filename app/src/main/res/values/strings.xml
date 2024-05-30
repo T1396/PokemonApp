@@ -135,6 +135,7 @@
     <string name="sort">Sort by</string>
     <string name="enter_pokemon_name">Enter the name of the pokemon</string>
     <string name="enter_name_error">You need to enter a name</string>
+    <string name="need_new_name_error">Enter a new team name.</string>
 
     <string name="failed_to_load_abilities">There was an error while fetching abilities list data… Try again or report this as a bug</string>
     <string name="failed_to_load_attacks">There was an error while fetching attack data… Try again or report this as a bug</string>
@@ -155,6 +156,8 @@
     <string name="delete">Delete</string>
     <string name="remove_access">Remove access</string>
     <string name="share_this_team">Share this Team</string>
+    <string name="share_team">Share Team</string>
+    <string name="share_success">Shared your team successfully</string>
     <string name="edit">Edit</string>
     <string name="evs_and_ivs_initial">Evs and Ivs ( 508 left) </string>
     <string name="evs_and_ivs">Evs and Ivs ( %d left )</string>
@@ -171,6 +174,7 @@
     <string name="need_to_save_first_pokemon">You need to save at least 1 pokemon on the bottom Button</string>
     <string name="sucessfully_saved_pokemon">Saved Pokemon!</string>
     <string name="delete_team_confirmation">Do you really want to delete this Team?</string>
+    <string name="delete_team_info">Users you shared your team with cannot access it anymore…</string>
     <string name="remove_access_confirmation">Do you really want to remove your access to %s\'s Team?</string>
     <string name="copy_team_confirmation">Do you want to make a own copy of that Team?</string>
     <string name="remove_access_text">This action cannot be undone. The owner of the team must give you access again. </string>
@@ -199,6 +203,10 @@
     <string name="slot_placeholder" translatable="false">Slot %d</string>
     <string name="no_place">Your Team is full already…</string>
     <string name="choose_version">Choose a Game Version</string>
+
+    <string name="my_teams">My teams</string>
+    <string name="shared_teams">Shared teams</string>
+    <string name="public_teams">Public teams</string>
 
     <string name="fetching_data">Started fetching data, could take a few seconds…</string>
     <string name="no_attacks_available">We don\'t have any move data for this pokemon…</string>
@@ -245,5 +253,19 @@
     <string name="wrong_login_details">The entered password is not correct</string>
     <string name="error_auth_failed">Authentication failed: An unexpected error occurred. Please try again.</string>
     <string name="publish">Publish</string>
+    <string name="user_details">User details</string>
+    <string name="number_of_created_teams">Number of created teams:</string>
+    <string name="received_likes">Received likes:</string>
+    <string name="registered_since">Registered since %s</string>
+    <string name="public_teams_from_user">Public Teams from %s</string>
+    <string name="change_teamname">Change Teamname</string>
+    <string name="like_the_pokemon_team">Like the pokemon team</string>
+    <string name="update_the_access_to_your_team">Update the access to your team</string>
+    <string name="enter_new_teamname_title">Enter the new name for your team</string>
+
+
+    <string name="like_count">%1$d</string>
+    <string name="success_remove_access">Access successfully deleted</string>
+    <string name="error_remove_access">There was an error, access to the shared team could not be deleted</string>
 
 </resources>
