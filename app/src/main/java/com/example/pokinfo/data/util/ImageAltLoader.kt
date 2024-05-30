@@ -1,8 +1,12 @@
 package com.example.pokinfo.data.util
 
+import android.util.Log
 import android.widget.ImageView
+import coil.clear
+import coil.dispose
 import coil.load
 import com.example.pokinfo.R
+
 
 object ImageAltLoader {
     /**
@@ -16,10 +20,13 @@ object ImageAltLoader {
     ) {
         // load image (or alternative ones if error)
         imageView.load(url) {
+            crossfade(true)
             listener(onError = { _, _ ->
                 imageView.load(altUrl) {
+                    crossfade(true)
                     listener(onError = { _, _ ->
                         imageView.load(officialUrl) {
+                            crossfade(true)
                             error(R.drawable.pokemon_type_icon_unknown)
                         }
                     })
