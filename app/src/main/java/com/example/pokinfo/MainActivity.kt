@@ -26,7 +26,7 @@ import androidx.navigation.ui.setupWithNavController
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.example.pokinfo.databinding.ActivityMainBinding
-import com.example.pokinfo.viewModels.FirebaseViewModel
+import com.example.pokinfo.viewModels.AuthenticationViewModel
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.google.android.material.appbar.MaterialToolbar
@@ -38,12 +38,13 @@ import com.google.android.material.snackbar.Snackbar
 class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: FirebaseViewModel
+    private lateinit var viewModel: AuthenticationViewModel
     private lateinit var sharedViewModel: SharedViewModel
 
     private val fabSaveIconRes = R.drawable.baseline_save_as_24
     private val fabAddIconRes = R.drawable.baseline_add_24
     private var isSplashScreenDisplayed = true
+    private var isNavigationOverridden: Boolean = false
 
     private fun initializeSplashAnimationEnd() {
         Handler(Looper.getMainLooper()).postDelayed({
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
         val factory = ViewModelFactory(application, sharedViewModel)
-        viewModel = ViewModelProvider(this, factory)[FirebaseViewModel::class.java]
+        viewModel = ViewModelProvider(this, factory)[AuthenticationViewModel::class.java]
 
         setSupportActionBar(binding.appBarMain.mainToolbar)
 
@@ -171,10 +172,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 val emailTv = drawerLayoutHeader.findViewById<TextView>(R.id.tvHeaderMail)
                 emailTv.text = firebaseUser.email
-                viewModel.getProfilePicture {
-                    updateProfilePicture(it)
-                }
             }
+        }
+
+        viewModel.userImage.observe(this) { url ->
+            url?.let { updateProfilePicture(it) }
         }
 
 
@@ -258,7 +260,7 @@ class MainActivity : AppCompatActivity() {
 
 
     /** Updates the image in the drawer layout */
-    private fun updateProfilePicture(photoUrl: Uri?) {
+    private fun updateProfilePicture(photoUrl: String) {
         val navView = binding.navView
         val headerView = navView.getHeaderView(0)
         val imageView: ImageView = headerView.findViewById(R.id.ivProfilePic)
@@ -275,12 +277,20 @@ class MainActivity : AppCompatActivity() {
 
     /** Restores old drawer navigation logic (if in team builder the navigation logic is modified */
     private fun restoreDrawerNavigation(navView: NavigationView) {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        findViewById<MaterialToolbar>(R.id.mainToolbar).setupWithNavController(
-            navController,
-            appBarConfiguration
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+        if (isNavigationOverridden) {
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+            binding.appBarMain.mainToolbar.setupWithNavController(navController, appBarConfiguration)
+            findViewById<MaterialToolbar>(R.id.mainToolbar).setupWithNavController(
+                navController,
+                appBarConfiguration
+            )
+            setupActionBarWithNavController(navController, appBarConfiguration)
+            navView.setupWithNavController(navController)
+            isNavigationOverridden = false
+        }
+    }
+
+    fun setNavigationOverridden(overridden: Boolean) {
+        isNavigationOverridden = overridden
     }
 }

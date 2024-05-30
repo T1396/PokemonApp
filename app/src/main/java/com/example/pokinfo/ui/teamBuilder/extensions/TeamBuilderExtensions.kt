@@ -2,6 +2,7 @@ package com.example.pokinfo.ui.teamBuilder.extensions
 
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import com.example.pokinfo.MainActivity
 import com.example.pokinfo.R
 import com.example.pokinfo.ui.teamBuilder.TeamBuilderFragment
 import com.google.android.material.appbar.MaterialToolbar
@@ -20,4 +21,5 @@ fun TeamBuilderFragment.overrideNavigationLogic() {
         ?.setNavigationOnClickListener {
             showUnsavedChangesDialog()
         }
+    (activity as? MainActivity)?.setNavigationOverridden(true)
 }
