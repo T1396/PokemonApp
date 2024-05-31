@@ -1,12 +1,10 @@
 package com.example.pokinfo.ui.teams
 
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.SnapHelper
@@ -65,7 +63,6 @@ class CreatorSheetFragment : BottomSheetDialogFragment() {
             creatorProfile.registrationDate.toGermanDateString()
         )
 
-
         teamsViewModel.getTeamsByUser(creatorProfile.userId) { pokemonTeams ->
             val adapter = TeamAdapterSmall(
                 TeamType.PUBLIC_TEAMS,
@@ -78,10 +75,6 @@ class CreatorSheetFragment : BottomSheetDialogFragment() {
                 adapter.setLikedTeams(likedTeams)
             }
             adapter.submitList(pokemonTeams)
-
-
-
-
             if (snapHelperTeams == null) {
                 snapHelperTeams = PagerSnapHelper()
                 snapHelperTeams?.attachToRecyclerView(binding.rvUserTeams)
@@ -90,34 +83,23 @@ class CreatorSheetFragment : BottomSheetDialogFragment() {
 
     }
 
+
     override fun onStart() {
         super.onStart()
-        val bottomSheetDialog = dialog as? BottomSheetDialog
-        val bottomSheetInternal = bottomSheetDialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-        bottomSheetInternal?.let {
-            val bottomSheetBehavior = BottomSheetBehavior.from(it)
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            bottomSheetBehavior.peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO
+        val dialog = dialog as? BottomSheetDialog
+        dialog?.let {
+            val bottomSheet = it.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            val behavior = BottomSheetBehavior.from(bottomSheet!!)
+
+            val orientation = resources.configuration.orientation
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior.skipCollapsed = true
+            } else {
+                behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            }
+            behavior.peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        dialog?.let { d ->
-            val bottomSheet = d.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as? FrameLayout
-            bottomSheet?.let { bs ->
-                val layoutParams = bs.layoutParams
-                layoutParams.height = if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                } else {
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                }
-                bs.layoutParams = layoutParams
-                BottomSheetBehavior.from(bs).apply {
-                    peekHeight = Resources.getSystem().displayMetrics.heightPixels
-                    state = BottomSheetBehavior.STATE_EXPANDED
-                }
-            }
-        }
-    }
 }
