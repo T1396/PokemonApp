@@ -40,17 +40,13 @@ class ShareTeamSheet : BottomSheetDialogFragment() {
         val userAdapter = UserRowAdapter(pokemonTeam.sharedWith) { userIds ->
             teamsViewModel.updateSelectedUserIds(userIds)
         }
-        val teamAdapter = TeamAdapterSmall(teamType, onItemLongClicked = {})
-        teamAdapter.submitList(listOf(pokemonTeam))
-
-        binding.rvUsers.adapter = userAdapter
-        binding.rvUsers.addItemDecoration(StartEndDecoration(requireContext(), 16))
-        binding.rvTeam.adapter = teamAdapter
+        setUpTeamRecyclerView(userAdapter)
 
         teamsViewModel.allProfiles.observe(viewLifecycleOwner) {
             userAdapter.submitList(it)
         }
         teamsViewModel.selectedUserIds.observe(viewLifecycleOwner) { selectedIds ->
+            // only enable saving when user choice is different than before
             binding.btnSave.isEnabled = selectedIds != pokemonTeam.sharedWith
         }
 
@@ -62,6 +58,14 @@ class ShareTeamSheet : BottomSheetDialogFragment() {
         binding.btnCancel.setOnClickListener {
             dismiss()
         }
+    }
+
+    private fun setUpTeamRecyclerView(userAdapter: UserRowAdapter) {
+        val teamAdapter = TeamAdapterSmall(teamType, onItemLongClicked = {})
+        teamAdapter.submitList(listOf(pokemonTeam))
+        binding.rvUsers.adapter = userAdapter
+        binding.rvUsers.addItemDecoration(StartEndDecoration(requireContext(), 16))
+        binding.rvTeam.adapter = teamAdapter
     }
 
     companion object {
