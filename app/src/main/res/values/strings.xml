@@ -267,5 +267,16 @@
     <string name="like_count">%1$d</string>
     <string name="success_remove_access">Access successfully deleted</string>
     <string name="error_remove_access">There was an error, access to the shared team could not be deleted</string>
+    <string name="user_profile_image">User Profile Image</string>
+    <string name="pokemon_image_slot_1">Pokemon image slot 1</string>
+    <string name="pokemon_image_slot_2">Pokemon image slot 2</string>
+    <string name="pokemon_image_slot_3">Pokemon image slot 3</string>
+    <string name="pokemon_image_slot_4">Pokemon image slot 4</string>
+    <string name="pokemon_image_slot_5">Pokemon image slot 5</string>
+    <string name="pokemon_image_slot_6">Pokemon image slot 6</string>
+
+    <string name="date_filter">Date</string>
+    <string name="likes_filter">Likes</string>
+    <string name="alphabetic_filter">Alphabetical</string>
 
 </resources>
