@@ -6,15 +6,18 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.pokinfo.R
+import com.example.pokinfo.data.enums.PokemonSortFilterState
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.data.models.firebase.PublicProfile
 import com.example.pokinfo.data.util.Event
+import com.example.pokinfo.ui.teams.TeamSortFilter
 import com.example.pokinfo.ui.teams.TeamType
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -49,7 +52,9 @@ class TeamsViewModel(
     val sharedPokemonTeams: LiveData<List<PokemonTeam>> get() = _sharedPokemonTeams
 
     private val _publicPokemonTeams = MutableLiveData<List<PokemonTeam>>()
-    val publicPokemonTeams: LiveData<List<PokemonTeam>> get() = _publicPokemonTeams
+    val publicPokemonTeams: LiveData<List<PokemonTeam>> get() = _publicNew
+
+    private val _publicNew = MutableLiveData<List<PokemonTeam>>()
 
     private val _likedTeams = MutableLiveData<List<String>>()
     val likedTeams: LiveData<List<String>> get() = _likedTeams
@@ -69,6 +74,52 @@ class TeamsViewModel(
         _selectedTab.value = Event(type)
     }
 
+    private val _filterStateLiveData =
+        MutableLiveData<Pair<TeamSortFilter, PokemonSortFilterState>>()
+
+    fun selectFilterAndState(
+        sortFilter: TeamSortFilter,
+        filterState: PokemonSortFilterState,
+    ) {
+        _filterStateLiveData.value = Pair(sortFilter, filterState)
+        sortAndFilterPokemon()
+    }
+
+
+    /**
+     * Sorts the list of Pokemon in homeDetail Fragment and filters
+     *
+     */
+    private fun sortAndFilterPokemon() {
+
+        val initialList = _publicNew.value.orEmpty() // every pokemon
+
+        val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(
+            TeamSortFilter.DATE,
+            PokemonSortFilterState.DESCENDING
+        )
+
+        val sortedFilteredList = sortList(initialList, sortFilter, filterState)
+        _publicNew.value = sortedFilteredList
+    }
+
+    private fun sortList(
+        list: List<PokemonTeam>,
+        sortFilter: TeamSortFilter,
+        filterState: PokemonSortFilterState
+    ): List<PokemonTeam> {
+        val comparator = when (sortFilter) {
+            TeamSortFilter.DATE -> compareBy<PokemonTeam> { it.timestamp.seconds }
+            TeamSortFilter.LIKES -> compareBy { it.likeCount }
+            TeamSortFilter.ALPHABETICAL -> compareBy { it.name }
+        }
+
+        return when (filterState) {
+            PokemonSortFilterState.ASCENDING -> list.sortedWith(comparator)
+            PokemonSortFilterState.DESCENDING -> list.sortedWith(comparator.reversed())
+            else -> list
+        }
+    }
 
     fun fetchOwnTeams() {
         fireStore.collection("pokemonTeams")
@@ -115,23 +166,22 @@ class TeamsViewModel(
         fireStore.collection("pokemonTeams")
             .whereEqualTo("isPublic", true)
             .whereNotEqualTo("ownerId", currentUserId) // exclude users own teams
+            .orderBy("likeCount", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot != null && !snapshot.isEmpty) {
                     val publicTeams = snapshot.documents.mapNotNull { doc ->
                         PokemonTeam.fromMap(doc.data)
                     }
-                    _publicPokemonTeams.postValue(publicTeams.sortedByDescending { it.likeCount })
+                    _publicNew.postValue(publicTeams)
                     callback(true)
                 } else {
-                    _publicPokemonTeams.postValue(emptyList())
                     callback(false)
                 }
             }
             .addOnFailureListener { e ->
                 callback(false)
                 Log.w("FetchError", "Fetch public teams failed.", e)
-                _publicPokemonTeams.postValue(emptyList())
             }
     }
 

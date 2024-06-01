@@ -2,29 +2,48 @@ package com.example.pokinfo.ui.teams
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.decoration.VerticalSpaceItemDecoration
 import com.example.pokinfo.adapter.teamAndTeambuilder.TeamAdapterLarge
+import com.example.pokinfo.data.enums.PokemonSortFilterState
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.databinding.FragmentTeamsBinding
 import com.example.pokinfo.databinding.PopupDialogOptionsBinding
 import com.example.pokinfo.databinding.PopupPublicTeamOptionsBinding
 import com.example.pokinfo.databinding.PopupSharedTeamsOptionsBinding
+import com.example.pokinfo.extensions.dpToPx
+import com.example.pokinfo.ui.home.ThreeStateChip
 import com.example.pokinfo.ui.teamBuilder.dialogs.EnterTeamNameDialogFragment
 import com.example.pokinfo.viewModels.SharedViewModel
 import com.example.pokinfo.viewModels.factory.ViewModelFactory
 import com.example.pokinfo.viewModels.teambuilder.TeamBuilderViewModel
 import com.example.pokinfo.viewModels.teams.TeamsViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlin.math.max
+
+enum class TeamSortFilter(val stringRes: Int) {
+    DATE(R.string.date_filter),
+    LIKES(R.string.likes_filter),
+    ALPHABETICAL(R.string.alphabetic_filter)
+}
+
 
 class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListener {
     private var _binding: FragmentTeamsBinding? = null
     private var teamType: TeamType = TeamType.MY_TEAMS
+    private var menuProvider: MenuProvider? = null
 
 
     // This property is only valid between onCreateView and
@@ -46,7 +65,12 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
 
             else -> {}
         }
+        menuProvider?.let { existingProvider ->
+            val menuHost: MenuHost = requireActivity()
+            menuHost.removeMenuProvider(existingProvider)
+        }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +79,28 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
             1 -> TeamType.SHARED_TEAMS
             2 -> TeamType.PUBLIC_TEAMS
             else -> TeamType.MY_TEAMS
+        }
+
+    }
+
+    private fun createMenuProvider(): MenuProvider {
+        return object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.main, menu)
+                val sec = menu.findItem(R.id.action_secondary)
+                sec.isVisible = (teamType == TeamType.PUBLIC_TEAMS)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                // Behandle Menüaktionen
+                return when (menuItem.itemId) {
+                    R.id.action_secondary -> {
+                        true
+                    }
+
+                    else -> false
+                }
+            }
         }
     }
 
@@ -66,6 +112,11 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
             }
 
             else -> {}
+
+        }
+        menuProvider?.let { existingProvider ->
+            val menuHost: MenuHost = requireActivity()
+            menuHost.removeMenuProvider(existingProvider)
         }
     }
 
@@ -97,6 +148,29 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
             teamsViewModel.likedTeams.observe(viewLifecycleOwner) { likedTeams ->
                 adapter.setLikedTeams(likedTeams)
             }
+            binding.filterScrollBar.visibility = View.VISIBLE
+            TeamSortFilter.entries.forEach { filter ->
+                ThreeStateChip(requireContext()).apply {
+                    text = getString(filter.stringRes)
+                    isCheckable = false
+                    tag = filter
+
+                    setOnClickListener { _ ->
+                        binding.chipGroup.children.forEach { child ->
+                            if (child != this) {
+                                (child as? ThreeStateChip)?.resetState()
+                            } else {
+                                (child as? ThreeStateChip)?.nextState()
+                            }
+                        }
+                        teamsViewModel.selectFilterAndState(tag as TeamSortFilter, this.state)
+                    }
+                    binding.chipGroup.addView(this)
+                    if (filter == TeamSortFilter.LIKES) {
+                        this.state = PokemonSortFilterState.DESCENDING
+                    }
+                }
+            }
         }
 
 
@@ -123,11 +197,31 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
             }
 
             TeamType.PUBLIC_TEAMS -> {
+
                 binding.swipeRefresh.setOnRefreshListener {
                     teamsViewModel.fetchPublicPokemonTeams {
                         binding.swipeRefresh.isRefreshing = false
                     }
                 }
+                binding.rvTeams.setPadding(0, dpToPx(requireContext(), 48), 0, 0)
+
+               binding.rvTeams.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+
+                        // Berechne das neue Alpha basierend auf der aktuellen Scroll-Position
+                        val scrolledOffset = recyclerView.computeVerticalScrollOffset()
+                        val filterBarHeight = binding.filterScrollBar.height
+                        val alpha = max(0f, 1f - (scrolledOffset / filterBarHeight.toFloat()))
+
+                        // Setze das Alpha der HorizontalScrollView
+                        binding.filterScrollBar.alpha = alpha
+
+                        // Setze die Sichtbarkeit basierend auf dem Alpha-Wert
+                        binding.filterScrollBar.visibility = if (alpha > 0) View.VISIBLE else View.INVISIBLE
+                    }
+                })
+
             }
         }
 

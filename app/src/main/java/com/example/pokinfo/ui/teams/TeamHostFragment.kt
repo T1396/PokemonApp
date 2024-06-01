@@ -25,8 +25,6 @@ enum class TeamType(val tabNr: Int, val tabTextRes: Int, val noTeamsTextRes: Int
 }
 
 
-
-
 class TeamsPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
     override fun getItemCount(): Int = 3
 
