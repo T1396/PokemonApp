@@ -1,13 +1,12 @@
 package com.example.pokinfo.ui.misc.dialogs
 
-import android.annotation.SuppressLint
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
+import com.example.pokinfo.databinding.PopupPokemonListBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 fun Fragment.showConfirmationDialog(
@@ -28,20 +27,18 @@ fun Fragment.showConfirmationDialog(
 }
 
 
-@SuppressLint("InflateParams")
 fun Fragment.openPokemonListDialog(
     listOfPokemon: List<PokemonForList>,
     title: String,
     typeNames: List<PokemonTypeName>,
     navigateCallback: (Int) -> Unit,
 ) {
-    val inflater = requireActivity().layoutInflater
-    val view = inflater.inflate(R.layout.popup_pokemon_list, null)
-    val rvList = view.findViewById<RecyclerView>(R.id.rvPokemovelist)
+    val binding = PopupPokemonListBinding.inflate(layoutInflater)
+    val rvList = binding.rvPokemovelist
     rvList.layoutManager = LinearLayoutManager(requireContext())
     val dialog = MaterialAlertDialogBuilder(requireContext()).apply {
         setTitle(title)
-        setView(view)
+        setView(binding.root)
         setPositiveButton(android.R.string.ok, null)
     }.create()
 
