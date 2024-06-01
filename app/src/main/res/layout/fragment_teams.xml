@@ -10,29 +10,50 @@
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvTeams"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:clipToPadding="false"
-            android:paddingTop="8dp"
-            android:visibility="visible"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/item_list_pokemonteam" />
+            android:layout_height="match_parent">
+
+            <HorizontalScrollView
+                android:id="@+id/filterScrollBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:elevation="2dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingStart="8dp"
+                    app:singleSelection="true" />
+            </HorizontalScrollView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTeams"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:visibility="visible"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:listitem="@layout/item_list_pokemonteam" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
