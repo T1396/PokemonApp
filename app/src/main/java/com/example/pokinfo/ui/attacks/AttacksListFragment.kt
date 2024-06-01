@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.attacks
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -200,10 +201,14 @@ class AttacksListFragment : Fragment() {
 
 
     private fun showSkeleton() {
+        val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val isNightMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+
+        val config = if (isNightMode) SkeletonConf.darkMode else SkeletonConf.whiteMode
         skeleton = binding.rvAttackList.applySkeleton(
             R.layout.item_skeleton,
             itemCount = 9,
-            config = SkeletonConf.whiteMode
+            config = config
         )
         skeleton?.showSkeleton()
 

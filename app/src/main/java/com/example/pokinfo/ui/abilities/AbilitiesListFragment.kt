@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.abilities
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -34,7 +35,7 @@ class AbilitiesListFragment : Fragment() {
         ViewModelFactory(requireActivity().application, sharedViewModel)
     }
     private lateinit var adapter: AbilityListAdapter
-    private lateinit var skeleton: Skeleton
+    private var skeleton: Skeleton? = null
     private var isFilterBarExpanded = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -78,7 +79,7 @@ class AbilitiesListFragment : Fragment() {
         binding.rvAbilities.adapter = adapter
 
         abilityViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            if (isLoading) showSkeleton() else skeleton.showOriginal()
+            if (isLoading) showSkeleton() else skeleton?.showOriginal()
         }
         createFilterChips(binding.chipGroupFilter)
 
@@ -128,13 +129,16 @@ class AbilitiesListFragment : Fragment() {
     }
 
     private fun showSkeleton() {
+        val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val isNightMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
+
+        val config = if (isNightMode) SkeletonConf.darkMode else SkeletonConf.whiteMode
         skeleton = binding.rvAbilities.applySkeleton(
             R.layout.item_skeleton,
             itemCount = 9,
-            config = SkeletonConf.whiteMode
+            config = config
         )
-        skeleton.showSkeleton()
+        skeleton?.showSkeleton()
     }
-
 
 }
