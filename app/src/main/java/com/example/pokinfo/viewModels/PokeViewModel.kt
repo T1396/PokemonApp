@@ -276,8 +276,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         list: List<PokemonForList>,
         sortFilter: PokemonSortFilter,
         filterState: PokemonSortFilterState
-    )
-            : List<PokemonForList> {
+    ): List<PokemonForList> {
         val comparator = when (sortFilter) {
             PokemonSortFilter.WEIGHT -> compareBy<PokemonForList> { it.weight }
             PokemonSortFilter.HEIGHT -> compareBy { it.height }
