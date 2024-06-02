@@ -70,7 +70,7 @@ class HomeFragment : Fragment() {
             swipeRefreshLayout.isRefreshing = isLoading
         }
 
-        // show all pokemons and navigate if one is clicked
+        // show all pokemon and navigate if one is clicked
         pokeViewModel.pokemonList.observe(viewLifecycleOwner) {
             val typeNames = pokeViewModel.pokemonTypeNames
             // create adapter and set callback function
@@ -103,7 +103,7 @@ class HomeFragment : Fragment() {
 
         }
 
-        // observe the filter/searchinput changes
+        // observe the filter/search input changes
         pokeViewModel.sortedFilteredPokemonList.observe(viewLifecycleOwner) {
             adapter.submitList(it) {
                 binding.rvPokeList.scrollToPosition(0)
