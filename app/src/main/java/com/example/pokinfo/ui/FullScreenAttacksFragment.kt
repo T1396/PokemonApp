@@ -25,7 +25,7 @@ import com.google.android.material.chip.ChipGroup
 
 /** Fragment can have 2 different use cases
  *  1. To just simply show Attacks of a pokemon within different generations (selection Mode = false)
- *  2. To show a list of the attacks a pokemon can learn in newest gens to select up to 4 of that for the teambuilder
+ *  2. To show a list of the attacks a pokemon can learn in newest gens to select up to 4 of that for the team builder
  * */
 class FullScreenAttacksFragment : Fragment() {
 
@@ -74,7 +74,7 @@ class FullScreenAttacksFragment : Fragment() {
             val chipGroup = binding.chipGroupAttacksPopup
             val rvList = binding.rvPopupAttackList
 
-            // in selection mode there are no chips to filter
+            // in selection mode there are no chips to filter for generations
             binding.scrollView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
             binding.tvLevel.visibility =
                 if (isSelectionMode) View.GONE else View.VISIBLE // hide level for team builder
@@ -84,11 +84,7 @@ class FullScreenAttacksFragment : Fragment() {
 
             if (!isSelectionMode) {
                 attacksAdapter = AttacksAdapter(typeNames, showLevel = true, showPosition = false)
-                // not needed in selection mode
-                setChipsForEachGenAndListener(
-                    chipGroup,
-                    allAttackDetails
-                ) // this submits the attacks also
+                setChipsForEachGenAndListener(chipGroup, allAttackDetails) // this submits the attacks also
 
             } else {
                 selectedAttackList = teamsViewModel.teamBuilderSelectedAttacks.value ?: emptyList()
@@ -104,8 +100,7 @@ class FullScreenAttacksFragment : Fragment() {
         }
 
         binding.floatingActionButton.setOnClickListener {
-            val attacks = attacksAdapter.getSelectedAttacks()
-            teamsViewModel.setSelectedAttacks(attacks)
+            teamsViewModel.setSelectedAttacks(attacksAdapter.getSelectedAttacks())
             teamsViewModel.updatePokemonAttacks()
             findNavController().navigateUp()
         }
