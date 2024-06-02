@@ -31,7 +31,7 @@ class TeamsViewModel(
     private var auth = Firebase.auth
     private val fireStore = Firebase.firestore
 
-    val currentUserId: String?
+    private val currentUserId: String?
         get() = auth.currentUser?.uid
 
     private val _selectedTab = MutableLiveData<Event<TeamType>>()
@@ -52,9 +52,9 @@ class TeamsViewModel(
     val sharedPokemonTeams: LiveData<List<PokemonTeam>> get() = _sharedPokemonTeams
 
     private val _publicPokemonTeams = MutableLiveData<List<PokemonTeam>>()
-    val publicPokemonTeams: LiveData<List<PokemonTeam>> get() = _publicNew
 
-    private val _publicNew = MutableLiveData<List<PokemonTeam>>()
+    val publicPokemonTeams: LiveData<List<PokemonTeam>> get() = _publicPokemonTeams
+
 
     private val _likedTeams = MutableLiveData<List<String>>()
     val likedTeams: LiveData<List<String>> get() = _likedTeams
@@ -92,7 +92,7 @@ class TeamsViewModel(
      */
     private fun sortAndFilterPokemon() {
 
-        val initialList = _publicNew.value.orEmpty() // every pokemon
+        val initialList = _publicPokemonTeams.value.orEmpty() // every pokemon
 
         val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(
             TeamSortFilter.DATE,
@@ -100,7 +100,7 @@ class TeamsViewModel(
         )
 
         val sortedFilteredList = sortList(initialList, sortFilter, filterState)
-        _publicNew.value = sortedFilteredList
+        _publicPokemonTeams.value = sortedFilteredList
     }
 
     private fun sortList(
@@ -173,7 +173,7 @@ class TeamsViewModel(
                     val publicTeams = snapshot.documents.mapNotNull { doc ->
                         PokemonTeam.fromMap(doc.data)
                     }
-                    _publicNew.postValue(publicTeams)
+                    _publicPokemonTeams.postValue(publicTeams)
                     callback(true)
                 } else {
                     callback(false)
@@ -263,7 +263,7 @@ class TeamsViewModel(
     /** Deletes a Pokemon Team and deletes it from every user like documents
      *  as well as increasing the teamsCount in the public user document
      * */
-    fun deletePokemonTeam(pokemonTeam: PokemonTeam) {
+    fun deletePokemonTeam(pokemonTeam: PokemonTeam, onFinish: (Boolean) -> Unit) {
         val userId = auth.currentUser?.uid ?: return
         val teamId = pokemonTeam.id
         val teamRef = fireStore.collection("pokemonTeams").document(teamId)
@@ -290,12 +290,15 @@ class TeamsViewModel(
                 likedTeamsToDelete.forEach { transaction.delete(it) }
             }.addOnSuccessListener {
                 Log.d(TAG, "Team successfully deleted")
+                onFinish(true)
                 sharedViewModel.postMessage(R.string.team_deleted)
             }.addOnFailureListener { exception ->
                 Log.w(TAG, "Error deleting team", exception)
+                onFinish(false)
                 sharedViewModel.postMessage(R.string.team_deleted_error)
             }
         }.addOnFailureListener { exception ->
+            onFinish(false)
             Log.w(TAG, "Failed to retrieve profiles for team deletion", exception)
             sharedViewModel.postMessage(R.string.team_deleted_error)
         }
@@ -412,7 +415,7 @@ class TeamsViewModel(
                     }
             }
         }.addOnFailureListener { exception ->
-            Log.e(TAG, "Error accessing Firestore: $exception")
+            Log.e(TAG, "Error accessing firestore: $exception")
         }
     }
 

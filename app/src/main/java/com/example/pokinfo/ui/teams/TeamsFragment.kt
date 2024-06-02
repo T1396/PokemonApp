@@ -43,7 +43,6 @@ enum class TeamSortFilter(val stringRes: Int) {
 class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListener {
     private var _binding: FragmentTeamsBinding? = null
     private var teamType: TeamType = TeamType.MY_TEAMS
-    private var menuProvider: MenuProvider? = null
 
 
     // This property is only valid between onCreateView and
@@ -65,10 +64,6 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
 
             else -> {}
         }
-        menuProvider?.let { existingProvider ->
-            val menuHost: MenuHost = requireActivity()
-            menuHost.removeMenuProvider(existingProvider)
-        }
     }
 
 
@@ -83,27 +78,6 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
 
     }
 
-    private fun createMenuProvider(): MenuProvider {
-        return object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.main, menu)
-                val sec = menu.findItem(R.id.action_secondary)
-                sec.isVisible = (teamType == TeamType.PUBLIC_TEAMS)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                // Behandle Menüaktionen
-                return when (menuItem.itemId) {
-                    R.id.action_secondary -> {
-                        true
-                    }
-
-                    else -> false
-                }
-            }
-        }
-    }
-
     override fun onPause() {
         super.onPause()
         when (teamType) {
@@ -113,10 +87,6 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
 
             else -> {}
 
-        }
-        menuProvider?.let { existingProvider ->
-            val menuHost: MenuHost = requireActivity()
-            menuHost.removeMenuProvider(existingProvider)
         }
     }
 
@@ -150,7 +120,7 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
             }
             binding.filterScrollBar.visibility = View.VISIBLE
             TeamSortFilter.entries.forEach { filter ->
-                ThreeStateChip(requireContext()).apply {
+                ThreeStateChip(requireContext(), ascendingFirst = true).apply {
                     text = getString(filter.stringRes)
                     isCheckable = false
                     tag = filter
@@ -412,8 +382,11 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
                 dialog.dismiss()
             }
             setPositiveButton(getString(R.string.delete)) { dialog, _ ->
-                teamsViewModel.deletePokemonTeam(pokemonTeam)
-                teamsViewModel.fetchOwnTeams()
+                teamsViewModel.deletePokemonTeam(pokemonTeam) { success ->
+                    if (success) {
+                        teamsViewModel.fetchOwnTeams()
+                    }
+                }
                 dialog.dismiss()
             }
         }.show()

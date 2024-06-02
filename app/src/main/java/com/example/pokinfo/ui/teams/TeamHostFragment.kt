@@ -80,6 +80,14 @@ class TeamsHostFragment : Fragment() {
             teamBuildViewModel.resetTeamData()
             findNavController().navigate(TeamsHostFragmentDirections.actionNavTeamsHostToNavTeambuilder())
         }
+
+        binding.viewPager.apply {
+            this.isUserInputEnabled = false
+        }
+
+        binding.viewPager.setPageTransformer { page, _ ->
+            page.setOnTouchListener { v, event -> true }
+        }
     }
 
     // save active tab
