@@ -457,6 +457,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
             val move = moveData.find { it.id == versionGroupDetail.moveId }
             val moveName = moveNames.find { it.moveId.toLong() == versionGroupDetail.moveId }?.name
             AttacksData(
+                attackId = move?.id?.toInt() ?: -1,
                 name = moveName ?: "Error",
                 levelLearned = versionGroupDetail.levelLearnedAt ?: 0,
                 accuracy = move?.accuracy,

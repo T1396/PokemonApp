@@ -149,7 +149,9 @@ class FullScreenAttacksFragment : Fragment() {
                     generationNrs[index] // use the number of the gen as tag to call viewmodel gen filter function on click
                 setOnCheckedChangeListener { _, _ ->
                     val list = pokeViewModel.getFilteredAttacks(this.tag as Int)
-                    attacksAdapter.submitList(list)
+                    attacksAdapter.submitList(list) {
+                        binding.rvPopupAttackList.scrollToPosition(0)
+                    }
                 }
                 // checks first chip so list will be submitted due to onCheckedChangeListener
                 chipGroup.addView(this)

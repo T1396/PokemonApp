@@ -21,8 +21,12 @@ abstract class BaseDiffCallback<T : Any>: DiffUtil.ItemCallback<T>() {
 }
 
 class AttacksDiffCallback: BaseDiffCallback<AttacksData>() {
+
+    override fun areItemsTheSame(oldItem: AttacksData, newItem: AttacksData): Boolean {
+        return oldItem.name == newItem.name && oldItem.levelLearned == newItem.levelLearned && oldItem.isExpanded == newItem.isExpanded
+    }
     override fun areContentsTheSame(oldItem: AttacksData, newItem: AttacksData): Boolean {
-        return oldItem.name == newItem.name && oldItem.levelLearned == newItem.levelLearned
+        return oldItem.name == newItem.name && oldItem.levelLearned == newItem.levelLearned && oldItem.isExpanded == newItem.isExpanded
     }
 }
 

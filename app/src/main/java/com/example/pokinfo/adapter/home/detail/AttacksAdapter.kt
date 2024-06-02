@@ -1,5 +1,6 @@
 package com.example.pokinfo.adapter.home.detail
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -68,7 +69,7 @@ class AttacksAdapter(
         holder.binding.tvEffectText.text = attack.effectText
         holder.binding.ibExpand.setOnClickListener {
             toggleAttackExpansion(attack)
-            notifyItemChanged(position)
+            notifyItemChanged(holder.bindingAdapterPosition)
         }
 
         holder.binding.tvLevelLearnedAt.visibility = if (showLevel) View.VISIBLE else View.GONE
@@ -133,8 +134,10 @@ class AttacksAdapter(
     private fun toggleAttackExpansion(attack: AttacksData) {
         if (isAttackExpanded(attack)) {
             expandedAttackNames.remove(attack.name)
+            attack.isExpanded = false
         } else {
             expandedAttackNames.add(attack.name)
+            attack.isExpanded = true
         }
     }
 
