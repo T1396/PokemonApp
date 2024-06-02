@@ -101,7 +101,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
             // wait once all data has been loaded
             val loadResults = listOf(
                 async { loadTypeDetails() }, // load pokemon types from api
-                async { loadLanguageAndVersionNames() }, // load all available language and versionnames
+                async { loadLanguageAndVersionNames() }, // load all available language and version names
                 async { repository.loadAllPokemonsWithSprites(languageId) },
             ).awaitAll()
 
@@ -347,9 +347,9 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         viewModelScope.launch(Dispatchers.IO) {
             sharedViewModel.postMessage("Started fetching EVERY POKEMON")
             var startId = 10001
-            val totalPokemons =  10277
+            val totalPokemon =  10277
 
-            while (startId <= totalPokemons) {
+            while (startId <= totalPokemon) {
                 try {
                     val success = suspendCoroutine { continuation ->
                         loadPokemonDataFromApiAndSave(
@@ -578,7 +578,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         val abilityData = data.abilityInfoList.map { ability ->
             val abilityEffectTexts = data.abilityEffectTexts
             val textLong = if (abilityEffectTexts.isEmpty()) "No Data found" else {
-                abilityEffectTexts.find { it?.abilityId == ability.id }?.effectTextLong // ?. is necessary
+                abilityEffectTexts.find { it.abilityId == ability.id }?.effectTextLong
             }
             val isHidden = abilityIds.find { it.abilityId == ability.id }?.isHidden ?: false
             val textShort =
