@@ -13,6 +13,7 @@ import com.google.android.material.color.MaterialColors
 
 class ThreeStateChip @JvmOverloads constructor(
     context: Context,
+    private val ascendingFirst: Boolean = false,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = com.google.android.material.R.attr.chipStyle
 ) : Chip(context, attrs, defStyleAttr) {
@@ -30,10 +31,15 @@ class ThreeStateChip @JvmOverloads constructor(
         }
 
     fun nextState() {
-        state = when(state) {
+        state = if (!ascendingFirst) when(state) {
             PokemonSortFilterState.INACTIVE -> PokemonSortFilterState.DESCENDING
             PokemonSortFilterState.DESCENDING -> PokemonSortFilterState.ASCENDING
             PokemonSortFilterState.ASCENDING -> PokemonSortFilterState.INACTIVE
+        } else when(state) {
+            PokemonSortFilterState.INACTIVE -> PokemonSortFilterState.ASCENDING
+            PokemonSortFilterState.ASCENDING -> PokemonSortFilterState.DESCENDING
+            PokemonSortFilterState.DESCENDING -> PokemonSortFilterState.INACTIVE
+
         }
     }
 
