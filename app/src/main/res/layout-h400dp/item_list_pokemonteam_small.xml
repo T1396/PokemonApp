@@ -342,7 +342,6 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:gravity="center_vertical"
-            android:text="Andi !"
             android:textColor="#1E90FF"
             android:textIsSelectable="false"
             android:textSize="12sp"
