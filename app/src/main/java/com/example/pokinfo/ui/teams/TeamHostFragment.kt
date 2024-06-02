@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.teams
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -58,6 +59,7 @@ class TeamsHostFragment : Fragment() {
         return binding.root
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val adapter = TeamsPagerAdapter(this)
@@ -86,7 +88,7 @@ class TeamsHostFragment : Fragment() {
         }
 
         binding.viewPager.setPageTransformer { page, _ ->
-            page.setOnTouchListener { v, event -> true }
+            page.setOnTouchListener { _, _ -> true }
         }
     }
 
