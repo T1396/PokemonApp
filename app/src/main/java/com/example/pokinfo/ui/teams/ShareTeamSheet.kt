@@ -1,5 +1,6 @@
 package com.example.pokinfo.ui.teams
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,8 @@ import com.example.pokinfo.adapter.teamAndTeambuilder.UserRowAdapter
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.databinding.PopupShareTeamBinding
 import com.example.pokinfo.viewModels.teams.TeamsViewModel
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class ShareTeamSheet : BottomSheetDialogFragment() {
@@ -66,6 +69,24 @@ class ShareTeamSheet : BottomSheetDialogFragment() {
         binding.rvUsers.adapter = userAdapter
         binding.rvUsers.addItemDecoration(StartEndDecoration(requireContext(), 16))
         binding.rvTeam.adapter = teamAdapter
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val dialog = dialog as? BottomSheetDialog
+        dialog?.let {
+            val bottomSheet = it.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            val behavior = BottomSheetBehavior.from(bottomSheet!!)
+
+            val orientation = resources.configuration.orientation
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior.skipCollapsed = true
+            } else {
+                behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            }
+            behavior.peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO
+        }
     }
 
     companion object {
