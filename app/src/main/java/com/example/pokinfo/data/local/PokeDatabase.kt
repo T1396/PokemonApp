@@ -119,6 +119,4 @@ abstract class PokeDatabase : RoomDatabase() {
             }
         }
     }
-
-
 }
