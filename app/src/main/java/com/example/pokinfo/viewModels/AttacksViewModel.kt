@@ -12,8 +12,8 @@ import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
-import com.example.pokinfo.data.enums.AttackFilter
-import com.example.pokinfo.data.enums.AttackFilter2
+import com.example.pokinfo.data.enums.AttackGenerationFilter
+import com.example.pokinfo.data.enums.AttackTypeFilter
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.data.models.firebase.AttacksData
 import com.example.pokinfo.data.util.sharedPreferences
@@ -52,13 +52,13 @@ class AttacksViewModel(application: Application, private val sharedViewModel: Sh
     //region Attacks Fragment
 
     // live-data to manage filters
-    private val _selectedAttackFilter = MutableLiveData<AttackFilter?>()
-    val selectedAttackFilter: LiveData<AttackFilter?>
+    private val _selectedAttackFilter = MutableLiveData<AttackGenerationFilter?>()
+    val selectedAttackFilter: LiveData<AttackGenerationFilter?>
         get() = _selectedAttackFilter
 
     // secondary filter
-    private val _selectedAttackTypeFilter = MutableLiveData<AttackFilter2?>()
-    val selectedAttackTypeFilter: LiveData<AttackFilter2?>
+    private val _selectedAttackTypeFilter = MutableLiveData<AttackTypeFilter?>()
+    val selectedAttackTypeFilter: LiveData<AttackTypeFilter?>
         get() = _selectedAttackTypeFilter
 
     // filtered Attacks Live-Data
@@ -104,9 +104,9 @@ class AttacksViewModel(application: Application, private val sharedViewModel: Sh
         // secondary filters
         filteredList = filteredList.filter {
             when (secondaryFilter) {
-                AttackFilter2.PHYSICAL_ATTACKS -> it.moveDamageClassId == 2
-                AttackFilter2.SPECIAL_ATTACKS -> it.moveDamageClassId != 1 && it.moveDamageClassId != 2
-                AttackFilter2.STATUS_ATTACKS -> it.moveDamageClassId == 1
+                AttackTypeFilter.PHYSICAL_ATTACKS -> it.moveDamageClassId == 2
+                AttackTypeFilter.SPECIAL_ATTACKS -> it.moveDamageClassId != 1 && it.moveDamageClassId != 2
+                AttackTypeFilter.STATUS_ATTACKS -> it.moveDamageClassId == 1
                 null -> {
                     true
                 } // if null don't filter
@@ -116,13 +116,13 @@ class AttacksViewModel(application: Application, private val sharedViewModel: Sh
     }
 
     /** Function to set actual (primary) filter in move-list fragment */
-    fun selectAttacksFilter(filter: AttackFilter, isSelected: Boolean) {
+    fun selectAttacksFilter(filter: AttackGenerationFilter, isSelected: Boolean) {
         _selectedAttackFilter.value = if (isSelected) filter else null
         filterAttacks()
     }
 
     /** Function to set actual (secondary) filter in move-list fragment */
-    fun selectSecondAttackFilter(filter: AttackFilter2, isSelected: Boolean) {
+    fun selectSecondAttackFilter(filter: AttackTypeFilter, isSelected: Boolean) {
         _selectedAttackTypeFilter.value = if (isSelected) filter else null
         filterAttacks()
     }

@@ -15,8 +15,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.detail.AttacksAdapter
-import com.example.pokinfo.data.enums.AttackFilter
-import com.example.pokinfo.data.enums.AttackFilter2
+import com.example.pokinfo.data.enums.AttackGenerationFilter
+import com.example.pokinfo.data.enums.AttackTypeFilter
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
 import com.example.pokinfo.databinding.FragmentAttacksListBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
@@ -135,7 +135,7 @@ class AttacksListFragment : Fragment() {
 
     private fun createFilterChips(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) { // only create filter chips if no chips are there (if navigated back for example)
-            val list = AttackFilter.entries
+            val list = AttackGenerationFilter.entries
             list.forEach { filter ->
 
                 val chip = Chip(chipGroup.context).apply {
@@ -148,7 +148,7 @@ class AttacksListFragment : Fragment() {
                         filter // filter is tagged to the chip so it can be used for filter function call
                 }
                 chip.setOnCheckedChangeListener { chip1, isChecked ->
-                    attacksViewModel.selectAttacksFilter(chip1.tag as AttackFilter, isChecked)
+                    attacksViewModel.selectAttacksFilter(chip1.tag as AttackGenerationFilter, isChecked)
                 }
                 chipGroup.addView(chip)
             }
@@ -156,7 +156,7 @@ class AttacksListFragment : Fragment() {
         }
     }
 
-    private fun updateFilterChips(selectedFilter: AttackFilter?) {
+    private fun updateFilterChips(selectedFilter: AttackGenerationFilter?) {
         binding.chipGroupFilter.children.forEach { view ->
             (view as? Chip)?.let { chip ->
                 chip.isChecked = chip.tag == selectedFilter
@@ -166,7 +166,7 @@ class AttacksListFragment : Fragment() {
 
     private fun createSecondFilterGroup(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) {
-            val list = AttackFilter2.entries
+            val list = AttackTypeFilter.entries
             list.forEach { filter ->
                 val chip = Chip(chipGroup.context).apply {
                     text = filter.filterName
@@ -179,7 +179,7 @@ class AttacksListFragment : Fragment() {
 
                 chip.setOnCheckedChangeListener { createdChip, isChecked ->
                     attacksViewModel.selectSecondAttackFilter(
-                        createdChip.tag as AttackFilter2,
+                        createdChip.tag as AttackTypeFilter,
                         isChecked
                     )
                 }
@@ -190,7 +190,7 @@ class AttacksListFragment : Fragment() {
     }
 
     /** */
-    private fun updateTypeFilterChips(selectedFilter: AttackFilter2?) {
+    private fun updateTypeFilterChips(selectedFilter: AttackTypeFilter?) {
         binding.chipGroupTypeFilter.children.forEach { view ->
             (view as? Chip)?.let { chip ->
                 chip.isChecked = chip.tag == selectedFilter
