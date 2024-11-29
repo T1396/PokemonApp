@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.decoration.VerticalSpaceItemDecoration
 import com.example.pokinfo.adapter.teamAndTeambuilder.TeamAdapterLarge
-import com.example.pokinfo.data.enums.PokemonSortFilterState
+import com.example.pokinfo.data.enums.PokemonSortOption
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.databinding.FragmentTeamsBinding
 import com.example.pokinfo.databinding.PopupDialogOptionsBinding
@@ -132,7 +132,7 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
                     }
                     binding.chipGroup.addView(this)
                     if (filter == TeamSortFilter.LIKES) {
-                        this.state = PokemonSortFilterState.DESCENDING
+                        this.state = PokemonSortOption.DESCENDING
                     }
                 }
             }
@@ -170,20 +170,18 @@ class TeamsFragment : Fragment(), EnterTeamNameDialogFragment.EnterTeamNameListe
                 }
                 binding.rvTeams.setPadding(0, dpToPx(requireContext(), 48), 0, 0)
 
-               binding.rvTeams.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                binding.rvTeams.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
 
-                        // Berechne das neue Alpha basierend auf der aktuellen Scroll-Position
                         val scrolledOffset = recyclerView.computeVerticalScrollOffset()
                         val filterBarHeight = binding.filterScrollBar.height
                         val alpha = max(0f, 1f - (scrolledOffset / filterBarHeight.toFloat()))
 
-                        // Setze das Alpha der HorizontalScrollView
                         binding.filterScrollBar.alpha = alpha
 
-                        // Setze die Sichtbarkeit basierend auf dem Alpha-Wert
-                        binding.filterScrollBar.visibility = if (alpha > 0) View.VISIBLE else View.INVISIBLE
+                        binding.filterScrollBar.visibility =
+                            if (alpha > 0) View.VISIBLE else View.INVISIBLE
                     }
                 })
 
