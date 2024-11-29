@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.pokinfo" />
-                  <option name="mobileSdkAppId" value="1:569710510391:android:0f9a55b7835bea584bdab2" />
-                  <option name="projectId" value="pokedex-52026" />
-                  <option name="projectNumber" value="569710510391" />
+                  <option name="mobileSdkAppId" value="1:850709038234:android:9cb30ad154468746e78b23" />
+                  <option name="projectId" value="pokemon-app-ae3d0" />
+                  <option name="projectNumber" value="850709038234" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
