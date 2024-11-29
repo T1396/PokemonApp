@@ -13,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
-import com.example.pokinfo.data.enums.AbilityFilter
+import com.example.pokinfo.data.enums.AbilityGenerationFilter
 import com.example.pokinfo.databinding.FragmentAbilitiesListBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.ui.misc.SkeletonConf
@@ -106,7 +106,7 @@ class AbilitiesListFragment : Fragment() {
 
     private fun createFilterChips(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) { // only create filter chips if no chips are there (if navigated back for example)
-            val list = AbilityFilter.entries
+            val list = AbilityGenerationFilter.entries
             list.forEach { filter ->
 
                 val chip = Chip(chipGroup.context).apply {
@@ -120,7 +120,7 @@ class AbilitiesListFragment : Fragment() {
                 }
                 // on click listener
                 chip.setOnCheckedChangeListener { chip1, isChecked ->
-                    abilityViewModel.selectAbilitiesFilter(chip1.tag as AbilityFilter, isChecked)
+                    abilityViewModel.selectAbilitiesFilter(chip1.tag as AbilityGenerationFilter, isChecked)
                 }
                 chipGroup.addView(chip)
             }

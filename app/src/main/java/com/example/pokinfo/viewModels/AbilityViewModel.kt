@@ -11,7 +11,7 @@ import com.example.pokinfo.R
 import com.example.pokinfo.adapter.abilities.AbilityListAdapter
 import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.data.RepositoryProvider
-import com.example.pokinfo.data.enums.AbilityFilter
+import com.example.pokinfo.data.enums.AbilityGenerationFilter
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
@@ -47,6 +47,15 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
         }
     }
 
+
+    private var _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
+
+    // api response data, must be mapped to dataclasses
+    private var _abilityDetails = MutableLiveData<AbilityDetailQuery.Data?>()
+    val abilityDetail: LiveData<AbilityDetailQuery.Data?>
+        get() = _abilityDetails
+
     private val _allAbilities = MutableLiveData<List<AbilityListAdapter.AbilityInfo>?>()
     private val abilityMapper: (AllAbilitiesQuery.Data?) -> List<AbilityListAdapter.AbilityInfo> = { response ->
         response?.response?.data?.map { ability ->
@@ -58,13 +67,19 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
         } ?: emptyList()
     }
 
-    private var _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    private val _filteredAbilityList = MutableLiveData<List<AbilityListAdapter.AbilityInfo>?>()
+    val filteredAbilityList: LiveData<List<AbilityListAdapter.AbilityInfo>?>
+        get() = _filteredAbilityList
 
+    private val _abilityEffectTexts = MutableLiveData<List<AbilityEffectText>>()
+    val abilityEffectTexts: LiveData<List<AbilityEffectText>> get() = _abilityEffectTexts
 
-    private var _abilityDetails = MutableLiveData<AbilityDetailQuery.Data?>()
-    val abilityDetail: LiveData<AbilityDetailQuery.Data?>
-        get() = _abilityDetails
+    private val _selectedAbilityFilter = MutableLiveData<AbilityGenerationFilter?>()
+    private val selectedAbilityFilter: LiveData<AbilityGenerationFilter?>
+        get() = _selectedAbilityFilter
+
+    private val _searchInputAbility = MutableLiveData("")
+
 
     // Define a mapper function for ability details similar to abilityMapper
     private val detailMapper: (AbilityDetailQuery.Data?) -> List<AbilityEffectText> = { data ->
@@ -84,27 +99,14 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
         } ?: emptyList()
     }
 
+
+
     // Use the mapper to transform the LiveData from repository data
     fun prepareAbilityDetails() {
         val ability = _abilityDetails.value
         val mappedDetails = detailMapper(ability)
         _abilityEffectTexts.postValue(mappedDetails)
     }
-
-    private val _abilityEffectTexts = MutableLiveData<List<AbilityEffectText>>()
-    val abilityEffectTexts: LiveData<List<AbilityEffectText>> get() = _abilityEffectTexts
-
-
-    private val _selectedAbilityFilter = MutableLiveData<AbilityFilter?>()
-    private val selectedAbilityFilter: LiveData<AbilityFilter?>
-        get() = _selectedAbilityFilter
-
-    private val _filteredAbilityList = MutableLiveData<List<AbilityListAdapter.AbilityInfo>?>()
-    val filteredAbilityList: LiveData<List<AbilityListAdapter.AbilityInfo>?>
-        get() = _filteredAbilityList
-
-    private val _searchInputAbility = MutableLiveData("")
-
 
     fun setSearchInput(input: String) {
         _searchInputAbility.value = input
@@ -119,7 +121,8 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
 
             if (abilitiesList == null) {
                 sharedViewModel.postMessage(R.string.failed_to_load_abilities) {
-                    // pass this function as lambda to make a retry function
+                    // pass this function as lambda to make a retry function for
+                    // the snack bar that will be published with sharedViewModel
                     getAllAbilities()
 
                 }
@@ -143,8 +146,8 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
         }
     }
 
-    /** Gets all Pokemon who learns the move the user is inspecting */
-    fun getPokemonListWhoHaveAbility(onLoadFinished: (List<PokemonForList>) -> Unit) {
+    /** Gets all Pokemon which have the ability the user is inspecting */
+    fun getListOfPokemonWithSpecificAbility(onLoadFinished: (List<PokemonForList>) -> Unit) {
         val ids = _abilityDetails.value?.data?.firstOrNull()?.pokemonList?.mapNotNull {
             it.pokemon_id
         } ?: return
@@ -154,7 +157,7 @@ class AbilityViewModel(application: Application, private val sharedViewModel: Sh
         }
     }
 
-    fun selectAbilitiesFilter(filter: AbilityFilter, isSelected: Boolean) {
+    fun selectAbilitiesFilter(filter: AbilityGenerationFilter, isSelected: Boolean) {
         if (isSelected) {
             _selectedAbilityFilter.value = filter
         } else {
