@@ -1,6 +1,5 @@
 package com.example.pokinfo.adapter.home.detail
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -144,7 +143,6 @@ class AttacksAdapter(
     fun getSelectedAttacks(): List<AttacksData> {
         return selectedAttacks
     }
-
 
     fun selectAttacks(attackList: List<AttacksData>) {
         selectedAttacks = attackList.toMutableList()
