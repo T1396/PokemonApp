@@ -155,7 +155,6 @@ class TeamBuilderViewModel(
                     _clickedPokemon.value = data
                     optionalCallback?.invoke()
                 }
-
             }
         }
     }
@@ -351,6 +350,7 @@ class TeamBuilderViewModel(
         }.size
         return amountOfPokemon >= 6
     }
+
     /** Gets the chosen values (level, iv, ev etc) in the team builder fragment to update the values in the team-live data,*/
     fun updatePokemonValuesInTeam(
         createNewSlot: Boolean,
