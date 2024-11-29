@@ -25,7 +25,8 @@ import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
 
 
-private const val BASE_URL = "https://pokeapi.co/api/v2/"
+//private const val BASE_URL = "https://pokeapi.co/api/v2/"
+const val BASE_URL = "http://192.168.178.26:8080/v1/graphql/"
 //private const val BASE_URL = BuildConfig.localApiUrl
 //private const val graphQLUrl = BuildConfig.localGraphqlUrl
 private const val graphQLUrl = "https://beta.pokeapi.co/graphql/v1beta/"
