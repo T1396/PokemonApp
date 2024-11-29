@@ -74,7 +74,8 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         get() = _teambuilderPokeList
 
 
-    // region database getter functions
+    //region database getter functions
+
     // returns all moves actually existing in the database to prevent adding them again or duplicated
     suspend fun getAllMovesFromDB(): List<PkMove> {
         return try {
@@ -95,9 +96,13 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    suspend fun getPokemonTableEntries(list: List<Int>): List<PokemonForList> {
+    /** Returns a list of all pokemon matching with the ids in the given in list
+     *  @param idList list of ids of the pokemon to fetch
+     *  @return list of the pokemon to display in a list
+     * */
+    suspend fun getPokemonTableEntries(idList: List<Int>): List<PokemonForList> {
         return try {
-            database.pokeDao.getSpecificPokemon(list)
+            database.pokeDao.getSpecificPokemon(idList)
         } catch (e: Exception) {
             Log.d(TAG, "Failed to load pokemons from the table_list_pokemon table", e)
             emptyList()
@@ -147,27 +152,10 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    //endregion
-
-
-    suspend fun insertPokemonDataIntoDB(
-        pokemonData: PokemonData,
-        onSaveFinish: (Boolean) -> Unit
-    ) {
-        try {
-            database.pokeDao.insertAllPokemonData(pokemonData)
-            val insertStatus = PokemonInsertStatus(
-                pokemonId = pokemonData.pokemon.id,
-                status = "Done"
-            )
-            database.pokeDao.setPokemonInsertStatus(insertStatus)
-            onSaveFinish(true)
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to insert Pokemon Data into Database", e)
-            onSaveFinish(false)
-        }
-    }
-
+    /** Gets details of a pokemon
+     *  @param pokemonId id of the pokemon
+     *  @param languageId to return results in a specific language
+     * */
     suspend fun getPokemonDataFromDatabase(
         pokemonId: Int,
         languageId: Int,
@@ -183,22 +171,36 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
 
     }
+    //endregion
 
 
-
-
+    /** Checks if a database entry of a pokemon exists
+     *  to reduce api calls
+     * */
     fun checkIfPokemonNeedsToBeLoaded(pokemonId: Int): Boolean {
         val insertStatus =
             database.pokeDao.checkPokemonInsertStatus(pokemonId)
-        if (insertStatus == null || insertStatus.status != "Done" ||
-            (Timestamp.now().toDate().time - insertStatus.timestamp.time) > SIXTY_DAYS_IN_MILLIS
-        ) {
-            return true //
-        }
-        return false
+        //
+        return insertStatus == null || insertStatus.status != "Done"
     }
 
-    // api functions
+
+    /** Determines if the details of a pokemon species is already inserted into the database
+     *  to prevent multiple insertions of that */
+    suspend fun doesSpeciesExistAlready(speciesId: Int): Boolean {
+        return try {
+            database.pokeDao.existsSpecies(speciesId)
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to check if species exists already in database", e)
+            false
+        }
+    }
+
+    //region api functions
+    /** Sends 3 queries to get details for a single pokemon like learned attacks, pokedex entries etc.
+     *  @param pokemonId id of the pokemon
+     *  @param languageId to get some details in a specific language
+     * */
     suspend fun loadSinglePokemonData(
         pokemonId: Int,
         languageId: Int,
@@ -216,7 +218,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-
+    /** Sends a query to get all available pokemon moves
+     *  @param languageId to get results in a specific language
+     * */
     suspend fun loadAllMoves(languageId: Int): AttacksQuery.Data? {
         return try {
             api.retrofitGraphService.sendAttackListQuery(languageId)
@@ -226,6 +230,10 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
+    /** Sends a query to graphql to get details of a single pokemon move (attack)
+     *  @param moveId id of the move to get details for
+     *  @param languageId to get results in a specific language
+     * */
     suspend fun loadSingleMoveDetails(moveId: Int, languageId: Int): AttackDetailsQuery.Data? {
         return try {
             api.retrofitGraphService.sendAttackDetailQuery(moveId, languageId)
@@ -235,6 +243,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
+    /** Gets a list of every available ability for all pokemon
+     * @param languageId to get results in a specific language
+     * */
     suspend fun loadAllAbilities(languageId: Int): AllAbilitiesQuery.Data? {
         return try {
             return api.retrofitGraphService.sendAbilitiesListQuery(languageId)
@@ -244,6 +255,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
+    /** Sends a query to graphql to get details of a single Ability
+     * @param abilityId id of the ability to get details for
+     * */
     suspend fun loadAbilityDetails(abilityId: Int): AbilityDetailQuery.Data? {
         return try {
             api.retrofitGraphService.sendAbilityDetailQuery(abilityId)
@@ -253,6 +267,10 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
+    /** Loads the available language and Version Names from graphQL via query
+     *  And inserts them into database
+     *  @param languageId to eventually get results in other languages
+     * */
     suspend fun loadLanguageAndVersionNames(languageId: Int) {
         try {
             val response = api.retrofitGraphService.sendLanguageVersionNameQuery(languageId)
@@ -277,8 +295,6 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
             Log.d(TAG, "Failed to load language/Version Names with apolloClient", e)
         }
     }
-    //endregion
-
 
     /** makes an api call to get a list of all pokemons with sprites for it and returns it to the viewmodel to map it */
     suspend fun loadAllPokemonsWithSprites(languageId: Int): PokeListQuery.Data? {
@@ -291,17 +307,9 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    // inserts a list of all Pokemon with few details into Database
-    suspend fun insertAllPokemon(list: List<PokemonForList>): Boolean {
-        return try {
-            database.pokeDao.insertAllPokemon(list)
-            true
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to insert pokemonList into DB (initialization)", e)
-            false
-        }
-    }
-
+    /** Returns a list of all Pokemon which can hold the ability corresponsing to abilityId
+     *  @param abilityId id of the ability which the pokemon must have
+     * */
     suspend fun getPokemonListOfAbility(abilityId: Int): PokemonWithAbilityQuery.Data? {
         return try {
             api.retrofitGraphService.sendAbilityPokemonListQuery(abilityId)
@@ -311,7 +319,8 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    // region type details
+    /** Loads the details (names, typeIds, strengthens, weaknesses) of all Pokemon Types and inserts in into the database
+     * */
     suspend fun loadTypeDetails() = coroutineScope {
         try {
             val jobs = mutableListOf<Deferred<Boolean>>()
@@ -337,7 +346,24 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
             Log.d(TAG, "Failed to load Pokemon type Details from API", e)
         }
     }
+    //endregion
 
+    //region database insertions
+
+    /** Inserts a list of pokemon into the database and returns true when succeeded else false
+     *  @param pokemonList list of the pokemon - data
+     *  */
+    suspend fun insertAllPokemon(pokemonList: List<PokemonForList>): Boolean {
+        return try {
+            database.pokeDao.insertAllPokemon(pokemonList)
+            true
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to insert pokemonList into DB (initialization)", e)
+            false
+        }
+    }
+
+    /** Inserts the pokemon type infos into the database */
     private suspend fun insertTypeInfoIntoDatabase(typeInfoList: List<TypeInfoForDatabase>) {
         try {
             database.pokeTypeDao.insertCompleteTypeInfo(typeInfoList)
@@ -346,12 +372,21 @@ class Repository(private val api: PokeApi, private val database: PokeDatabase) {
         }
     }
 
-    suspend fun doesSpeciesExistAlready(speciesId: Int): Boolean {
-        return try {
-            database.pokeDao.existsSpecies(speciesId)
+    suspend fun insertPokemonDataIntoDB(
+        pokemonData: PokemonData,
+        onSaveFinish: (Boolean) -> Unit
+    ) {
+        try {
+            database.pokeDao.insertAllPokemonData(pokemonData)
+            val insertStatus = PokemonInsertStatus(
+                pokemonId = pokemonData.pokemon.id,
+                status = "Done"
+            )
+            database.pokeDao.setPokemonInsertStatus(insertStatus)
+            onSaveFinish(true)
         } catch (e: Exception) {
-            Log.d(TAG, "Failed to check if species exists already in database", e)
-            false
+            Log.d(TAG, "Failed to insert Pokemon Data into Database", e)
+            onSaveFinish(false)
         }
     }
     //endregion
