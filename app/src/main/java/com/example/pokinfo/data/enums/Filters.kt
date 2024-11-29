@@ -1,6 +1,6 @@
 package com.example.pokinfo.data.enums
 
-enum class AttackFilter(val filterName: String, val genId: Int) {
+enum class AttackGenerationFilter(val filterName: String, val genId: Int) {
     FROM_GEN1("Inv. in Gen1", 1),
     FROM_GEN2("Inv. in Gen2", 2),
     FROM_GEN3("Inv. in Gen3", 3),
@@ -12,13 +12,13 @@ enum class AttackFilter(val filterName: String, val genId: Int) {
     FROM_GEN9("Inv. in Gen9", 9)
 }
 
-enum class AttackFilter2(val filterName: String) {
+enum class AttackTypeFilter(val filterName: String) {
     PHYSICAL_ATTACKS("Phy. Attacks"),
     SPECIAL_ATTACKS("Sp. Attacks"),
     STATUS_ATTACKS("Status-Attacks"),
 }
 
-enum class AbilityFilter(val filterName: String, val genId: Int) {
+enum class AbilityGenerationFilter(val filterName: String, val genId: Int) {
     FROM_GEN3("Gen3", 3),
     FROM_GEN4("Gen4", 4),
     FROM_GEN5("Gen5", 5),
@@ -28,13 +28,13 @@ enum class AbilityFilter(val filterName: String, val genId: Int) {
     FROM_GEN9("Gen9", 9)
 }
 
-enum class PokemonSortFilter(val filterName: String) {
+enum class PokemonSortSetting(val filterName: String) {
     WEIGHT("Weight"),
     HEIGHT("Height"),
     NAME("Name"),
     STATS("Stat Values")
 }
 
-enum class PokemonSortFilterState {
+enum class PokemonSortOption {
     ASCENDING, DESCENDING, INACTIVE
 }
