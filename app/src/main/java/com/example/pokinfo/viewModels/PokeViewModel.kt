@@ -14,18 +14,18 @@ import com.example.pokinfo.adapter.home.detail.AbilityEffectText
 import com.example.pokinfo.data.RepositoryProvider
 import com.example.pokinfo.data.mapper.PokemonDatabaseMapper
 import com.example.pokinfo.data.mapper.PokemonListMapper
-import com.example.pokinfo.data.maps.imageTypeName
-import com.example.pokinfo.data.maps.readableNames
-import com.example.pokinfo.data.maps.typeColorMap
-import com.example.pokinfo.data.maps.versionGroupMap
 import com.example.pokinfo.data.models.database.pokemon.PokemonData
 import com.example.pokinfo.data.models.database.pokemon.PokemonDexEntries
 import com.example.pokinfo.data.models.database.pokemon.PokemonForList
 import com.example.pokinfo.data.models.database.pokemon.LanguageNames
 import com.example.pokinfo.data.models.database.pokemon.VersionNames
 import com.example.pokinfo.data.models.firebase.AttacksData
-import com.example.pokinfo.data.enums.PokemonSortFilter
-import com.example.pokinfo.data.enums.PokemonSortFilterState
+import com.example.pokinfo.data.enums.PokemonSortSetting
+import com.example.pokinfo.data.enums.PokemonSortOption
+import com.example.pokinfo.data.maps.imageTypeName
+import com.example.pokinfo.data.maps.readableNames
+import com.example.pokinfo.data.maps.typeColorMap
+import com.example.pokinfo.data.maps.versionGroupMap
 import com.example.pokinfo.data.models.database.pokemon.EvolutionStage
 import com.example.pokinfo.data.models.database.pokemon.PkEvolutionDetails
 import com.example.pokinfo.data.models.database.pokemon.PokemonTypeName
@@ -239,17 +239,17 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         return _searchInputPokemonList.value.orEmpty()
     }
 
-    private val _filterStateLiveData =
-        MutableLiveData<Pair<PokemonSortFilter, PokemonSortFilterState>>()
-    val filterStateLiveData: LiveData<Pair<PokemonSortFilter, PokemonSortFilterState>>
-        get() = _filterStateLiveData
+    private val _sortOptionsLiveData =
+        MutableLiveData<Pair<PokemonSortSetting, PokemonSortOption>>()
+    val sortOptionLiveData: LiveData<Pair<PokemonSortSetting, PokemonSortOption>>
+        get() = _sortOptionsLiveData
 
 
-    fun selectFilterAndState(
-        filterState: PokemonSortFilterState,
-        pokemonSortFilter: PokemonSortFilter,
+    fun selectSortOption(
+        filterState: PokemonSortOption,
+        sortSetting: PokemonSortSetting,
     ) {
-        _filterStateLiveData.value = Pair(pokemonSortFilter, filterState)
+        _sortOptionsLiveData.value = Pair(sortSetting, filterState)
         sortAndFilterPokemon()
     }
 
@@ -263,9 +263,9 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         val initialList = _pokemonList.value.orEmpty() // every pokemon
 
         val filteredList = initialList.filter { it.name.contains(searchInput, true) }
-        val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(
-            PokemonSortFilter.WEIGHT,
-            PokemonSortFilterState.INACTIVE
+        val (sortFilter, filterState) = _sortOptionsLiveData.value ?: Pair(
+            PokemonSortSetting.WEIGHT,
+            PokemonSortOption.INACTIVE
         )
 
         val sortedFilteredList = sortList(filteredList, sortFilter, filterState)
@@ -274,19 +274,18 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
 
     private fun sortList(
         list: List<PokemonForList>,
-        sortFilter: PokemonSortFilter,
-        filterState: PokemonSortFilterState
+        sortFilter: PokemonSortSetting,
+        filterState: PokemonSortOption
     ): List<PokemonForList> {
         val comparator = when (sortFilter) {
-            PokemonSortFilter.WEIGHT -> compareBy<PokemonForList> { it.weight }
-            PokemonSortFilter.HEIGHT -> compareBy { it.height }
-            PokemonSortFilter.NAME -> compareBy { it.name }
-            PokemonSortFilter.STATS -> compareBy { it.baseStats.sumOf { stat -> stat.statValue } }
+            PokemonSortSetting.WEIGHT -> compareBy<PokemonForList> { it.weight }
+            PokemonSortSetting.HEIGHT -> compareBy { it.height }
+            PokemonSortSetting.NAME -> compareBy { it.name }
+            PokemonSortSetting.STATS -> compareBy { it.baseStats.sumOf { stat -> stat.statValue } }
         }
-
         return when (filterState) {
-            PokemonSortFilterState.ASCENDING -> list.sortedWith(comparator)
-            PokemonSortFilterState.DESCENDING -> list.sortedWith(comparator.reversed())
+            PokemonSortOption.ASCENDING -> list.sortedWith(comparator)
+            PokemonSortOption.DESCENDING -> list.sortedWith(comparator.reversed())
             else -> list
         }
     }
@@ -483,7 +482,7 @@ class PokeViewModel(application: Application, private val sharedViewModel: Share
         val gson = Gson()
         val spriteListType = object : TypeToken<List<PokemonDetail1Query.Sprite>>() {}.type
         val spritesData: List<PokemonDetail1Query.Sprite> = gson.fromJson(sprites, spriteListType)
-        val spriteMap = spritesData.first().sprites as Map<*, *>
+        val spriteMap = (spritesData.firstOrNull()?.sprites as? Map<*, *>) ?: return
 
         val categorizedMap = mutableMapOf<String, MutableList<Pair<String, String>>>()
 
