@@ -28,7 +28,8 @@ data class PkEvolutionDetails(
     val minLevel: Int?
 )
 
-/** Dataclass to use the Evolution Details in views, in a recursive way
+/**
+ * Dataclass to use the Evolution Details in views, in a recursive way
  * @evolutionDetails is null if the pokemon that is the actual Stage is the root of the evolution
  * */
 data class EvolutionStage(
