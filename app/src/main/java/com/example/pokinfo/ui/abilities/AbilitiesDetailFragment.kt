@@ -1,7 +1,6 @@
 package com.example.pokinfo.ui.abilities
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,7 +65,7 @@ class AbilitiesDetailFragment : Fragment() {
         typeNames: List<PokemonTypeName>,
         ability: AbilityEffectText
     ) {
-        abilityViewModel.getPokemonListWhoHaveAbility { pokemonList ->
+        abilityViewModel.getListOfPokemonWithSpecificAbility { pokemonList ->
             adapter = AbilitySheetAdapter(ability, typeNames) { pokemonId ->
                 showConfirmationDialog(
                     onConfirm = {
