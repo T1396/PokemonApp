@@ -12,7 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionManager
 import com.example.pokinfo.R
 import com.example.pokinfo.adapter.home.PokeListAdapter
-import com.example.pokinfo.data.enums.PokemonSortFilter
+import com.example.pokinfo.data.enums.PokemonSortSetting
 import com.example.pokinfo.databinding.FragmentHomeBinding
 import com.example.pokinfo.ui.Extensions.animations.showOrHideChipGroupAnimated
 import com.example.pokinfo.viewModels.PokeViewModel
@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
     // creates a chip for each PokemonSortFilter
     private fun createFilterChips(chipGroup: ChipGroup) {
         if (chipGroup.childCount == 0) { // only create chips if not already there
-            PokemonSortFilter.entries.forEachIndexed { _, filter ->
+            PokemonSortSetting.entries.forEachIndexed { _, filter ->
                 // slightly different version of chip to have 3 states instead of 2
                 val chip = ThreeStateChip(chipGroup.context).apply {
                     text = filter.filterName
@@ -131,9 +131,9 @@ class HomeFragment : Fragment() {
                             }
                             // disables all other chips if a chip is clicked
                         }
-                        pokeViewModel.selectFilterAndState(
+                        pokeViewModel.selectSortOption(
                             this.state, // filter state (asc, desc)
-                            tag as PokemonSortFilter, // filter tag (which attribute to sort)
+                            tag as PokemonSortSetting, // filter tag (which attribute to sort)
                         )
                     }
                 }
@@ -141,7 +141,7 @@ class HomeFragment : Fragment() {
             }
 
             // sets the active filter again if fragment is created again
-            pokeViewModel.filterStateLiveData.value?.let { selectedFilter ->
+            pokeViewModel.sortOptionLiveData.value?.let { selectedFilter ->
                 chipGroup.children.forEach { chip ->
                     if ((chip as ThreeStateChip).tag == selectedFilter.first) {
                         chip.state = selectedFilter.second
