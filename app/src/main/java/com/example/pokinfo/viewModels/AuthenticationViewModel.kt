@@ -70,7 +70,6 @@ class AuthenticationViewModel(
         auth.currentUser?.let { firebaseUser ->
             profileRef = fireStore.collection("userData").document(firebaseUser.uid)
             getProfilePicUrl() // once the profile exists load image Url
-
         }
     }
 
@@ -116,7 +115,7 @@ class AuthenticationViewModel(
                 sharedViewModel.postMessage(R.string.google_error)
                 Log.d(TAG, "Get Credential Error", e)
             } catch (e: GetCredentialCancellationException) {
-                Log.d(TAG, "Credential Login/Sign in cancelled by user")
+                Log.d(TAG, "Credential Login/Sign in cancelled by user or some other unused behaviour", e)
             } catch (e: Exception) {
                 Log.e(TAG, "Get Credential Error", e)
                 sharedViewModel.postMessage(R.string.credential_error)
@@ -200,7 +199,7 @@ class AuthenticationViewModel(
     }
     //endregion
 
-    //region createprofile document update image
+    //region create profile document update image
     private fun showErrorMessageForUser(it: Task<AuthResult>) {
         val errorCode = (it.exception as? FirebaseAuthException)?.errorCode
         val errorMessage = getErrorMessage(errorCode)
