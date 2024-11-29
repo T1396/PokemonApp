@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.pokinfo.R
-import com.example.pokinfo.data.enums.PokemonSortFilterState
+import com.example.pokinfo.data.enums.PokemonSortOption
 import com.example.pokinfo.data.models.firebase.PokemonTeam
 import com.example.pokinfo.data.models.firebase.PublicProfile
 import com.example.pokinfo.data.util.Event
@@ -75,11 +75,11 @@ class TeamsViewModel(
     }
 
     private val _filterStateLiveData =
-        MutableLiveData<Pair<TeamSortFilter, PokemonSortFilterState>>()
+        MutableLiveData<Pair<TeamSortFilter, PokemonSortOption>>()
 
     fun selectFilterAndState(
         sortFilter: TeamSortFilter,
-        filterState: PokemonSortFilterState,
+        filterState: PokemonSortOption,
     ) {
         _filterStateLiveData.value = Pair(sortFilter, filterState)
         sortAndFilterPokemon()
@@ -96,7 +96,7 @@ class TeamsViewModel(
 
         val (sortFilter, filterState) = _filterStateLiveData.value ?: Pair(
             TeamSortFilter.DATE,
-            PokemonSortFilterState.DESCENDING
+            PokemonSortOption.DESCENDING
         )
 
         val sortedFilteredList = sortList(initialList, sortFilter, filterState)
@@ -106,7 +106,7 @@ class TeamsViewModel(
     private fun sortList(
         list: List<PokemonTeam>,
         sortFilter: TeamSortFilter,
-        filterState: PokemonSortFilterState
+        filterState: PokemonSortOption
     ): List<PokemonTeam> {
         val comparator = when (sortFilter) {
             TeamSortFilter.DATE -> compareBy<PokemonTeam> { it.timestamp.seconds }
@@ -115,8 +115,8 @@ class TeamsViewModel(
         }
 
         return when (filterState) {
-            PokemonSortFilterState.ASCENDING -> list.sortedWith(comparator)
-            PokemonSortFilterState.DESCENDING -> list.sortedWith(comparator.reversed())
+            PokemonSortOption.ASCENDING -> list.sortedWith(comparator)
+            PokemonSortOption.DESCENDING -> list.sortedWith(comparator.reversed())
             else -> list
         }
     }
@@ -323,8 +323,8 @@ class TeamsViewModel(
             }
     }
 
-    /** Grants access for a list of users to the pokemon team of the actual user
-     *
+    /**
+     * Grants access for a list of users to the pokemon team of the actual user
      * */
     fun grantAccessToOtherUser(pokemonTeam: PokemonTeam) {
         val userIds = _selectedUserIds.value ?: emptyList()
